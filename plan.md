@@ -33,7 +33,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
 
 ## 🛠️ Stack Tecnológica Recomendada
 
-- **Desktop App (Avalonia + .NET 8 LTS):**
+- **Desktop App (Avalonia + .NET 10 LTS):**
   - **Framework UI:** Avalonia 11 (XAML-like, MVVM via CommunityToolkit.Mvvm).
   - **Engine de Compressão:** ZstdSharp (zstd) sobre streams/buffers em chunks.
   - **Integridade:** SHA-256 incremental (`System.Security.Cryptography`).
@@ -43,7 +43,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
 
 - **VPS Infraestrutura & Backend:**
   - **Sistema Operacional:** Ubuntu Server / Debian na VPS.
-  - **Backend API & Signaling:** ASP.NET Core 8 (Web API + SignalR).
+  - **Backend API & Signaling:** ASP.NET Core 10 (Web API + SignalR).
   - **Auth:** ASP.NET Core Identity + JWT.
   - **Banco de Dados:** PostgreSQL (prod) / SQLite (dev) via EF Core.
   - **Servidor TURN/STUN:** coturn (nativo Linux para fallback de rede).
@@ -59,7 +59,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
 ### FASE 1: Motor de Compressão em Streaming (Local)
 Objetivo: Compactar/descompactar em tempo real usando buffers de memória sem travar a interface.
 
-- [ ] Configurar projeto base Desktop (Avalonia + .NET 8).
+- [ ] Configurar projeto base Desktop (Avalonia + .NET 10).
 - [ ] Implementar compressão por blocos/chunks (ex: blocos de 4MB com ZstdSharp).
 - [ ] Criar pipeline de I/O assíncrono (`Channel<T>` + `Stream`/`PipeReader`) para leitura/gravação em disco.
 - [ ] Implementar verificação de integridade por chunk (SHA-256 incremental).
