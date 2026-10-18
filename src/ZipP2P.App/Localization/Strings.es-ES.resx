@@ -46,7 +46,7 @@
     <value>Máximo</value>
   </data>
   <data name="Action.Browse" xml:space="preserve">
-    <value>Examinar...</value>
+    <value>Examinar</value>
   </data>
   <data name="Action.Start" xml:space="preserve">
     <value>Iniciar</value>

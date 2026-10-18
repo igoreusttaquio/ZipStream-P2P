@@ -13,7 +13,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="App.Title" xml:space="preserve">
-    <value>Zip-P2P</value>
+    <value>ZipStream</value>
+  </data>
+  <data name="App.Tagline" xml:space="preserve">
+    <value>P2P</value>
   </data>
   <data name="Home.DropHint" xml:space="preserve">
     <value>Drop files here or click to browse</value>
@@ -46,7 +49,7 @@
     <value>Maximum</value>
   </data>
   <data name="Action.Browse" xml:space="preserve">
-    <value>Browse...</value>
+    <value>Browse</value>
   </data>
   <data name="Action.Start" xml:space="preserve">
     <value>Start</value>

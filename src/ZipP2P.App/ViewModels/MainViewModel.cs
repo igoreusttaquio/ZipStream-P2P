@@ -1,9 +1,11 @@
 using System.Globalization;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Material.Icons;
 using ZipP2P.App.Localization;
 using ZipP2P.Core.Compression;
 
@@ -55,6 +57,12 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial MaterialIconKind StatusIcon { get; set; } = MaterialIconKind.CheckCircleOutline;
+
+    [ObservableProperty]
+    public partial IBrush StatusBrush { get; set; } = Brushes.Gray;
 
     [ObservableProperty]
     public partial string Details { get; set; } = string.Empty;
@@ -112,7 +120,43 @@ public partial class MainViewModel : ViewModelBase
         IsFolderArchive = false;
     }
 
-    private void RefreshStatus() => StatusText = Localizer.Instance[_statusKey];
+    private void RefreshStatus()
+    {
+        StatusText = Localizer.Instance[_statusKey];
+
+        switch (_statusKey)
+        {
+            case "Status.Compressing":
+                StatusIcon = MaterialIconKind.Archive;
+                StatusBrush = AccentStatusBrush;
+                break;
+            case "Status.Decompressing":
+                StatusIcon = MaterialIconKind.Unarchive;
+                StatusBrush = AccentStatusBrush;
+                break;
+            case "Status.Completed":
+                StatusIcon = MaterialIconKind.CheckCircle;
+                StatusBrush = SuccessBrush;
+                break;
+            case "Status.Cancelled":
+                StatusIcon = MaterialIconKind.Cancel;
+                StatusBrush = WarningBrush;
+                break;
+            case "Status.Failed":
+                StatusIcon = MaterialIconKind.ErrorOutline;
+                StatusBrush = ErrorBrush;
+                break;
+            default:
+                StatusIcon = MaterialIconKind.CheckCircleOutline;
+                StatusBrush = Brushes.Gray;
+                break;
+        }
+    }
+
+    private static readonly SolidColorBrush AccentStatusBrush = new(Color.Parse("#3B82F6"));
+    private static readonly SolidColorBrush SuccessBrush = new(Color.Parse("#22C55E"));
+    private static readonly SolidColorBrush WarningBrush = new(Color.Parse("#F59E0B"));
+    private static readonly SolidColorBrush ErrorBrush = new(Color.Parse("#EF4444"));
 
     private void SetStatus(string key)
     {
@@ -144,6 +188,10 @@ public partial class MainViewModel : ViewModelBase
             {
                 AllowMultiple = false,
                 Title = Localizer.Instance["Home.DropHint"],
+                FileTypeFilter = new FilePickerFileType[]
+                {
+                    new("ZipStream (.zpp2)") { Patterns = new[] { "*.zpp2" } },
+                },
             });
 
             var file = files.FirstOrDefault();
