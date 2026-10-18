@@ -15,7 +15,8 @@ public static class ChunkedCompressor
         Stream output,
         CompressionOptions? options = null,
         IProgress<CompressionProgress>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        byte contentType = Zpp2Format.ContentTypeFile)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
@@ -35,6 +36,7 @@ public static class ChunkedCompressor
         writer.Write(Zpp2Format.Version);
         writer.Write(options.ChunkSize);
         writer.Write((byte)options.Level);
+        writer.Write(contentType);
 
         var chunkBuffer = ArrayPool<byte>.Shared.Rent(options.ChunkSize);
         var compressor = new ZstdSharp.Compressor(options.Level);

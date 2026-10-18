@@ -14,10 +14,13 @@ namespace ZipP2P.Core.Compression;
 public static class Zpp2Format
 {
     public const int Magic = 0x3250505A; // "ZPP2" little-endian
-    public const int Version = 1;
+    public const int Version = 2;
 
     public const byte RecordChunk = 0x01;
     public const byte RecordTrailer = 0x02;
+
+    public const byte ContentTypeFile = 0x00;
+    public const byte ContentTypeDirectory = 0x01;
 
     public const int Sha256Length = 32;
 

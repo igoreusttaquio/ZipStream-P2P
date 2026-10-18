@@ -9,7 +9,7 @@ namespace ZipP2P.Core.Compression;
 /// </summary>
 public static class ChunkedDecompressor
 {
-    public static async Task DecompressAsync(
+    public static async Task<byte> DecompressAsync(
         Stream input,
         Stream output,
         IProgress<CompressionProgress>? progress = null,
@@ -33,6 +33,7 @@ public static class ChunkedDecompressor
             throw new InvalidDataException($"Invalid chunk size: {chunkSize}.");
 
         byte level = reader.ReadByte();
+        byte contentType = reader.ReadByte();
 
         long totalBytes = TryGetLength(input);
 
@@ -111,6 +112,8 @@ public static class ChunkedDecompressor
             throw new InvalidDataException("Integrity check failed: global hash mismatch.");
 
         await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+        return contentType;
     }
 
     private static long TryGetLength(Stream input)
