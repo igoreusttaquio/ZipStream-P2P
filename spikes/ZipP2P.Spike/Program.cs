@@ -1,24 +1,21 @@
 ﻿using System.Diagnostics;
-using DataChannelDotnet;
 using DataChannelDotnet.Data;
-using DataChannelDotnet.Impl;
+using ZipP2P.P2P;
 
-// Spike Fase 2 (libdatachannel): medir vazão de DataChannel em loopback in-process.
+// Spike Fase 2 (libdatachannel): validar ITransport + LibDataChannelTransport em loopback,
+// medindo vazão de chunks binários.
 
 const int MessageSize = 64 * 1024;
 const long TotalBytes = 256L * 1024 * 1024;
 
-var offerer = new RtcPeerConnection(new RtcPeerConfiguration());
-var answerer = new RtcPeerConnection(new RtcPeerConfiguration());
+await using var offerer = new LibDataChannelTransport(new RtcPeerConfiguration());
+await using var answerer = new LibDataChannelTransport(new RtcPeerConfiguration());
 
-// Ponte de sinalização (loopback): SDP e candidatos trocados diretamente entre os peers.
-offerer.OnLocalDescriptionSafe += (_, desc) => answerer.SetRemoteDescription(desc);
-answerer.OnLocalDescriptionSafe += (_, desc) => offerer.SetRemoteDescription(desc);
-offerer.OnCandidateSafe += (_, cand) => answerer.AddRemoteCandidate(cand);
-answerer.OnCandidateSafe += (_, cand) => offerer.AddRemoteCandidate(cand);
-
-offerer.OnConnectionStateChange += (_, s) => Console.WriteLine($"[offerer] conn={s}");
-answerer.OnConnectionStateChange += (_, s) => Console.WriteLine($"[answerer] conn={s}");
+// Ponte de sinalização (loopback): SDP e candidatos trocados diretamente entre os transportes.
+offerer.LocalDescriptionReady += d => answerer.OnRemoteDescription(d);
+answerer.LocalDescriptionReady += d => offerer.OnRemoteDescription(d);
+offerer.LocalCandidateReady += c => answerer.OnRemoteCandidate(c);
+answerer.LocalCandidateReady += c => offerer.OnRemoteCandidate(c);
 
 var offererOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 var answererOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -26,25 +23,24 @@ var received = 0L;
 var allReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 var sw = new Stopwatch();
 
-answerer.OnDataChannel += (_, channel) =>
+offerer.Connected += () => { Console.WriteLine("[offerer] connected"); offererOpen.TrySetResult(); };
+answerer.Connected += () => { Console.WriteLine("[answerer] connected"); answererOpen.TrySetResult(); };
+offerer.Disconnected += () => Console.WriteLine("[offerer] disconnected");
+answerer.Disconnected += () => Console.WriteLine("[answerer] disconnected");
+
+answerer.MessageReceived += data =>
 {
-    Console.WriteLine($"[answerer] ondatachannel label={channel.Label}");
-    channel.OnOpen += _ => { Console.WriteLine("[answerer] channel open"); answererOpen.TrySetResult(); };
-    channel.OnBinaryReceivedSafe += (_, data) =>
+    if (received == 0)
+        sw.Start();
+    received += data.Length;
+    if (received >= TotalBytes)
     {
-        if (received == 0)
-            sw.Start();
-        received += data.Data.Length;
-        if (received >= TotalBytes)
-        {
-            sw.Stop();
-            allReceived.TrySetResult();
-        }
-    };
+        sw.Stop();
+        allReceived.TrySetResult();
+    }
 };
 
-var channel = offerer.CreateDataChannel(new RtcCreateDataChannelArgs { Label = "data" });
-channel.OnOpen += _ => { Console.WriteLine("[offerer] channel open"); offererOpen.TrySetResult(); };
+offerer.CreateDataChannel("data");
 
 await Task.WhenAll(offererOpen.Task, answererOpen.Task).WaitAsync(TimeSpan.FromSeconds(15));
 
@@ -58,7 +54,7 @@ long sent = 0;
 while (sent < TotalBytes)
 {
     int length = (int)Math.Min(MessageSize, TotalBytes - sent);
-    channel.Send(buffer.AsSpan(0, length));
+    await offerer.SendAsync(buffer.AsMemory(0, length));
     sent += length;
 }
 
