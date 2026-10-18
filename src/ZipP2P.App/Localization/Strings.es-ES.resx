@@ -13,7 +13,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="App.Title" xml:space="preserve">
-    <value>Zip-P2P</value>
+    <value>ZipStream</value>
+  </data>
+  <data name="App.Tagline" xml:space="preserve">
+    <value>P2P</value>
   </data>
   <data name="Home.DropHint" xml:space="preserve">
     <value>Arrastra archivos aquí o haz clic para elegir</value>
