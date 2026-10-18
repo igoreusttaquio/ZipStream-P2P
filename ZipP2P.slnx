@@ -3,4 +3,7 @@
     <Project Path="src/ZipP2P.App/ZipP2P.App.csproj" />
     <Project Path="src/ZipP2P.Core/ZipP2P.Core.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZipP2P.Core.Tests/ZipP2P.Core.Tests.csproj" />
+  </Folder>
 </Solution>

@@ -158,6 +158,18 @@ Tema escuro, accent em um tom (azul/roxo) para ações; status por cor: verde (P
 
 ---
 
+## 🌍 Internacionalização (i18n)
+
+- **Idiomas:** en-US (base/invariante), pt-BR e es-ES.
+- **Abordagem:** arquivos `.resx` por cultura (`Strings.resx`, `Strings.pt-BR.resx`, `Strings.es-ES.resx`) + `Localizer` (singleton) com `INotifyPropertyChanged` e indexador `this[string key]`, expondo uma propriedade `Culture`. Trocar o idioma dispara `PropertyChanged(null)` para atualizar todas as bindings.
+- **Binding no XAML:** `{Binding [Chave], Source={x:Static local:Localizer.Instance}}`.
+- **Convenção de camadas:**
+  - **Core (biblioteca):** mensagens de exceção **invariantes em inglês** (códigos estáveis, nunca localizadas). A UI mapeia código → mensagem localizada.
+  - **App (UI):** todos os textos visíveis vêm do `Localizer` (nunca hardcoded).
+- **Formatos:** datas/números/bytes sempre via `CultureInfo` ativa (ex: tamanho "4,2 GB" vs "4.2 GB").
+
+---
+
 ## 🔒 Segurança & Performance
 
 1. **E2EE:** A VPS nunca lê o conteúdo. A chave de criptografia de cada sessão é gerada localmente no remetente e embutida no fragment/hash da URL enviada ao destinatário.
