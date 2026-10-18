@@ -78,4 +78,28 @@
   <data name="Settings.Language" xml:space="preserve">
     <value>Idioma</value>
   </data>
+  <data name="Mode.Send" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Mode.Receive" xml:space="preserve">
+    <value>Receber</value>
+  </data>
+  <data name="Label.RoomCode" xml:space="preserve">
+    <value>Código da sala</value>
+  </data>
+  <data name="Status.WaitingForPeer" xml:space="preserve">
+    <value>Aguardando par...</value>
+  </data>
+  <data name="Status.Sending" xml:space="preserve">
+    <value>Enviando...</value>
+  </data>
+  <data name="Status.Receiving" xml:space="preserve">
+    <value>Recebendo...</value>
+  </data>
+  <data name="Action.Send" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Action.Receive" xml:space="preserve">
+    <value>Receber</value>
+  </data>
 </root>

@@ -27,5 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ZipP2P.Core\ZipP2P.Core.csproj" />
+    <ProjectReference Include="..\ZipP2P.P2P\ZipP2P.P2P.csproj" />
   </ItemGroup>
 </Project>

@@ -5,9 +5,12 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DataChannelDotnet.Data;
 using Material.Icons;
 using ZipP2P.App.Localization;
 using ZipP2P.Core.Compression;
+using ZipP2P.P2P;
+using ZipP2P.P2P.Transfer;
 
 namespace ZipP2P.App.ViewModels;
 
@@ -17,13 +20,19 @@ public partial class MainViewModel : ViewModelBase
     private const long MB = 1024 * 1024;
     private const long GB = 1024 * 1024 * 1024;
 
+    private const string SignalingServerUrl = "http://localhost:5000/signaling";
+
     private IStorageProvider? _storage;
     private CancellationTokenSource? _cts;
     private string _statusKey = "Status.Ready";
 
     public MainViewModel()
     {
-        Localizer.Instance.PropertyChanged += (_, _) => RefreshStatus();
+        Localizer.Instance.PropertyChanged += (_, _) =>
+        {
+            RefreshStatus();
+            OnPropertyChanged(nameof(StartButtonLabel));
+        };
         LanguageIndex = DetectLanguageIndex();
         RefreshStatus();
     }
@@ -44,6 +53,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCompressMode))]
     [NotifyPropertyChangedFor(nameof(IsDecompressMode))]
+    [NotifyPropertyChangedFor(nameof(IsSendMode))]
+    [NotifyPropertyChangedFor(nameof(IsReceiveMode))]
+    [NotifyPropertyChangedFor(nameof(IsInputVisible))]
+    [NotifyPropertyChangedFor(nameof(IsOutputVisible))]
+    [NotifyPropertyChangedFor(nameof(IsRoomCodeVisible))]
+    [NotifyPropertyChangedFor(nameof(StartButtonLabel))]
     public partial int ModeIndex { get; set; }
 
     [ObservableProperty]
@@ -75,11 +90,28 @@ public partial class MainViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(StartCommand))]
     public partial bool IsFolderArchive { get; set; }
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand))]
+    public partial string RoomCode { get; set; } = string.Empty;
+
     public bool IsCompressMode => ModeIndex == 0;
 
     public bool IsDecompressMode => ModeIndex == 1;
 
+    public bool IsSendMode => ModeIndex == 2;
+
+    public bool IsReceiveMode => ModeIndex == 3;
+
     public bool IsLightMode => !IsDarkMode;
+
+    public bool IsInputVisible => !IsReceiveMode;
+
+    public bool IsOutputVisible => IsCompressMode || IsDecompressMode;
+
+    public bool IsRoomCodeVisible => IsSendMode || IsReceiveMode;
+
+    public string StartButtonLabel => Localizer.Instance[
+        IsSendMode ? "Action.Send" : IsReceiveMode ? "Action.Receive" : "Action.Start"];
 
     private int SelectedLevel => CompressionPresetIndex switch
     {
@@ -134,6 +166,18 @@ public partial class MainViewModel : ViewModelBase
                 StatusIcon = MaterialIconKind.Unarchive;
                 StatusBrush = AccentStatusBrush;
                 break;
+            case "Status.WaitingForPeer":
+                StatusIcon = MaterialIconKind.HourglassEmpty;
+                StatusBrush = AccentStatusBrush;
+                break;
+            case "Status.Sending":
+                StatusIcon = MaterialIconKind.Upload;
+                StatusBrush = AccentStatusBrush;
+                break;
+            case "Status.Receiving":
+                StatusIcon = MaterialIconKind.Download;
+                StatusBrush = AccentStatusBrush;
+                break;
             case "Status.Completed":
                 StatusIcon = MaterialIconKind.CheckCircle;
                 StatusBrush = SuccessBrush;
@@ -170,7 +214,7 @@ public partial class MainViewModel : ViewModelBase
         if (_storage is null)
             return;
 
-        if (IsCompressMode)
+        if (IsCompressMode || IsSendMode)
         {
             var folders = await _storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
@@ -234,9 +278,6 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
     {
-        if (string.IsNullOrWhiteSpace(InputPath) || string.IsNullOrWhiteSpace(OutputPath))
-            return;
-
         _cts = new CancellationTokenSource();
         IsBusy = true;
         ProgressPercent = 0;
@@ -244,43 +285,14 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
-            var progress = new Progress<CompressionProgress>(OnProgress);
-            var options = new CompressionOptions { ChunkSize = 4 * 1024 * 1024, Level = SelectedLevel };
-
-            if (IsCompressMode)
-            {
-                SetStatus("Status.Compressing");
-                await using var output = File.Create(OutputPath);
-
-                if (Directory.Exists(InputPath))
-                {
-                    await FolderCodec.CompressAsync(InputPath, output, options, progress, _cts.Token)
-                        .ConfigureAwait(true);
-                }
-                else
-                {
-                    await using var input = File.OpenRead(InputPath);
-                    await ChunkedCompressor.CompressAsync(input, output, options, progress, _cts.Token)
-                        .ConfigureAwait(true);
-                }
-            }
+            if (IsSendMode)
+                await SendTransferAsync(_cts.Token).ConfigureAwait(true);
+            else if (IsReceiveMode)
+                await ReceiveTransferAsync(_cts.Token).ConfigureAwait(true);
+            else if (IsCompressMode)
+                await CompressLocalAsync(_cts.Token).ConfigureAwait(true);
             else
-            {
-                SetStatus("Status.Decompressing");
-                await using var input = File.OpenRead(InputPath);
-
-                if (IsFolderArchive)
-                {
-                    await FolderCodec.ExtractAsync(input, OutputPath, progress, _cts.Token)
-                        .ConfigureAwait(true);
-                }
-                else
-                {
-                    await using var output = File.Create(OutputPath);
-                    await ChunkedDecompressor.DecompressAsync(input, output, progress, _cts.Token)
-                        .ConfigureAwait(true);
-                }
-            }
+                await DecompressLocalAsync(_cts.Token).ConfigureAwait(true);
 
             ProgressPercent = 100;
             SetStatus("Status.Completed");
@@ -301,8 +313,121 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private bool CanStart() =>
-        !IsBusy && !string.IsNullOrWhiteSpace(InputPath) && !string.IsNullOrWhiteSpace(OutputPath);
+    private bool CanStart()
+    {
+        if (IsBusy)
+            return false;
+        if (IsSendMode)
+            return !string.IsNullOrWhiteSpace(InputPath);
+        if (IsReceiveMode)
+            return !string.IsNullOrWhiteSpace(RoomCode);
+        return !string.IsNullOrWhiteSpace(InputPath) && !string.IsNullOrWhiteSpace(OutputPath);
+    }
+
+    private async Task CompressLocalAsync(CancellationToken cancellationToken)
+    {
+        SetStatus("Status.Compressing");
+        var progress = new Progress<CompressionProgress>(OnProgress);
+        var options = new CompressionOptions { ChunkSize = 4 * 1024 * 1024, Level = SelectedLevel };
+
+        await using var output = File.Create(OutputPath);
+        if (Directory.Exists(InputPath))
+        {
+            await FolderCodec.CompressAsync(InputPath, output, options, progress, cancellationToken)
+                .ConfigureAwait(true);
+        }
+        else
+        {
+            await using var input = File.OpenRead(InputPath);
+            await ChunkedCompressor.CompressAsync(input, output, options, progress, cancellationToken)
+                .ConfigureAwait(true);
+        }
+    }
+
+    private async Task DecompressLocalAsync(CancellationToken cancellationToken)
+    {
+        SetStatus("Status.Decompressing");
+        var progress = new Progress<CompressionProgress>(OnProgress);
+
+        await using var input = File.OpenRead(InputPath);
+        if (IsFolderArchive)
+        {
+            await FolderCodec.ExtractAsync(input, OutputPath, progress, cancellationToken)
+                .ConfigureAwait(true);
+        }
+        else
+        {
+            await using var output = File.Create(OutputPath);
+            await ChunkedDecompressor.DecompressAsync(input, output, progress, cancellationToken)
+                .ConfigureAwait(true);
+        }
+    }
+
+    private async Task SendTransferAsync(CancellationToken cancellationToken)
+    {
+        RoomCode = GenerateRoomCode();
+
+        var transport = new LibDataChannelTransport(new RtcPeerConfiguration());
+        var signaling = new SignalRSignalingClient(SignalingServerUrl);
+        await using var session = new TransferSession(transport);
+        var peer = new PeerConnection(transport, signaling, RoomCode);
+
+        try
+        {
+            var connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            transport.Connected += () => connected.TrySetResult();
+
+            SetStatus("Status.WaitingForPeer");
+            await peer.ConnectAsync(asOfferer: true, cancellationToken).ConfigureAwait(true);
+            await connected.Task.WaitAsync(cancellationToken).ConfigureAwait(true);
+
+            SetStatus("Status.Sending");
+            var progress = new Progress<CompressionProgress>(OnProgress);
+            await session.SendAsync(InputPath, progress, cancellationToken).ConfigureAwait(true);
+        }
+        finally
+        {
+            await peer.DisposeAsync().ConfigureAwait(true);
+        }
+    }
+
+    private async Task ReceiveTransferAsync(CancellationToken cancellationToken)
+    {
+        var transport = new LibDataChannelTransport(new RtcPeerConfiguration());
+        var signaling = new SignalRSignalingClient(SignalingServerUrl);
+        await using var session = new TransferSession(transport);
+        var peer = new PeerConnection(transport, signaling, RoomCode);
+
+        try
+        {
+            var connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            transport.Connected += () => connected.TrySetResult();
+
+            await peer.ConnectAsync(asOfferer: false, cancellationToken).ConfigureAwait(true);
+            await connected.Task.WaitAsync(cancellationToken).ConfigureAwait(true);
+
+            SetStatus("Status.Receiving");
+            var progress = new Progress<CompressionProgress>(OnProgress);
+            var destinationDir = Path.Combine(Path.GetTempPath(), "ZipStream-Recebidos");
+            await session.ReceiveAsync(destinationDir, progress, cancellationToken).ConfigureAwait(true);
+
+            Details = destinationDir;
+        }
+        finally
+        {
+            await peer.DisposeAsync().ConfigureAwait(true);
+        }
+    }
+
+    private static string GenerateRoomCode()
+    {
+        const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        return string.Create(6, 0, (span, _) =>
+        {
+            for (var i = 0; i < span.Length; i++)
+                span[i] = alphabet[Random.Shared.Next(alphabet.Length)];
+        });
+    }
 
     [RelayCommand(CanExecute = nameof(CanCancel))]
     private void Cancel() => _cts?.Cancel();
