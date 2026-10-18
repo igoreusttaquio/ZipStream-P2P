@@ -14,9 +14,12 @@ public sealed class LibDataChannelTransport : ITransport
     private readonly IRtcPeerConnection _peer;
     private IRtcDataChannel? _channel;
 
-    public LibDataChannelTransport(RtcPeerConfiguration configuration)
+    public LibDataChannelTransport(IEnumerable<string>? iceServers = null)
     {
-        ArgumentNullException.ThrowIfNull(configuration);
+        var configuration = new RtcPeerConfiguration
+        {
+            IceServers = (iceServers ?? Array.Empty<string>()).ToList(),
+        };
 
         _peer = new RtcPeerConnection(configuration);
 

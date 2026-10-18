@@ -5,7 +5,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DataChannelDotnet.Data;
 using Material.Icons;
 using ZipP2P.App.Localization;
 using ZipP2P.Core.Compression;
@@ -367,7 +366,7 @@ public partial class MainViewModel : ViewModelBase
     {
         RoomCode = GenerateRoomCode();
 
-        var transport = new LibDataChannelTransport(new RtcPeerConfiguration());
+        var transport = new LibDataChannelTransport();
         var signaling = new SignalRSignalingClient(SignalingServerUrl);
         await using var session = new TransferSession(transport);
         var peer = new PeerConnection(transport, signaling, RoomCode);
@@ -393,7 +392,7 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task ReceiveTransferAsync(CancellationToken cancellationToken)
     {
-        var transport = new LibDataChannelTransport(new RtcPeerConfiguration());
+        var transport = new LibDataChannelTransport();
         var signaling = new SignalRSignalingClient(SignalingServerUrl);
         await using var session = new TransferSession(transport);
         var peer = new PeerConnection(transport, signaling, RoomCode);
