@@ -29,6 +29,11 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
    - **TURN/STUN Server (coturn):** retransmite os dados se o P2P direto for bloqueado por NAT/Firewall.
    - **API & Auth Server:** gerencia usuários, sessões, limites de tamanho e pagamentos.
 
+### Decisões de arquitetura (fixadas)
+1. **Relay-first:** a transferência deve funcionar **sempre via relay** (coturn) como baseline; o P2P direto é uma **otimização** para economizar banda, não um requisito de funcionamento. Isso elimina o risco de bloqueio por NAT/CGNAT/firewall.
+2. **Transporte trocável:** o componente de transporte (WebRTC/SIPSorcery) fica **isolado** atrás de uma interface, para que a troca por `libdatachannel` (ou outro) seja localizada, sem redesenhar o restante.
+3. **Spike como "gate" (Fase 2):** validar o SIPSorcery com teste de 10GB (P2P + relay) **antes** de investir em infraestrutura de produção. Critério de go/no-go: vazão ≥ 50% da banda do enlace e taxa de erro < 1%.
+
 ---
 
 ## 🛠️ Stack Tecnológica Recomendada
@@ -50,7 +55,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
   - **Proxy Reverso / SSL:** Nginx / Caddy com Let's Encrypt.
   - **Pagamentos:** Stripe.NET.
 
-> ⚠️ **Risco a monitorar:** SIPSorcery é a principal lib .NET para WebRTC DataChannel, mas é menos madura que as libs JS/nativas. Plano B: binding nativo do `libdatachannel` (C++) via P/Invoke caso o SIPSorcery não atenda performance/estabilidade no teste de 10GB+.
+> ⚠️ **Risco a monitorar:** SIPSorcery é a principal lib .NET para WebRTC DataChannel, mas é menos madura que as libs JS/nativas. **Plano B:** binding nativo do `libdatachannel` (C++) via P/Invoke caso o SIPSorcery não atenda performance/estabilidade no spike de 10GB+. O transporte fica isolado para tornar a troca localizada.
 
 ---
 
@@ -65,7 +70,16 @@ Objetivo: Compactar/descompactar em tempo real usando buffers de memória sem tr
 - [ ] Implementar verificação de integridade por chunk (SHA-256 incremental).
 - [ ] *Entregável:* App local que compacta/descompacta arquivos grandes gerando stream de blocos, com UI responsiva.
 
-### FASE 2: Infraestrutura da VPS & Protocolo de Sinalização (Signaling)
+### FASE 2: Spike P2P (validação do SIPSorcery) — "gate" do projeto
+Objetivo: Provar que o SIPSorcery sustenta transferência de chunks em alta vazão, antes de qualquer infraestrutura.
+
+- [ ] Loopback in-process (dois `RTCPeerConnection` no mesmo processo) com DataChannel trocando N MB — medir vazão/estabilidade.
+- [ ] Conectar dois processos distintos via signaling mínimo (SDP manual ou SignalR local).
+- [ ] Validar caminho de relay (coturn) além do P2P direto.
+- [ ] Teste de 10GB; documentar vazão, erro e RAM. **go/no-go** documentado.
+- [ ] *Entregável:* evidência de que o transporte aguenta 10GB+ (P2P e relay) ou decisão de trocar para `libdatachannel`.
+
+### FASE 3: Infraestrutura da VPS & Protocolo de Sinalização (Signaling)
 Objetivo: Preparar a VPS para conectar dois clientes e intermediar o handshake de rede.
 
 - [ ] Configurar a VPS (Docker, Nginx/Caddy, Firewall/UFW).
@@ -74,7 +88,7 @@ Objetivo: Preparar a VPS para conectar dois clientes e intermediar o handshake d
 - [ ] Implementar autenticação por chave/sessão temporária (JWT de curta duração).
 - [ ] *Entregável:* VPS com signaling + TURN prontos para estabelecer conexão entre duas instâncias do app.
 
-### FASE 3: Transmissão P2P e Fallback de Relay
+### FASE 4: Transmissão P2P e Fallback de Relay
 Objetivo: Enviar blocos compactados da origem ao destino via WebRTC (ou Relay na VPS).
 
 - [ ] Implementar client WebRTC DataChannels com SIPSorcery no app.
@@ -87,7 +101,7 @@ Objetivo: Enviar blocos compactados da origem ao destino via WebRTC (ou Relay na
 - [ ] Criptografia End-to-End (E2EE) das streams antes da transmissão.
 - [ ] *Entregável:* Envio bem-sucedido de um arquivo de 10GB+ entre duas máquinas distantes.
 
-### FASE 4: Interface do Usuário (UI/UX) & Experiência
+### FASE 5: Interface do Usuário (UI/UX) & Experiência
 Objetivo: App intuitivo, simples e com feedback visual em tempo real.
 
 - [ ] **Tela Principal:** Drag & Drop de arquivos/pastas; seleção de nível de compressão (Velocidade vs. Tamanho).
@@ -95,7 +109,7 @@ Objetivo: App intuitivo, simples e com feedback visual em tempo real.
 - [ ] **Tela de Recebimento:** pré-visualização da estrutura antes de baixar; escolha do diretório e botão "Iniciar".
 - [ ] *Entregável:* Aplicação visualmente pronta e agradável.
 
-### FASE 5: Monetização, Limites & Medição de Banda
+### FASE 6: Monetização, Limites & Medição de Banda
 Objetivo: Implementar modelo freemium / pagamento por envio ou assinatura.
 
 - [ ] Integrar Stripe.NET na VPS.
