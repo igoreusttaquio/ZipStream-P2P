@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ZipP2P.Contracts\ZipP2P.Contracts.csproj" />
+    <ProjectReference Include="..\ZipP2P.Core\ZipP2P.Core.csproj" />
   </ItemGroup>
 
 </Project>

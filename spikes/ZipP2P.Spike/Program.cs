@@ -4,17 +4,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using ZipP2P.P2P;
+using ZipP2P.P2P.Transfer;
 using ZipP2P.Server;
 
-// Spike Fase 2/3: sinalização SignalR (servidor em processo) + dois clientes (offer/answer)
-// trocando chunks via libdatachannel. Valida o fluxo de sinalização ponta a ponta.
+// Spike Fase 3: transferência real de uma pasta via sinalização SignalR + libdatachannel.
 
-const int MessageSize = 64 * 1024;
-const long TotalBytes = 128L * 1024 * 1024;
 const string RoomCode = "ABCD-1234";
 const string ServerUrl = "http://127.0.0.1:5002/signaling";
 
-// 1. Sobe o servidor de sinalização em processo.
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddSignalR();
 builder.WebHost.UseUrls("http://127.0.0.1:5002");
@@ -23,70 +20,57 @@ app.MapHub<SignalingHub>("/signaling");
 await app.StartAsync();
 Console.WriteLine("[server] sinalização em " + ServerUrl);
 
+var sampleDir = Path.Combine(Path.GetTempPath(), "zpp2-sample-" + Guid.NewGuid().ToString("N"));
+var destDir = Path.Combine(Path.GetTempPath(), "zpp2-dest-" + Guid.NewGuid().ToString("N"));
+
 try
 {
-    await using var offerer = CreatePeer();
-    await using var answerer = CreatePeer();
+    // Pasta de exemplo.
+    Directory.CreateDirectory(Path.Combine(sampleDir, "sub"));
+    File.WriteAllText(Path.Combine(sampleDir, "a.txt"), "olá mundo");
+    File.WriteAllText(Path.Combine(sampleDir, "sub", "b.txt"), "arquivo aninhado");
+    var big = new byte[8 * 1024 * 1024];
+    new Random(7).NextBytes(big);
+    File.WriteAllBytes(Path.Combine(sampleDir, "big.bin"), big);
+
+    var offererTransport = new LibDataChannelTransport(new RtcPeerConfiguration());
+    var answererTransport = new LibDataChannelTransport(new RtcPeerConfiguration());
+    await using var offerer = new TransferSession(offererTransport);
+    await using var answerer = new TransferSession(answererTransport);
+    var offererPeer = new PeerConnection(offererTransport, new SignalRSignalingClient(ServerUrl), RoomCode);
+    var answererPeer = new PeerConnection(answererTransport, new SignalRSignalingClient(ServerUrl), RoomCode);
 
     var offererOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     var answererOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    var received = 0L;
-    var allReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    var sw = new Stopwatch();
+    offererTransport.Connected += () => offererOpen.TrySetResult();
+    answererTransport.Connected += () => answererOpen.TrySetResult();
 
-    offerer.Transport.Connected += () => { Console.WriteLine("[offerer] connected"); offererOpen.TrySetResult(); };
-    answerer.Transport.Connected += () => { Console.WriteLine("[answerer] connected"); answererOpen.TrySetResult(); };
-
-    answerer.Transport.MessageReceived += data =>
-    {
-        if (received == 0)
-            sw.Start();
-        received += data.Length;
-        if (received >= TotalBytes)
-        {
-            sw.Stop();
-            allReceived.TrySetResult();
-        }
-    };
-
-    // Offerer entra primeiro (aguarda o par); depois o answerer entra.
-    var offererTask = offerer.ConnectAsync(asOfferer: true);
+    var offererConnect = offererPeer.ConnectAsync(asOfferer: true);
     await Task.Delay(500);
-    await answerer.ConnectAsync(asOfferer: false);
-    await offererTask;
+    await answererPeer.ConnectAsync(asOfferer: false);
+    await offererConnect;
 
     await Task.WhenAll(offererOpen.Task, answererOpen.Task).WaitAsync(TimeSpan.FromSeconds(15));
+    Console.WriteLine("[spike] conectados. Transferindo pasta...");
 
-    Console.WriteLine($"[spike] enviando {TotalBytes / (1024 * 1024)} MB em mensagens de {MessageSize / 1024} KB...");
+    var sw = Stopwatch.StartNew();
+    await Task.WhenAll(
+        offerer.SendAsync(sampleDir),
+        answerer.ReceiveAsync(destDir));
+    sw.Stop();
 
-    var buffer = new byte[MessageSize];
-    new Random(42).NextBytes(buffer);
-
-    sw.Reset();
-    long sent = 0;
-    while (sent < TotalBytes)
-    {
-        int length = (int)Math.Min(MessageSize, TotalBytes - sent);
-        await offerer.Transport.SendAsync(buffer.AsMemory(0, length));
-        sent += length;
-    }
-
-    await allReceived.Task.WaitAsync(TimeSpan.FromSeconds(60));
-
-    double seconds = sw.Elapsed.TotalSeconds;
-    double mbps = received / (1024.0 * 1024.0) / seconds;
-    Console.WriteLine($"[spike] OK: {received / (1024 * 1024)} MB em {seconds:F2}s → {mbps:F1} MB/s");
+    // Verificação.
+    Console.WriteLine($"a.txt = {File.ReadAllText(Path.Combine(destDir, "a.txt"))}");
+    Console.WriteLine($"sub/b.txt = {File.ReadAllText(Path.Combine(destDir, "sub", "b.txt"))}");
+    var receivedBig = File.ReadAllBytes(Path.Combine(destDir, "big.bin"));
+    Console.WriteLine($"big.bin = {receivedBig.Length} bytes, igual = {receivedBig.AsSpan().SequenceEqual(big)}");
+    Console.WriteLine($"[spike] OK em {sw.Elapsed.TotalSeconds:F2}s");
 
     return 0;
 }
 finally
 {
     await app.StopAsync();
-}
-
-PeerConnection CreatePeer()
-{
-    var transport = new LibDataChannelTransport(new RtcPeerConfiguration());
-    var signaling = new SignalRSignalingClient(ServerUrl);
-    return new PeerConnection(transport, signaling, RoomCode);
+    try { Directory.Delete(sampleDir, recursive: true); } catch { }
+    try { Directory.Delete(destDir, recursive: true); } catch { }
 }
