@@ -168,7 +168,7 @@ Tema escuro, accent em um tom (azul/roxo) para ações; status por cor: verde (P
 - Barra de progresso segmentada por chunk (mostra o que já foi confirmado via ACK — base do Resume).
 - Indicador persistente de vazão (`MB/s`) e status de conexão no rodapé (diferencial: streaming em tempo real).
 
-**Ícones:** Material Symbols (https://fonts.google.com/icons). No Avalonia, usar os ícones como vetor via `PathIcon` + `StreamGeometry` (extrair o `d` do SVG em um `ResourceDictionary` `Icons.xaml`), em vez da fonte com ligaduras (suporte a ligaduras é instável no Avalonia). Isso mantém os ícones escaláveis e estilizáveis por `Foreground`.
+**Ícones:** Material Symbols (https://fonts.google.com/icons) via pacote `Material.Icons.Avalonia` (controle `MaterialIcon` + enum `MaterialIconKind`). É a abordagem vetorial (geometry/`StreamGeometry`), não fonte com ligaduras — mantém escalabilidade e estilização por `Foreground`.
 
 ---
 

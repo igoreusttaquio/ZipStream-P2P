@@ -2,30 +2,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ZipP2P.App.ViewModels"
         xmlns:loc="using:ZipP2P.App.Localization"
+        xmlns:icons="using:Material.Icons.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="560"
+        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="660"
         x:Class="ZipP2P.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Width="760" Height="560"
-        MinWidth="640" MinHeight="480"
+        Width="760" Height="660"
+        MinWidth="640" MinHeight="580"
         Title="{Binding [App.Title], Source={x:Static loc:Localizer.Instance}}">
 
     <Design.DataContext>
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" Margin="28" RowSpacing="16">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" Margin="32" RowSpacing="20">
 
-        <!-- Cabeçalho -->
+        <!-- Cabeçalho: título à esquerda, idioma à direita -->
         <DockPanel Grid.Row="0">
             <TextBlock DockPanel.Dock="Left"
                        Text="{Binding [App.Title], Source={x:Static loc:Localizer.Instance}}"
                        FontSize="26" FontWeight="Bold" VerticalAlignment="Center" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="{Binding [Settings.Language], Source={x:Static loc:Localizer.Instance}}"
-                           VerticalAlignment="Center" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <icons:MaterialIcon Kind="Language" IconSize="20" VerticalAlignment="Center" Opacity="0.7" />
                 <ComboBox SelectedIndex="{Binding LanguageIndex}" MinWidth="160">
                     <ComboBoxItem Content="English" />
                     <ComboBoxItem Content="Português (Brasil)" />
@@ -34,61 +34,81 @@
             </StackPanel>
         </DockPanel>
 
-        <!-- Área de drop -->
-        <Border Grid.Row="1" Height="120" CornerRadius="8"
-                BorderThickness="1" BorderBrush="#33FFFFFF" Background="#14FFFFFF">
-            <TextBlock Text="{Binding [Home.DropHint], Source={x:Static loc:Localizer.Instance}}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Opacity="0.7" />
+        <!-- Dropzone -->
+        <Border Grid.Row="1" Height="168" CornerRadius="12"
+                BorderThickness="1.5" BorderBrush="#3AFFFFFF" Background="#12FFFFFF">
+            <StackPanel Orientation="Vertical" Spacing="10"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <icons:MaterialIcon Kind="CloudUpload" IconSize="56"
+                                    HorizontalAlignment="Center" Opacity="0.85" />
+                <TextBlock Text="{Binding [Home.DropHint], Source={x:Static loc:Localizer.Instance}}"
+                           HorizontalAlignment="Center" Opacity="0.7" />
+            </StackPanel>
         </Border>
 
-        <!-- Modo + nível de compressão -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
-            <TextBlock Text="{Binding [Label.Mode], Source={x:Static loc:Localizer.Instance}}"
-                       VerticalAlignment="Center" />
-            <ComboBox SelectedIndex="{Binding ModeIndex}" MinWidth="160">
-                <ComboBoxItem Content="{Binding [Mode.Compress], Source={x:Static loc:Localizer.Instance}}" />
-                <ComboBoxItem Content="{Binding [Mode.Decompress], Source={x:Static loc:Localizer.Instance}}" />
-            </ComboBox>
-            <TextBlock Text="{Binding [Label.CompressionLevel], Source={x:Static loc:Localizer.Instance}}"
-                       VerticalAlignment="Center" Margin="24,0,0,0"
-                       IsVisible="{Binding IsCompressMode}" />
-            <ComboBox SelectedIndex="{Binding CompressionPresetIndex}" MinWidth="160"
-                      IsVisible="{Binding IsCompressMode}">
-                <ComboBoxItem Content="{Binding [Level.Fast], Source={x:Static loc:Localizer.Instance}}" />
-                <ComboBoxItem Content="{Binding [Level.Balanced], Source={x:Static loc:Localizer.Instance}}" />
-                <ComboBoxItem Content="{Binding [Level.Maximum], Source={x:Static loc:Localizer.Instance}}" />
-            </ComboBox>
-        </StackPanel>
+        <!-- Modo + nível de compressão (lado a lado) -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,10,0">
+                <TextBlock Text="{Binding [Label.Mode], Source={x:Static loc:Localizer.Instance}}"
+                           FontSize="12" Opacity="0.7" />
+                <ComboBox SelectedIndex="{Binding ModeIndex}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="{Binding [Mode.Compress], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Mode.Decompress], Source={x:Static loc:Localizer.Instance}}" />
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6" Margin="10,0,0,0"
+                        IsVisible="{Binding IsCompressMode}">
+                <TextBlock Text="{Binding [Label.CompressionLevel], Source={x:Static loc:Localizer.Instance}}"
+                           FontSize="12" Opacity="0.7" />
+                <ComboBox SelectedIndex="{Binding CompressionPresetIndex}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="{Binding [Level.Fast], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Level.Balanced], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Level.Maximum], Source={x:Static loc:Localizer.Instance}}" />
+                </ComboBox>
+            </StackPanel>
+        </Grid>
 
         <!-- Arquivo de entrada -->
-        <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto">
-            <TextBlock Grid.Column="0" Text="{Binding [Label.InputFile], Source={x:Static loc:Localizer.Instance}}"
-                       VerticalAlignment="Center" Margin="0,0,10,0" />
-            <TextBox Grid.Column="1" Text="{Binding InputPath}"
-                     IsReadOnly="True" VerticalContentAlignment="Center" />
-            <Button Grid.Column="2" Margin="10,0,0,0"
-                    Content="{Binding [Action.Browse], Source={x:Static loc:Localizer.Instance}}"
-                    Command="{Binding BrowseInputCommand}" />
-        </Grid>
+        <StackPanel Grid.Row="3" Spacing="6">
+            <TextBlock Text="{Binding [Label.InputFile], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Opacity="0.7" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Text="{Binding InputPath}"
+                         IsReadOnly="True" VerticalContentAlignment="Center" />
+                <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding BrowseInputCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="FolderOpen" IconSize="16" />
+                        <TextBlock Text="{Binding [Action.Browse], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
 
         <!-- Arquivo de saída -->
-        <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
-            <TextBlock Grid.Column="0" Text="{Binding [Label.OutputFile], Source={x:Static loc:Localizer.Instance}}"
-                       VerticalAlignment="Center" Margin="0,0,10,0" />
-            <TextBox Grid.Column="1" Text="{Binding OutputPath}"
-                     IsReadOnly="True" VerticalContentAlignment="Center" />
-            <Button Grid.Column="2" Margin="10,0,0,0"
-                    Content="{Binding [Action.Browse], Source={x:Static loc:Localizer.Instance}}"
-                    Command="{Binding BrowseOutputCommand}" />
-        </Grid>
+        <StackPanel Grid.Row="4" Spacing="6">
+            <TextBlock Text="{Binding [Label.OutputFile], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Opacity="0.7" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Text="{Binding OutputPath}"
+                         IsReadOnly="True" VerticalContentAlignment="Center" />
+                <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding BrowseOutputCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="FolderOpen" IconSize="16" />
+                        <TextBlock Text="{Binding [Action.Browse], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
 
-        <!-- Progresso -->
-        <StackPanel Grid.Row="5" Spacing="8">
+        <!-- Progresso + status -->
+        <StackPanel Grid.Row="5" Spacing="10">
             <ProgressBar Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" Height="8" />
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0" Text="{Binding StatusText}" />
-                <TextBlock Grid.Column="1" Text="{Binding Details}" Opacity="0.7" />
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <icons:MaterialIcon Kind="CheckCircleOutline" IconSize="18" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Details}" Opacity="0.7" VerticalAlignment="Center" />
             </Grid>
         </StackPanel>
 
@@ -97,8 +117,7 @@
             <Button Content="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}"
                     Command="{Binding CancelCommand}" />
             <Button Content="{Binding [Action.Start], Source={x:Static loc:Localizer.Instance}}"
-                    Command="{Binding StartCommand}"
-                    Classes="accent" />
+                    Command="{Binding StartCommand}" Classes="accent" MinWidth="120" />
         </StackPanel>
 
     </Grid>
