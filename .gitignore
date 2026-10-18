@@ -1,0 +1,33 @@
+# Build results
+bin/
+obj/
+[Oo]ut/
+[Pp]ublish/
+*.user
+
+# IDE
+.vs/
+.idea/
+*.suo
+*.userprefs
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Env / secrets
+.env
+*.env
+appsettings.*.local.json
+secrets.json
