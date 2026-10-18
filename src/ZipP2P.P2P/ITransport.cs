@@ -1,17 +1,6 @@
+using ZipP2P.Contracts;
+
 namespace ZipP2P.P2P;
-
-/// <summary>Tipo de descrição SDP (oferta ou resposta).</summary>
-public enum SignalDescriptionType
-{
-    Offer,
-    Answer
-}
-
-/// <summary>Descrição SDP a ser trocada entre os pares via sinalização.</summary>
-public sealed record SignalDescription(string Sdp, SignalDescriptionType Type);
-
-/// <summary>Candidato ICE a ser trocado entre os pares via sinalização.</summary>
-public sealed record SignalCandidate(string Content, string Mid);
 
 /// <summary>
 /// Transporte de dados P2P. Abstrai o backend (ex.: libdatachannel) para que a troca de
