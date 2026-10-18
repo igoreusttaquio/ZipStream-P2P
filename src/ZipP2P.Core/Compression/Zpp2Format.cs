@@ -28,4 +28,41 @@ public static class Zpp2Format
 
     /// <summary>Máximo razoável para evitar "zip bombs" ao descomprimir.</summary>
     public const int MaxChunkSize = 512 * 1024 * 1024;
+
+    private const int TrailerSize = 1 + 8 + 8 + Sha256Length; // type + chunkCount + total + hash
+
+    /// <summary>
+    /// Lê o tamanho original (não comprimido) gravado no trailer, sem consumir o stream.
+    /// Retorna -1 se não for possível (stream não-seekable ou formato inválido).
+    /// </summary>
+    public static long PeekOriginalSize(Stream input)
+    {
+        if (!input.CanSeek)
+            return -1;
+
+        var position = input.Position;
+        try
+        {
+            if (input.Length < TrailerSize)
+                return -1;
+
+            input.Seek(-TrailerSize, SeekOrigin.End);
+
+            Span<byte> trailer = stackalloc byte[1 + 8 + 8];
+            input.ReadExactly(trailer);
+
+            if (trailer[0] != RecordTrailer)
+                return -1;
+
+            return BitConverter.ToInt64(trailer.Slice(1 + 8, 8));
+        }
+        catch
+        {
+            return -1;
+        }
+        finally
+        {
+            input.Position = position;
+        }
+    }
 }

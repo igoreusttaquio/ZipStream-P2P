@@ -18,6 +18,11 @@ public static class ChunkedDecompressor
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
 
+        // Tamanho total para o progresso: prefere o tamanho original (trailer); senão cai para o tamanho do stream.
+        long totalBytes = Zpp2Format.PeekOriginalSize(input);
+        if (totalBytes <= 0)
+            totalBytes = TryGetLength(input);
+
         var reader = new BinaryReader(input, Encoding.UTF8, leaveOpen: true);
 
         int magic = reader.ReadInt32();
@@ -34,8 +39,6 @@ public static class ChunkedDecompressor
 
         byte level = reader.ReadByte();
         byte contentType = reader.ReadByte();
-
-        long totalBytes = TryGetLength(input);
 
         using var decompressor = new ZstdSharp.Decompressor();
         using var globalHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);

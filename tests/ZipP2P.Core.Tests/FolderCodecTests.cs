@@ -33,6 +33,7 @@ public class FolderCodecTests : IDisposable
         File.WriteAllText(Path.Combine(src, "a.txt"), "hello");
         File.WriteAllBytes(Path.Combine(src, "sub", "b.bin"), new byte[4096]);
         File.WriteAllText(Path.Combine(src, "sub", "nested", "c.txt"), "nested content");
+        File.WriteAllBytes(Path.Combine(src, "empty-file.txt"), Array.Empty<byte>()); // arquivo vazio (0 bytes)
         return src;
     }
 
@@ -54,6 +55,31 @@ public class FolderCodecTests : IDisposable
         Assert.Equal(4096, new FileInfo(Path.Combine(dest, "sub", "b.bin")).Length);
         Assert.Equal("nested content", File.ReadAllText(Path.Combine(dest, "sub", "nested", "c.txt")));
         Assert.True(Directory.Exists(Path.Combine(dest, "empty")));
+        Assert.True(File.Exists(Path.Combine(dest, "empty-file.txt")));
+        Assert.Empty(File.ReadAllBytes(Path.Combine(dest, "empty-file.txt")));
+    }
+
+    [Fact]
+    public async Task RoundTrip_Folder_LongAndUnicodeNames()
+    {
+        var src = Path.Combine(_root, "src");
+        Directory.CreateDirectory(src);
+
+        var longName = new string('x', 120) + ".txt"; // >100 caracteres força cabeçalho PAX
+        var unicodeName = "arquivo-com-acentuação-ñ.txt";
+
+        File.WriteAllText(Path.Combine(src, longName), "longo");
+        File.WriteAllText(Path.Combine(src, unicodeName), "unicode");
+
+        using var compressed = new MemoryStream();
+        await FolderCodec.CompressAsync(src, compressed);
+
+        compressed.Position = 0;
+        var dest = Path.Combine(_root, "dest");
+        await FolderCodec.ExtractAsync(compressed, dest);
+
+        Assert.Equal("longo", File.ReadAllText(Path.Combine(dest, longName)));
+        Assert.Equal("unicode", File.ReadAllText(Path.Combine(dest, unicodeName)));
     }
 
     [Fact]

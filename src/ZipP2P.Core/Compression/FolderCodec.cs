@@ -24,6 +24,12 @@ public static class FolderCodec
         if (!Directory.Exists(folderPath))
             throw new DirectoryNotFoundException($"Folder not found: {folderPath}");
 
+        var totalBytes = CalculateTotalSize(folderPath);
+
+        IProgress<CompressionProgress>? effectiveProgress = progress is null
+            ? null
+            : new Progress<CompressionProgress>(p => progress.Report(p with { TotalBytes = totalBytes }));
+
         var pipe = new Pipe(new PipeOptions(
             pauseWriterThreshold: 4 * 1024 * 1024,
             resumeWriterThreshold: 2 * 1024 * 1024));
@@ -41,9 +47,25 @@ public static class FolderCodec
         }, cancellationToken);
 
         var readTask = ChunkedCompressor.CompressAsync(
-            pipe.Reader.AsStream(), output, options, progress, cancellationToken, Zpp2Format.ContentTypeDirectory);
+            pipe.Reader.AsStream(), output, options, effectiveProgress, cancellationToken, Zpp2Format.ContentTypeDirectory);
 
         await Task.WhenAll(writeTask, readTask).ConfigureAwait(false);
+    }
+
+    private static long CalculateTotalSize(string folderPath)
+    {
+        var dir = new DirectoryInfo(folderPath);
+        long total = 0;
+
+        foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
+        {
+            if (file.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                continue;
+
+            total += file.Length;
+        }
+
+        return total;
     }
 
     public static async Task ExtractAsync(
@@ -57,14 +79,33 @@ public static class FolderCodec
 
         Directory.CreateDirectory(destinationDir);
 
-        var pipe = new Pipe(new PipeOptions(
-            pauseWriterThreshold: 4 * 1024 * 1024,
-            resumeWriterThreshold: 2 * 1024 * 1024));
+        // Extrai via arquivo temporário (stream seekable): o TarReader pode retornar
+        // entradas com DataStream nulo ao ler de streams não-seekable (cabeçalhos PAX).
+        var tempPath = Path.Combine(Path.GetTempPath(), $"zpp2-{Guid.NewGuid():N}.tar");
+        try
+        {
+            await using (var temp = new FileStream(
+                tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None, 81920, useAsync: true))
+            {
+                await ChunkedDecompressor
+                    .DecompressAsync(input, temp, progress, cancellationToken)
+                    .ConfigureAwait(false);
 
-        var decompressTask = DecompressAsync(input, pipe.Writer, progress, cancellationToken);
-        var extractTask = ExtractTarAsync(pipe.Reader.AsStream(), destinationDir, cancellationToken);
-
-        await Task.WhenAll(decompressTask, extractTask).ConfigureAwait(false);
+                temp.Position = 0;
+                await ExtractTarAsync(temp, destinationDir, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(tempPath);
+            }
+            catch
+            {
+                // ignora falha de limpeza do temporário
+            }
+        }
     }
 
     /// <summary>Lê o byte de tipo de conteúdo do cabeçalho sem consumir o stream (exige stream seekable).</summary>
@@ -84,21 +125,6 @@ public static class FolderCodec
         finally
         {
             input.Position = position;
-        }
-    }
-
-    private static async Task DecompressAsync(
-        Stream input, PipeWriter writer, IProgress<CompressionProgress>? progress, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await ChunkedDecompressor
-                .DecompressAsync(input, writer.AsStream(), progress, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        finally
-        {
-            await writer.CompleteAsync().ConfigureAwait(false);
         }
     }
 
@@ -160,7 +186,9 @@ public static class FolderCodec
                     await using (var fs = new FileStream(
                         destPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
                     {
-                        await entry.DataStream!.CopyToAsync(fs, cancellationToken).ConfigureAwait(false);
+                        // DataStream é null para arquivos vazios (0 bytes).
+                        if (entry.DataStream is not null)
+                            await entry.DataStream.CopyToAsync(fs, cancellationToken).ConfigureAwait(false);
                     }
                     break;
 
