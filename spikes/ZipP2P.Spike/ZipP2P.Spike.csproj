@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="DataChannelDotnet" Version="1.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZipP2P.P2P\ZipP2P.P2P.csproj" />
+    <ProjectReference Include="..\..\src\ZipP2P.Server\ZipP2P.Server.csproj" />
   </ItemGroup>
 
 </Project>
