@@ -2,13 +2,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ZipP2P.App.App"
              xmlns:local="using:ZipP2P.App"
+             xmlns:materialIcons="using:Material.Icons.Avalonia"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="BorderColorBrush" Color="#E2E8F0" />
+                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A" />
+                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#64748B" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+                    <SolidColorBrush x:Key="LogoBrush" Color="#394149" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1E1E24" />
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#2A2B36" />
+                    <SolidColorBrush x:Key="BorderColorBrush" Color="#3F4050" />
+                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F1F5F9" />
+                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#94A3B8" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
+                    <SolidColorBrush x:Key="LogoBrush" Color="#E2E8F0" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
+        <materialIcons:MaterialIconStyles />
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="MinWidth" Value="120" />
+        </Style>
     </Application.Styles>
 </Application>

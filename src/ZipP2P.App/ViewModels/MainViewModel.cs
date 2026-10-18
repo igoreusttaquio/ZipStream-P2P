@@ -1,5 +1,7 @@
 using System.Globalization;
+using Avalonia;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ZipP2P.App.Localization;
@@ -57,9 +59,19 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public partial string Details { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLightMode))]
+    public partial bool IsDarkMode { get; set; } = true;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand))]
+    public partial bool IsFolderArchive { get; set; }
+
     public bool IsCompressMode => ModeIndex == 0;
 
     public bool IsDecompressMode => ModeIndex == 1;
+
+    public bool IsLightMode => !IsDarkMode;
 
     private int SelectedLevel => CompressionPresetIndex switch
     {
@@ -70,10 +82,34 @@ public partial class MainViewModel : ViewModelBase
 
     public void SetStorageProvider(IStorageProvider storage) => _storage = storage;
 
+    public void SetInputPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        InputPath = path;
+        UpdateFolderArchive();
+        SuggestOutputPath();
+    }
+
+    [RelayCommand]
+    private void ToggleTheme()
+    {
+        IsDarkMode = !IsDarkMode;
+
+        if (Application.Current is { } app)
+            app.RequestedThemeVariant = IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+    }
+
     partial void OnLanguageIndexChanged(int value)
     {
         if (value >= 0 && value < Localizer.SupportedCultures.Count)
             Localizer.Instance.Culture = Localizer.SupportedCultures[value];
+    }
+
+    partial void OnModeIndexChanged(int value)
+    {
+        IsFolderArchive = false;
     }
 
     private void RefreshStatus() => StatusText = Localizer.Instance[_statusKey];
@@ -90,18 +126,30 @@ public partial class MainViewModel : ViewModelBase
         if (_storage is null)
             return;
 
-        var files = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        if (IsCompressMode)
         {
-            AllowMultiple = false,
-            Title = Localizer.Instance["Home.DropHint"],
-        });
+            var folders = await _storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = Localizer.Instance["Home.DropHint"],
+            });
 
-        var file = files.FirstOrDefault();
-        if (file is null)
-            return;
+            var folder = folders.FirstOrDefault();
+            if (folder is not null)
+                SetInputPath(folder.TryGetLocalPath() ?? folder.Name);
+        }
+        else
+        {
+            var files = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = Localizer.Instance["Home.DropHint"],
+            });
 
-        InputPath = file.TryGetLocalPath() ?? file.Name;
-        SuggestOutputPath();
+            var file = files.FirstOrDefault();
+            if (file is not null)
+                SetInputPath(file.TryGetLocalPath() ?? file.Name);
+        }
     }
 
     [RelayCommand]
@@ -110,14 +158,29 @@ public partial class MainViewModel : ViewModelBase
         if (_storage is null)
             return;
 
-        var file = await _storage.SaveFilePickerAsync(new FilePickerSaveOptions
+        if (IsDecompressMode && IsFolderArchive)
         {
-            SuggestedFileName = SuggestedOutputName(),
-            Title = Localizer.Instance["Action.Browse"],
-        });
+            var folders = await _storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = Localizer.Instance["Action.Browse"],
+            });
 
-        if (file is not null)
-            OutputPath = file.TryGetLocalPath() ?? file.Name;
+            var folder = folders.FirstOrDefault();
+            if (folder is not null)
+                OutputPath = folder.TryGetLocalPath() ?? folder.Name;
+        }
+        else
+        {
+            var file = await _storage.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                SuggestedFileName = SuggestedOutputName(),
+                Title = Localizer.Instance["Action.Browse"],
+            });
+
+            if (file is not null)
+                OutputPath = file.TryGetLocalPath() ?? file.Name;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
@@ -134,29 +197,41 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             var progress = new Progress<CompressionProgress>(OnProgress);
+            var options = new CompressionOptions { ChunkSize = 4 * 1024 * 1024, Level = SelectedLevel };
 
             if (IsCompressMode)
             {
                 SetStatus("Status.Compressing");
-                await using var input = File.OpenRead(InputPath);
                 await using var output = File.Create(OutputPath);
-                await ChunkedCompressor.CompressAsync(
-                    input,
-                    output,
-                    new CompressionOptions { ChunkSize = 4 * 1024 * 1024, Level = SelectedLevel },
-                    progress,
-                    _cts.Token).ConfigureAwait(true);
+
+                if (Directory.Exists(InputPath))
+                {
+                    await FolderCodec.CompressAsync(InputPath, output, options, progress, _cts.Token)
+                        .ConfigureAwait(true);
+                }
+                else
+                {
+                    await using var input = File.OpenRead(InputPath);
+                    await ChunkedCompressor.CompressAsync(input, output, options, progress, _cts.Token)
+                        .ConfigureAwait(true);
+                }
             }
             else
             {
                 SetStatus("Status.Decompressing");
                 await using var input = File.OpenRead(InputPath);
-                await using var output = File.Create(OutputPath);
-                await ChunkedDecompressor.DecompressAsync(
-                    input,
-                    output,
-                    progress,
-                    _cts.Token).ConfigureAwait(true);
+
+                if (IsFolderArchive)
+                {
+                    await FolderCodec.ExtractAsync(input, OutputPath, progress, _cts.Token)
+                        .ConfigureAwait(true);
+                }
+                else
+                {
+                    await using var output = File.Create(OutputPath);
+                    await ChunkedDecompressor.DecompressAsync(input, output, progress, _cts.Token)
+                        .ConfigureAwait(true);
+                }
             }
 
             ProgressPercent = 100;
@@ -192,13 +267,34 @@ public partial class MainViewModel : ViewModelBase
         Details = $"{FormatBytes(p.BytesProcessed)} / {FormatBytes(p.TotalBytes)}";
     }
 
+    private void UpdateFolderArchive()
+    {
+        if (IsDecompressMode && File.Exists(InputPath))
+        {
+            using var stream = File.OpenRead(InputPath);
+            IsFolderArchive = FolderCodec.PeekContentType(stream) == Zpp2Format.ContentTypeDirectory;
+        }
+        else
+        {
+            IsFolderArchive = false;
+        }
+    }
+
     private void SuggestOutputPath()
     {
         if (string.IsNullOrWhiteSpace(InputPath))
             return;
 
-        var dir = Path.GetDirectoryName(InputPath) ?? string.Empty;
-        OutputPath = Path.Combine(dir, SuggestedOutputName());
+        if (IsDecompressMode && IsFolderArchive)
+        {
+            var parent = Path.GetDirectoryName(InputPath) ?? string.Empty;
+            OutputPath = Path.Combine(parent, Path.GetFileNameWithoutExtension(InputPath) + "_extracted");
+        }
+        else
+        {
+            var dir = Path.GetDirectoryName(InputPath) ?? string.Empty;
+            OutputPath = Path.Combine(dir, SuggestedOutputName());
+        }
     }
 
     private string SuggestedOutputName()
@@ -207,7 +303,7 @@ public partial class MainViewModel : ViewModelBase
             return string.Empty;
 
         if (IsCompressMode)
-            return Path.GetFileNameWithoutExtension(InputPath) + ".zpp2";
+            return Path.GetFileName(InputPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) + ".zpp2";
 
         var name = Path.GetFileName(InputPath);
         return name.EndsWith(".zpp2", StringComparison.OrdinalIgnoreCase)
