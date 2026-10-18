@@ -23,7 +23,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
 ```
 
 ### Componentes:
-1. **Desktop Client App:** Avalonia UI + motor de I/O em streaming (chunks), WebRTC (SIPSorcery) e compressão (ZstdSharp).
+1. **Desktop Client App:** Avalonia UI + motor de I/O em streaming (chunks), WebRTC (libdatachannel via DataChannelDotnet) e compressão (ZstdSharp).
 2. **VPS Backend (ASP.NET Core):**
    - **SignalR Hub (Signaling):** estabelece o túnel entre origem e destino (troca de SDP/ICE).
    - **TURN/STUN Server (coturn):** retransmite os dados se o P2P direto for bloqueado por NAT/Firewall.
@@ -31,8 +31,8 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
 
 ### Decisões de arquitetura (fixadas)
 1. **Relay-first:** a transferência deve funcionar **sempre via relay** (coturn) como baseline; o P2P direto é uma **otimização** para economizar banda, não um requisito de funcionamento. Isso elimina o risco de bloqueio por NAT/CGNAT/firewall.
-2. **Transporte trocável:** o componente de transporte (WebRTC/SIPSorcery) fica **isolado** atrás de uma interface, para que a troca por `libdatachannel` (ou outro) seja localizada, sem redesenhar o restante.
-3. **Spike como "gate" (Fase 2):** validar o SIPSorcery com teste de 10GB (P2P + relay) **antes** de investir em infraestrutura de produção. Critério de go/no-go: vazão ≥ 50% da banda do enlace e taxa de erro < 1%.
+2. **Transporte trocável:** o componente de transporte fica **isolado** atrás de uma interface (`ITransport`), para que a troca de backend seja localizada, sem redesenhar o restante.
+3. **Spike como "gate" (Fase 2):** validar o transporte com teste de vazão **antes** de investir em infraestrutura de produção. Resultado do spike (loopback, 256MB): SIPSorcery ~1 MB/s (reprovado) → **libdatachannel via DataChannelDotnet ~39,5 MB/s (aprovado)**.
 
 ---
 
@@ -42,7 +42,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
   - **Framework UI:** Avalonia 11 (XAML-like, MVVM via CommunityToolkit.Mvvm).
   - **Engine de Compressão:** ZstdSharp (zstd) sobre streams/buffers em chunks.
   - **Integridade:** SHA-256 incremental (`System.Security.Cryptography`).
-  - **Comunicação P2P:** SIPSorcery (WebRTC DataChannels) + SignalR client (signaling).
+  - **Comunicação P2P:** libdatachannel (C++, MPL 2.0) via `DataChannelDotnet` (binding .NET, MIT) + SignalR client (signaling).
   - **Pipeline de chunks:** `System.Threading.Channels` (produtor/consumidor, backpressure).
   - **Protocolo binário:** MessagePack-CSharp (framing compacto de chunks).
 
@@ -55,7 +55,7 @@ O sistema utiliza a máquina do remetente como fonte do streaming (sem armazenar
   - **Proxy Reverso / SSL:** Nginx / Caddy com Let's Encrypt.
   - **Pagamentos:** Stripe.NET.
 
-> ⚠️ **Risco a monitorar:** SIPSorcery é a principal lib .NET para WebRTC DataChannel, mas é menos madura que as libs JS/nativas. **Plano B:** binding nativo do `libdatachannel` (C++) via P/Invoke caso o SIPSorcery não atenda performance/estabilidade no spike de 10GB+. O transporte fica isolado para tornar a troca localizada.
+> ✅ **Transporte definido:** o SIPSorcery reprovou no spike (~1 MB/s no loopback — gargalo na janela de recebimento do SCTP). Adotado o **libdatachannel via `DataChannelDotnet`** (binding .NET gerenciado, MIT, empacota os binários nativos win/linux/macOS), que atingiu **~39,5 MB/s** no loopback. O transporte fica isolado em `ITransport` para troca localizada.
 
 ---
 
@@ -70,14 +70,14 @@ Objetivo: Compactar/descompactar em tempo real usando buffers de memória sem tr
 - [ ] Implementar verificação de integridade por chunk (SHA-256 incremental).
 - [ ] *Entregável:* App local que compacta/descompacta arquivos grandes gerando stream de blocos, com UI responsiva.
 
-### FASE 2: Spike P2P (validação do SIPSorcery) — "gate" do projeto
-Objetivo: Provar que o SIPSorcery sustenta transferência de chunks em alta vazão, antes de qualquer infraestrutura.
+### FASE 2: Spike P2P (validação do transporte) — "gate" do projeto
+Objetivo: Provar que o transporte sustenta transferência de chunks em alta vazão, antes de qualquer infraestrutura.
 
-- [ ] Loopback in-process (dois `RTCPeerConnection` no mesmo processo) com DataChannel trocando N MB — medir vazão/estabilidade.
-- [ ] Conectar dois processos distintos via signaling mínimo (SDP manual ou SignalR local).
-- [ ] Validar caminho de relay (coturn) além do P2P direto.
+- [x] Loopback in-process com DataChannel trocando 256MB — libdatachannel ~39,5 MB/s (SIPSorcery reprovado com ~1 MB/s).
+- [ ] Conectar dois processos distintos via signaling (SDP/candidatos via SignalR local).
+- [ ] Validar caminho de relay (coturn/TURN) além do P2P direto.
 - [ ] Teste de 10GB; documentar vazão, erro e RAM. **go/no-go** documentado.
-- [ ] *Entregável:* evidência de que o transporte aguenta 10GB+ (P2P e relay) ou decisão de trocar para `libdatachannel`.
+- [ ] *Entregável:* evidência de que o transporte aguenta 10GB+ (P2P e relay).
 
 ### FASE 3: Infraestrutura da VPS & Protocolo de Sinalização (Signaling)
 Objetivo: Preparar a VPS para conectar dois clientes e intermediar o handshake de rede.
