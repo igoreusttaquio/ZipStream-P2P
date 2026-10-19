@@ -1,5 +1,4 @@
-ï»¿using System.Diagnostics;
-using DataChannelDotnet.Data;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +6,7 @@ using ZipP2P.P2P;
 using ZipP2P.P2P.Transfer;
 using ZipP2P.Server;
 
-// Spike Fase 3: transferÃªncia real de uma pasta via sinalizaÃ§Ã£o SignalR + libdatachannel.
+// Spike Fase 3: transferência real de uma pasta via sinalização SignalR + libdatachannel.
 
 const string RoomCode = "ABCD-1234";
 const string ServerUrl = "http://127.0.0.1:5002/signaling";
@@ -18,7 +17,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:5002");
 var app = builder.Build();
 app.MapHub<SignalingHub>("/signaling");
 await app.StartAsync();
-Console.WriteLine("[server] sinalizaÃ§Ã£o em " + ServerUrl);
+Console.WriteLine("[server] sinalização em " + ServerUrl);
 
 var sampleDir = Path.Combine(Path.GetTempPath(), "zpp2-sample-" + Guid.NewGuid().ToString("N"));
 var destDir = Path.Combine(Path.GetTempPath(), "zpp2-dest-" + Guid.NewGuid().ToString("N"));
@@ -27,14 +26,14 @@ try
 {
     // Pasta de exemplo.
     Directory.CreateDirectory(Path.Combine(sampleDir, "sub"));
-    File.WriteAllText(Path.Combine(sampleDir, "a.txt"), "olÃ¡ mundo");
+    File.WriteAllText(Path.Combine(sampleDir, "a.txt"), "olá mundo");
     File.WriteAllText(Path.Combine(sampleDir, "sub", "b.txt"), "arquivo aninhado");
     var big = new byte[8 * 1024 * 1024];
     new Random(7).NextBytes(big);
     File.WriteAllBytes(Path.Combine(sampleDir, "big.bin"), big);
 
-    var offererTransport = new LibDataChannelTransport(new RtcPeerConfiguration());
-    var answererTransport = new LibDataChannelTransport(new RtcPeerConfiguration());
+    var offererTransport = new LibDataChannelTransport();
+    var answererTransport = new LibDataChannelTransport();
     await using var offerer = new TransferSession(offererTransport);
     await using var answerer = new TransferSession(answererTransport);
     var offererPeer = new PeerConnection(offererTransport, new SignalRSignalingClient(ServerUrl), RoomCode);
@@ -59,7 +58,7 @@ try
         answerer.ReceiveAsync(destDir));
     sw.Stop();
 
-    // VerificaÃ§Ã£o.
+    // Verificação.
     Console.WriteLine($"a.txt = {File.ReadAllText(Path.Combine(destDir, "a.txt"))}");
     Console.WriteLine($"sub/b.txt = {File.ReadAllText(Path.Combine(destDir, "sub", "b.txt"))}");
     var receivedBig = File.ReadAllBytes(Path.Combine(destDir, "big.bin"));

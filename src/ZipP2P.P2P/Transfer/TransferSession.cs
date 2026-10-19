@@ -2,17 +2,23 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using ZipP2P.Core.Compression;
+using ZipP2P.Core.Security;
 
 namespace ZipP2P.P2P.Transfer;
 
 /// <summary>
-/// Sessão de transferência em uma direção: compacta e envia (lado remetente) ou
-/// recebe e descomprime (lado destinatário). Inscreve-se no transporte no construtor,
-/// para não perder mensagens que cheguem antes do início da recepção.
+/// Sessão de transferência em uma direção com criptografia ponta a ponta (E2EE).
+/// Compacta e envia (remetente) ou recebe e descomprime (destinatário).
+/// A chave de sessão é negociada via ECDH sobre o próprio DataChannel, e cada
+/// chunk (e o cabeçalho) é cifrado com AES-256-GCM — o relay/servidor nunca vê o conteúdo.
 /// </summary>
 public sealed class TransferSession : IAsyncDisposable
 {
     private const int ChunkSize = 64 * 1024;
+
+    private const byte TypePublicKey = 0x01;
+    private const byte TypeHeader = 0x02;
+    private const byte TypeChunk = 0x03;
 
     private readonly ITransport _transport;
     private readonly Channel<ReadOnlyMemory<byte>> _incoming = Channel.CreateUnbounded<ReadOnlyMemory<byte>>(
@@ -26,9 +32,11 @@ public sealed class TransferSession : IAsyncDisposable
 
     public ITransport Transport => _transport;
 
-    /// <summary>Compacta <paramref name="inputPath"/> (arquivo ou pasta) e envia pelo canal.</summary>
+    /// <summary>Compacta <paramref name="inputPath"/> (arquivo ou pasta) e envia cifrado.</summary>
     public async Task SendAsync(string inputPath, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
     {
+        var cipher = await EstablishKeyAsync(cancellationToken).ConfigureAwait(false);
+
         var isFolder = Directory.Exists(inputPath);
         var contentType = isFolder ? Zpp2Format.ContentTypeDirectory : Zpp2Format.ContentTypeFile;
         var fileName = Path.GetFileName(inputPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
@@ -49,13 +57,13 @@ public sealed class TransferSession : IAsyncDisposable
 
             var size = new FileInfo(tempPath).Length;
             var header = JsonSerializer.Serialize(new TransferHeader(fileName, size, contentType));
-            await _transport.SendAsync(Encoding.UTF8.GetBytes(header), cancellationToken).ConfigureAwait(false);
+            await SendTypedAsync(TypeHeader, cipher.Encrypt(Encoding.UTF8.GetBytes(header)), cancellationToken).ConfigureAwait(false);
 
             var buffer = new byte[ChunkSize];
             await using var fileStream = File.OpenRead(tempPath);
             int read;
             while ((read = await fileStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
-                await _transport.SendAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                await SendTypedAsync(TypeChunk, cipher.Encrypt(buffer.AsSpan(0, read)), cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -70,13 +78,15 @@ public sealed class TransferSession : IAsyncDisposable
         }
     }
 
-    /// <summary>Recebe e descomprime para <paramref name="destinationDir"/>.</summary>
+    /// <summary>Recebe, decifra e descomprime para <paramref name="destinationDir"/>.</summary>
     public async Task ReceiveAsync(string destinationDir, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(destinationDir);
 
-        var headerMessage = await _incoming.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-        var header = JsonSerializer.Deserialize<TransferHeader>(headerMessage.Span)
+        var cipher = await EstablishKeyAsync(cancellationToken).ConfigureAwait(false);
+
+        var headerBytes = await ReadTypedAsync(TypeHeader, cancellationToken).ConfigureAwait(false);
+        var header = JsonSerializer.Deserialize<TransferHeader>(cipher.Decrypt(headerBytes.Span))
             ?? throw new InvalidDataException("Invalid transfer header.");
 
         var tempPath = Path.Combine(Path.GetTempPath(), $"zpp2-recv-{Guid.NewGuid():N}.zpp2");
@@ -87,7 +97,8 @@ public sealed class TransferSession : IAsyncDisposable
             {
                 while (written < header.Size)
                 {
-                    var chunk = await _incoming.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    var encrypted = await ReadTypedAsync(TypeChunk, cancellationToken).ConfigureAwait(false);
+                    var chunk = cipher.Decrypt(encrypted.Span);
                     await temp.WriteAsync(chunk, cancellationToken).ConfigureAwait(false);
                     written += chunk.Length;
                 }
@@ -116,6 +127,32 @@ public sealed class TransferSession : IAsyncDisposable
                 // ignora falha de limpeza do temporário
             }
         }
+    }
+
+    private async Task<ChunkCipher> EstablishKeyAsync(CancellationToken cancellationToken)
+    {
+        using var agreement = new KeyAgreement();
+        await SendTypedAsync(TypePublicKey, agreement.PublicKey, cancellationToken).ConfigureAwait(false);
+
+        var otherKey = await ReadTypedAsync(TypePublicKey, cancellationToken).ConfigureAwait(false);
+        return new ChunkCipher(agreement.DeriveKey(otherKey.Span));
+    }
+
+    private async Task SendTypedAsync(byte type, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    {
+        var message = new byte[1 + payload.Length];
+        message[0] = type;
+        payload.CopyTo(message.AsMemory(1));
+        await _transport.SendAsync(message, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<ReadOnlyMemory<byte>> ReadTypedAsync(byte expectedType, CancellationToken cancellationToken)
+    {
+        var message = await _incoming.Reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        if (message.Length < 1 || message.Span[0] != expectedType)
+            throw new InvalidDataException($"Unexpected message type 0x{message.Span[0]:X2} (expected 0x{expectedType:X2}).");
+
+        return message[1..];
     }
 
     public ValueTask DisposeAsync() => _transport.DisposeAsync();
