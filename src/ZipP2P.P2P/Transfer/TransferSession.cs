@@ -7,10 +7,9 @@ using ZipP2P.Core.Security;
 namespace ZipP2P.P2P.Transfer;
 
 /// <summary>
-/// Sessão de transferência em uma direção com criptografia ponta a ponta (E2EE).
-/// Compacta e envia (remetente) ou recebe e descomprime (destinatário).
-/// A chave de sessão é negociada via ECDH sobre o próprio DataChannel, e cada
-/// chunk (e o cabeçalho) é cifrado com AES-256-GCM — o relay/servidor nunca vê o conteúdo.
+/// Sessão de transferência em uma direção com criptografia ponta a ponta (E2EE)
+/// e suporte a retomada (resume). Compacta e envia (remetente) ou recebe e
+/// descomprime (destinatário). A chave é negociada via ECDH sobre o DataChannel.
 /// </summary>
 public sealed class TransferSession : IAsyncDisposable
 {
@@ -19,6 +18,7 @@ public sealed class TransferSession : IAsyncDisposable
     private const byte TypePublicKey = 0x01;
     private const byte TypeHeader = 0x02;
     private const byte TypeChunk = 0x03;
+    private const byte TypeResumeOffset = 0x04;
 
     private readonly ITransport _transport;
     private readonly Channel<ReadOnlyMemory<byte>> _incoming = Channel.CreateUnbounded<ReadOnlyMemory<byte>>(
@@ -35,10 +35,11 @@ public sealed class TransferSession : IAsyncDisposable
     /// <summary>Disparado quando o código de verificação (SAS) é derivado — exibir para o usuário conferir.</summary>
     public event Action<string>? SasReady;
 
-    /// <summary>Compacta <paramref name="inputPath"/> (arquivo ou pasta) e envia cifrado.</summary>
+    /// <summary>Compacta <paramref name="inputPath"/> e envia, retomando do offset informado pelo destinatário.</summary>
     public async Task SendAsync(string inputPath, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         var cipher = await EstablishKeyAsync(cancellationToken).ConfigureAwait(false);
+        var resumeOffset = await ReadResumeOffsetAsync(cancellationToken).ConfigureAwait(false);
 
         var isFolder = Directory.Exists(inputPath);
         var contentType = isFolder ? Zpp2Format.ContentTypeDirectory : Zpp2Format.ContentTypeFile;
@@ -64,6 +65,8 @@ public sealed class TransferSession : IAsyncDisposable
 
             var buffer = new byte[ChunkSize];
             await using var fileStream = File.OpenRead(tempPath);
+            fileStream.Seek(Math.Min(resumeOffset, size), SeekOrigin.Begin);
+
             int read;
             while ((read = await fileStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
                 await SendTypedAsync(TypeChunk, cipher.Encrypt(buffer.AsSpan(0, read)), cancellationToken).ConfigureAwait(false);
@@ -81,23 +84,44 @@ public sealed class TransferSession : IAsyncDisposable
         }
     }
 
-    /// <summary>Recebe, decifra e descomprime para <paramref name="destinationDir"/>.</summary>
-    public async Task ReceiveAsync(string destinationDir, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Recebe, decifra e descomprime para <paramref name="destinationDir"/>.
+    /// Se <paramref name="partialFilePath"/> existir, retoma de onde parou (resume).
+    /// </summary>
+    public async Task ReceiveAsync(string destinationDir, string? partialFilePath = null, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(destinationDir);
 
         var cipher = await EstablishKeyAsync(cancellationToken).ConfigureAwait(false);
 
+        long resumeOffset;
+        string tempPath;
+        var keepPartial = !string.IsNullOrEmpty(partialFilePath);
+
+        if (keepPartial && File.Exists(partialFilePath))
+        {
+            resumeOffset = new FileInfo(partialFilePath).Length;
+            tempPath = partialFilePath!;
+        }
+        else
+        {
+            resumeOffset = 0;
+            tempPath = Path.Combine(Path.GetTempPath(), $"zpp2-recv-{Guid.NewGuid():N}.zpp2");
+        }
+
+        await SendResumeOffsetAsync(resumeOffset, cancellationToken).ConfigureAwait(false);
+
         var headerBytes = await ReadTypedAsync(TypeHeader, cancellationToken).ConfigureAwait(false);
         var header = JsonSerializer.Deserialize<TransferHeader>(cipher.Decrypt(headerBytes.Span))
             ?? throw new InvalidDataException("Invalid transfer header.");
 
-        var tempPath = Path.Combine(Path.GetTempPath(), $"zpp2-recv-{Guid.NewGuid():N}.zpp2");
         try
         {
-            long written = 0;
-            await using (var temp = File.Create(tempPath))
+            long written = resumeOffset;
+            await using (var temp = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 81920, useAsync: true))
             {
+                temp.Seek(resumeOffset, SeekOrigin.Begin);
+
                 while (written < header.Size)
                 {
                     var encrypted = await ReadTypedAsync(TypeChunk, cancellationToken).ConfigureAwait(false);
@@ -121,13 +145,16 @@ public sealed class TransferSession : IAsyncDisposable
         }
         finally
         {
-            try
+            if (!keepPartial)
             {
-                File.Delete(tempPath);
-            }
-            catch
-            {
-                // ignora falha de limpeza do temporário
+                try
+                {
+                    File.Delete(tempPath);
+                }
+                catch
+                {
+                    // ignora falha de limpeza do temporário
+                }
             }
         }
     }
@@ -143,6 +170,15 @@ public sealed class TransferSession : IAsyncDisposable
         SasReady?.Invoke(SasCode.Compute(agreement.PublicKey, otherKey.Span, key));
 
         return new ChunkCipher(key);
+    }
+
+    private async Task SendResumeOffsetAsync(long offset, CancellationToken cancellationToken)
+        => await SendTypedAsync(TypeResumeOffset, BitConverter.GetBytes(offset), cancellationToken).ConfigureAwait(false);
+
+    private async Task<long> ReadResumeOffsetAsync(CancellationToken cancellationToken)
+    {
+        var payload = await ReadTypedAsync(TypeResumeOffset, cancellationToken).ConfigureAwait(false);
+        return BitConverter.ToInt64(payload.Span);
     }
 
     private async Task SendTypedAsync(byte type, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
