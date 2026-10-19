@@ -125,6 +125,13 @@
                        FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
             <TextBox Text="{Binding RoomCode}" IsReadOnly="{Binding IsSendMode}"
                      VerticalContentAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsSasVisible}">
+                <icons:MaterialIcon Kind="Lock" Width="16" Height="16" VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentBrush}" />
+                <TextBlock Text="{Binding [Label.SecurityCode], Source={x:Static loc:Localizer.Instance}}"
+                           Foreground="{DynamicResource SecondaryTextBrush}" />
+                <TextBlock Text="{Binding SasCode}" FontWeight="Bold" />
+            </StackPanel>
         </StackPanel>
 
         <!-- Progresso + status -->

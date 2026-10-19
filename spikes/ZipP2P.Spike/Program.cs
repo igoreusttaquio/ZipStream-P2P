@@ -6,7 +6,7 @@ using ZipP2P.P2P;
 using ZipP2P.P2P.Transfer;
 using ZipP2P.Server;
 
-// Spike Fase 3: transferência real de uma pasta via sinalização SignalR + libdatachannel.
+// Spike Fase 3: transferï¿½ncia real de uma pasta via sinalizaï¿½ï¿½o SignalR + libdatachannel.
 
 const string RoomCode = "ABCD-1234";
 const string ServerUrl = "http://127.0.0.1:5002/signaling";
@@ -17,7 +17,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:5002");
 var app = builder.Build();
 app.MapHub<SignalingHub>("/signaling");
 await app.StartAsync();
-Console.WriteLine("[server] sinalização em " + ServerUrl);
+Console.WriteLine("[server] sinalizaï¿½ï¿½o em " + ServerUrl);
 
 var sampleDir = Path.Combine(Path.GetTempPath(), "zpp2-sample-" + Guid.NewGuid().ToString("N"));
 var destDir = Path.Combine(Path.GetTempPath(), "zpp2-dest-" + Guid.NewGuid().ToString("N"));
@@ -26,7 +26,7 @@ try
 {
     // Pasta de exemplo.
     Directory.CreateDirectory(Path.Combine(sampleDir, "sub"));
-    File.WriteAllText(Path.Combine(sampleDir, "a.txt"), "olá mundo");
+    File.WriteAllText(Path.Combine(sampleDir, "a.txt"), "olï¿½ mundo");
     File.WriteAllText(Path.Combine(sampleDir, "sub", "b.txt"), "arquivo aninhado");
     var big = new byte[8 * 1024 * 1024];
     new Random(7).NextBytes(big);
@@ -36,6 +36,9 @@ try
     var answererTransport = new LibDataChannelTransport();
     await using var offerer = new TransferSession(offererTransport);
     await using var answerer = new TransferSession(answererTransport);
+    string? offererSas = null, answererSas = null;
+    offerer.SasReady += s => { offererSas = s; Console.WriteLine($"[offerer] SAS = {s}"); };
+    answerer.SasReady += s => { answererSas = s; Console.WriteLine($"[answerer] SAS = {s}"); };
     var offererPeer = new PeerConnection(offererTransport, new SignalRSignalingClient(ServerUrl), RoomCode);
     var answererPeer = new PeerConnection(answererTransport, new SignalRSignalingClient(ServerUrl), RoomCode);
 
@@ -58,11 +61,12 @@ try
         answerer.ReceiveAsync(destDir));
     sw.Stop();
 
-    // Verificação.
+    // Verificaï¿½ï¿½o.
     Console.WriteLine($"a.txt = {File.ReadAllText(Path.Combine(destDir, "a.txt"))}");
     Console.WriteLine($"sub/b.txt = {File.ReadAllText(Path.Combine(destDir, "sub", "b.txt"))}");
     var receivedBig = File.ReadAllBytes(Path.Combine(destDir, "big.bin"));
     Console.WriteLine($"big.bin = {receivedBig.Length} bytes, igual = {receivedBig.AsSpan().SequenceEqual(big)}");
+    Console.WriteLine($"SAS iguais = {offererSas == answererSas} ({offererSas})");
     Console.WriteLine($"[spike] OK em {sw.Elapsed.TotalSeconds:F2}s");
 
     return 0;

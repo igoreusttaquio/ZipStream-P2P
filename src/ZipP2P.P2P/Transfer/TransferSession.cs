@@ -32,6 +32,9 @@ public sealed class TransferSession : IAsyncDisposable
 
     public ITransport Transport => _transport;
 
+    /// <summary>Disparado quando o código de verificação (SAS) é derivado — exibir para o usuário conferir.</summary>
+    public event Action<string>? SasReady;
+
     /// <summary>Compacta <paramref name="inputPath"/> (arquivo ou pasta) e envia cifrado.</summary>
     public async Task SendAsync(string inputPath, IProgress<CompressionProgress>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -135,7 +138,11 @@ public sealed class TransferSession : IAsyncDisposable
         await SendTypedAsync(TypePublicKey, agreement.PublicKey, cancellationToken).ConfigureAwait(false);
 
         var otherKey = await ReadTypedAsync(TypePublicKey, cancellationToken).ConfigureAwait(false);
-        return new ChunkCipher(agreement.DeriveKey(otherKey.Span));
+        var key = agreement.DeriveKey(otherKey.Span);
+
+        SasReady?.Invoke(SasCode.Compute(agreement.PublicKey, otherKey.Span, key));
+
+        return new ChunkCipher(key);
     }
 
     private async Task SendTypedAsync(byte type, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)

@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
@@ -92,6 +93,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartCommand))]
     public partial string RoomCode { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSasVisible))]
+    public partial string SasCode { get; set; } = string.Empty;
+
+    public bool IsSasVisible => !string.IsNullOrWhiteSpace(SasCode);
 
     public bool IsCompressMode => ModeIndex == 0;
 
@@ -281,6 +288,7 @@ public partial class MainViewModel : ViewModelBase
         IsBusy = true;
         ProgressPercent = 0;
         Details = string.Empty;
+        SasCode = string.Empty;
 
         try
         {
@@ -369,6 +377,7 @@ public partial class MainViewModel : ViewModelBase
         var transport = new LibDataChannelTransport();
         var signaling = new SignalRSignalingClient(SignalingServerUrl);
         await using var session = new TransferSession(transport);
+        session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         var peer = new PeerConnection(transport, signaling, RoomCode);
 
         try
@@ -395,6 +404,7 @@ public partial class MainViewModel : ViewModelBase
         var transport = new LibDataChannelTransport();
         var signaling = new SignalRSignalingClient(SignalingServerUrl);
         await using var session = new TransferSession(transport);
+        session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         var peer = new PeerConnection(transport, signaling, RoomCode);
 
         try

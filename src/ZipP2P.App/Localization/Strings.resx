@@ -102,4 +102,7 @@
   <data name="Action.Receive" xml:space="preserve">
     <value>Receive</value>
   </data>
+  <data name="Label.SecurityCode" xml:space="preserve">
+    <value>Security code</value>
+  </data>
 </root>

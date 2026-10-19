@@ -57,4 +57,21 @@ public class SecurityTests
         var encrypted = cipher.Encrypt(ReadOnlySpan<byte>.Empty);
         Assert.Empty(cipher.Decrypt(encrypted));
     }
+
+    [Fact]
+    public void SasCode_IsSymmetricAndShort()
+    {
+        using var alice = new KeyAgreement();
+        using var bob = new KeyAgreement();
+
+        var keyAlice = alice.DeriveKey(bob.PublicKey);
+        var keyBob = bob.DeriveKey(alice.PublicKey);
+
+        var sasAlice = SasCode.Compute(alice.PublicKey, bob.PublicKey, keyAlice);
+        var sasBob = SasCode.Compute(bob.PublicKey, alice.PublicKey, keyBob);
+
+        Assert.Equal(sasAlice, sasBob);
+        Assert.Equal(6, sasAlice.Length);
+        Assert.All(sasAlice, c => Assert.True(char.IsDigit(c)));
+    }
 }
