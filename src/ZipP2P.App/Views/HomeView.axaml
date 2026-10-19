@@ -1,0 +1,130 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="660"
+             x:Class="ZipP2P.App.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="20">
+
+        <!-- Dropzone -->
+        <Grid Grid.Row="0" Height="168"
+              DragDrop.AllowDrop="True"
+              DragDrop.DragOver="OnDragOver"
+              DragDrop.Drop="OnDrop">
+            <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
+                       StrokeDashArray="2,5" StrokeLineCap="Round"
+                       RadiusX="12" RadiusY="12"
+                       Fill="{DynamicResource CardBackgroundBrush}" />
+            <StackPanel Orientation="Vertical" Spacing="10"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <icons:MaterialIcon Kind="CloudUpload" Width="56" Height="56"
+                                    HorizontalAlignment="Center" Opacity="0.85"
+                                    Foreground="{DynamicResource SecondaryTextBrush}" />
+                <TextBlock Text="{Binding [Home.DropHint], Source={x:Static loc:Localizer.Instance}}"
+                           HorizontalAlignment="Center" Opacity="0.8"
+                           Foreground="{DynamicResource SecondaryTextBrush}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Modo + nível de compressão (lado a lado) -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,10,0">
+                <TextBlock Text="{Binding [Label.Mode], Source={x:Static loc:Localizer.Instance}}"
+                           FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                <ComboBox SelectedIndex="{Binding ModeIndex}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="{Binding [Mode.Compress], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Mode.Decompress], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Mode.Send], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Mode.Receive], Source={x:Static loc:Localizer.Instance}}" />
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6" Margin="10,0,0,0"
+                        IsVisible="{Binding IsCompressMode}">
+                <TextBlock Text="{Binding [Label.CompressionLevel], Source={x:Static loc:Localizer.Instance}}"
+                           FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                <ComboBox SelectedIndex="{Binding CompressionPresetIndex}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="{Binding [Level.Fast], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Level.Balanced], Source={x:Static loc:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [Level.Maximum], Source={x:Static loc:Localizer.Instance}}" />
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- Arquivo de entrada -->
+        <StackPanel Grid.Row="2" Spacing="6" IsVisible="{Binding IsInputVisible}">
+            <TextBlock Text="{Binding [Label.InputFile], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" Text="{Binding InputPath}"
+                         IsReadOnly="True" VerticalContentAlignment="Center" />
+                <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding BrowseInputCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="FolderOpen" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Action.Browse], Source={x:Static loc:Localizer.Instance}}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
+
+        <!-- Arquivo de saída (gerado automaticamente) -->
+        <StackPanel Grid.Row="3" Spacing="6" IsVisible="{Binding IsOutputVisible}">
+            <TextBlock Text="{Binding [Label.OutputFile], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+            <TextBox Text="{Binding OutputPath}"
+                     IsReadOnly="True" VerticalContentAlignment="Center" />
+        </StackPanel>
+
+        <!-- Código da sala (Enviar/Receber) -->
+        <StackPanel Grid.Row="3" Spacing="6" IsVisible="{Binding IsRoomCodeVisible}">
+            <TextBlock Text="{Binding [Label.RoomCode], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+            <TextBox Text="{Binding RoomCode}" IsReadOnly="{Binding IsSendMode}"
+                     VerticalContentAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsSasVisible}">
+                <icons:MaterialIcon Kind="Lock" Width="16" Height="16" VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentBrush}" />
+                <TextBlock Text="{Binding [Label.SecurityCode], Source={x:Static loc:Localizer.Instance}}"
+                           Foreground="{DynamicResource SecondaryTextBrush}" />
+                <TextBlock Text="{Binding SasCode}" FontWeight="Bold" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Progresso + status -->
+        <StackPanel Grid.Row="4" Spacing="10">
+            <ProgressBar Value="{Binding ProgressPercent}" Minimum="0" Maximum="100" Height="8" />
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <icons:MaterialIcon Kind="{Binding StatusIcon}" Width="18" Height="18" VerticalAlignment="Center"
+                                        Foreground="{Binding StatusBrush}" />
+                    <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Details}"
+                           Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Ações -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Command="{Binding CancelCommand}" MinWidth="120">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:MaterialIcon Kind="Close" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding StartCommand}" Classes="primary">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:MaterialIcon Kind="Play" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StartButtonLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+    </Grid>
+</UserControl>

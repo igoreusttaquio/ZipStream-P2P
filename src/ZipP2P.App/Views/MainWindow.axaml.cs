@@ -1,6 +1,9 @@
+using System.ComponentModel;
+using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using ZipP2P.App.ViewModels;
 
 namespace ZipP2P.App.Views;
@@ -10,6 +13,43 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.PropertyChanged += OnVmPropertyChanged;
+    }
+
+    private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.CurrentPage))
+            _ = AnimatePageAsync();
+    }
+
+    private async Task AnimatePageAsync()
+    {
+        var animation = new Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(220),
+            Easing = new CubicEaseOut(),
+            Children =
+            {
+                new KeyFrame
+                {
+                    Cue = new Cue(0),
+                    Setters = { new Setter(Visual.OpacityProperty, 0.0) },
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(1),
+                    Setters = { new Setter(Visual.OpacityProperty, 1.0) },
+                },
+            },
+        };
+
+        await animation.RunAsync(PageHost);
     }
 
     protected override void OnOpened(EventArgs e)
@@ -18,26 +58,5 @@ public partial class MainWindow : Window
 
         if (DataContext is MainViewModel vm)
             vm.SetStorageProvider(StorageProvider);
-    }
-
-    private void OnDragOver(object? sender, DragEventArgs e)
-    {
-        e.DragEffects = e.DataTransfer.TryGetFiles()?.Length > 0
-            ? DragDropEffects.Copy
-            : DragDropEffects.None;
-    }
-
-    private void OnDrop(object? sender, DragEventArgs e)
-    {
-        var item = e.DataTransfer.TryGetFiles()?.FirstOrDefault();
-        if (item is null)
-            return;
-
-        var path = item.TryGetLocalPath();
-        if (string.IsNullOrWhiteSpace(path))
-            return;
-
-        if (DataContext is MainViewModel vm)
-            vm.SetInputPath(path);
     }
 }

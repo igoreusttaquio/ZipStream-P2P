@@ -6,9 +6,11 @@ namespace ZipP2P.App;
 public sealed class AppSettings
 {
     public const string DefaultSignalingUrl = "http://localhost:5000/signaling";
+    public const int DefaultPort = 5000;
 
     private const string SignalingUrlKey = "SignalingUrl";
     private const string IceServersKey = "IceServers";
+    private const string PortKey = "Port";
 
     private readonly SettingsStore _store;
 
@@ -21,6 +23,12 @@ public sealed class AppSettings
     {
         get => _store.Get(SignalingUrlKey) ?? DefaultSignalingUrl;
         set => _store.Set(SignalingUrlKey, value);
+    }
+
+    public int Port
+    {
+        get => int.TryParse(_store.Get(PortKey), out var p) ? p : DefaultPort;
+        set => _store.Set(PortKey, value.ToString());
     }
 
     public IReadOnlyList<string> IceServers

@@ -126,4 +126,13 @@
   <data name="Settings.ServerRunning" xml:space="preserve">
     <value>Servidor local</value>
   </data>
+  <data name="Settings.Back" xml:space="preserve">
+    <value>Volver</value>
+  </data>
+  <data name="Settings.Port" xml:space="preserve">
+    <value>Puerto</value>
+  </data>
+  <data name="Settings.ServerUrlHint" xml:space="preserve">
+    <value>URL del servidor remoto al que conectarse (para transferencias por internet)</value>
+  </data>
 </root>

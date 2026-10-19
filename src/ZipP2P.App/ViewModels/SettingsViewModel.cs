@@ -6,9 +6,13 @@ namespace ZipP2P.App.ViewModels;
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly AppSettings _settings;
+    private readonly Action _back;
 
     [ObservableProperty]
     public partial string ServerUrl { get; set; }
+
+    [ObservableProperty]
+    public partial int Port { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsServerStopped))]
@@ -19,16 +23,27 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string ServerStatus { get; set; } = string.Empty;
 
-    public SettingsViewModel(AppSettings settings)
+    public SettingsViewModel(AppSettings settings, Action back)
     {
         _settings = settings;
+        _back = back;
         ServerUrl = settings.SignalingUrl;
+        Port = settings.Port;
         IsServerRunning = EmbeddedSignalingServer.Instance.IsRunning;
         if (IsServerRunning)
             ServerStatus = BuildStatus();
     }
 
-    public void Save() => _settings.SignalingUrl = ServerUrl;
+    [RelayCommand]
+    private void Save()
+    {
+        _settings.SignalingUrl = ServerUrl;
+        _settings.Port = Port;
+        Back();
+    }
+
+    [RelayCommand]
+    private void Back() => _back();
 
     [RelayCommand]
     private async Task ToggleServerAsync()
@@ -41,12 +56,12 @@ public partial class SettingsViewModel : ViewModelBase
         }
         else
         {
-            await EmbeddedSignalingServer.Instance.StartAsync();
+            await EmbeddedSignalingServer.Instance.StartAsync($"http://0.0.0.0:{Port}");
             IsServerRunning = true;
             ServerStatus = BuildStatus();
         }
     }
 
-    private static string BuildStatus()
-        => $"http://{NetworkInfo.GetLocalIpAddress()}:5000/signaling";
+    private string BuildStatus()
+        => $"http://{NetworkInfo.GetLocalIpAddress()}:{Port}/signaling";
 }
