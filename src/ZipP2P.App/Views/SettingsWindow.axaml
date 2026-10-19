@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ZipP2P.App.ViewModels"
+        xmlns:loc="using:ZipP2P.App.Localization"
+        xmlns:icons="using:Material.Icons.Avalonia"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
+        x:Class="ZipP2P.App.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Width="480" Height="320"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        Title="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24" RowSpacing="16">
+
+        <TextBlock Grid.Row="0"
+                   Text="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}"
+                   FontSize="20" FontWeight="Bold" />
+
+        <!-- URL do servidor (conectar a um servidor externo) -->
+        <StackPanel Grid.Row="1" Spacing="6">
+            <TextBlock Text="{Binding [Settings.ServerUrl], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+            <TextBox Text="{Binding ServerUrl}" VerticalContentAlignment="Center" />
+        </StackPanel>
+
+        <!-- Servidor local (transferências na mesma rede) -->
+        <StackPanel Grid.Row="2" Spacing="8">
+            <TextBlock Text="{Binding [Settings.LocalServerHint], Source={x:Static loc:Localizer.Instance}}"
+                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerStopped}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="Play" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Settings.StartServer], Source={x:Static loc:Localizer.Instance}}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerRunning}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="Stop" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Settings.StopServer], Source={x:Static loc:Localizer.Instance}}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="{Binding ServerStatus}" VerticalAlignment="Center" IsVisible="{Binding IsServerRunning}"
+                           Foreground="{DynamicResource AccentBrush}" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Button Content="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}"
+                    Click="OnCancelClick" MinWidth="100" />
+            <Button Content="{Binding [Settings.Save], Source={x:Static loc:Localizer.Instance}}"
+                    Click="OnSaveClick" Classes="primary" />
+        </StackPanel>
+
+    </Grid>
+</Window>

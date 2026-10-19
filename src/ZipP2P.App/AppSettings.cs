@@ -2,29 +2,36 @@ using System.Text.Json;
 
 namespace ZipP2P.App;
 
-/// <summary>Configurações do aplicativo, carregadas de um arquivo settings.json.</summary>
-public sealed record AppSettings
+/// <summary>Acesso tipado às configurações persistidas em SQLite.</summary>
+public sealed class AppSettings
 {
-    /// <summary>URL do servidor de sinalização (SignalR).</summary>
-    public string SignalingUrl { get; init; } = "http://localhost:5000/signaling";
+    public const string DefaultSignalingUrl = "http://localhost:5000/signaling";
 
-    /// <summary>Servidores ICE (STUN/TURN), no formato "stun:host:port" ou "turn:user:pass@host:port".</summary>
-    public List<string> IceServers { get; init; } = new();
+    private const string SignalingUrlKey = "SignalingUrl";
+    private const string IceServersKey = "IceServers";
 
-    public static AppSettings Load(string baseDirectory)
+    private readonly SettingsStore _store;
+
+    public AppSettings(SettingsStore store)
     {
-        var path = Path.Combine(baseDirectory, "settings.json");
-        if (!File.Exists(path))
-            return new AppSettings();
+        _store = store;
+    }
 
-        try
+    public string SignalingUrl
+    {
+        get => _store.Get(SignalingUrlKey) ?? DefaultSignalingUrl;
+        set => _store.Set(SignalingUrlKey, value);
+    }
+
+    public IReadOnlyList<string> IceServers
+    {
+        get
         {
-            var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-        }
-        catch
-        {
-            return new AppSettings();
+            var json = _store.Get(IceServersKey);
+            if (string.IsNullOrEmpty(json))
+                return Array.Empty<string>();
+
+            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
         }
     }
 }

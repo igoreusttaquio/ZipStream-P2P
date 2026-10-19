@@ -105,4 +105,25 @@
   <data name="Label.SecurityCode" xml:space="preserve">
     <value>Security code</value>
   </data>
+  <data name="Settings.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings.ServerUrl" xml:space="preserve">
+    <value>Server URL</value>
+  </data>
+  <data name="Settings.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Settings.LocalServerHint" xml:space="preserve">
+    <value>Local transfers (same network)</value>
+  </data>
+  <data name="Settings.StartServer" xml:space="preserve">
+    <value>Start local server</value>
+  </data>
+  <data name="Settings.StopServer" xml:space="preserve">
+    <value>Stop server</value>
+  </data>
+  <data name="Settings.ServerRunning" xml:space="preserve">
+    <value>Local server</value>
+  </data>
 </root>

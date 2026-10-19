@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using ZipP2P.App.Localization;
+using ZipP2P.App.Views;
 using ZipP2P.Core.Compression;
 using ZipP2P.P2P;
 using ZipP2P.P2P.Transfer;
@@ -20,7 +21,7 @@ public partial class MainViewModel : ViewModelBase
     private const long MB = 1024 * 1024;
     private const long GB = 1024 * 1024 * 1024;
 
-    private readonly AppSettings _settings = AppSettings.Load(AppContext.BaseDirectory);
+    private readonly AppSettings _settings = new(new SettingsStore());
 
     private IStorageProvider? _storage;
     private CancellationTokenSource? _cts;
@@ -35,6 +36,17 @@ public partial class MainViewModel : ViewModelBase
         };
         LanguageIndex = DetectLanguageIndex();
         RefreshStatus();
+
+        EmbeddedSignalingServer.Instance.StateChanged += () => Dispatcher.UIThread.Post(RefreshServerStatus);
+        RefreshServerStatus();
+    }
+
+    private void RefreshServerStatus()
+    {
+        IsServerRunning = EmbeddedSignalingServer.Instance.IsRunning;
+        ServerStatus = IsServerRunning
+            ? $"http://{NetworkInfo.GetLocalIpAddress()}:5000/signaling"
+            : string.Empty;
     }
 
     [ObservableProperty]
@@ -100,6 +112,12 @@ public partial class MainViewModel : ViewModelBase
 
     public bool IsSasVisible => !string.IsNullOrWhiteSpace(SasCode);
 
+    [ObservableProperty]
+    public partial bool IsServerRunning { get; set; }
+
+    [ObservableProperty]
+    public partial string ServerStatus { get; set; } = string.Empty;
+
     public bool IsCompressMode => ModeIndex == 0;
 
     public bool IsDecompressMode => ModeIndex == 1;
@@ -145,6 +163,16 @@ public partial class MainViewModel : ViewModelBase
 
         if (Application.Current is { } app)
             app.RequestedThemeVariant = IsDarkMode ? ThemeVariant.Dark : ThemeVariant.Light;
+    }
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        var window = new SettingsWindow
+        {
+            DataContext = new SettingsViewModel(new AppSettings(new SettingsStore())),
+        };
+        window.Show();
     }
 
     partial void OnLanguageIndexChanged(int value)
@@ -418,7 +446,7 @@ public partial class MainViewModel : ViewModelBase
             SetStatus("Status.Receiving");
             var progress = new Progress<CompressionProgress>(OnProgress);
             var destinationDir = Path.Combine(Path.GetTempPath(), "ZipStream-Recebidos");
-            await session.ReceiveAsync(destinationDir, progress, cancellationToken).ConfigureAwait(true);
+            await session.ReceiveAsync(destinationDir, null, progress, cancellationToken).ConfigureAwait(true);
 
             Details = destinationDir;
         }

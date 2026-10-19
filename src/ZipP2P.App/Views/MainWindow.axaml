@@ -47,6 +47,9 @@
                         <icons:MaterialIcon Kind="WeatherNight" Width="20" Height="20" IsVisible="{Binding IsLightMode}" />
                     </Grid>
                 </Button>
+                <Button Command="{Binding OpenSettingsCommand}" Padding="8" VerticalAlignment="Center">
+                    <icons:MaterialIcon Kind="Cog" Width="20" Height="20" />
+                </Button>
             </StackPanel>
         </Grid>
 

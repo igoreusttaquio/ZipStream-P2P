@@ -10,7 +10,7 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
-    <None Update="settings.json" CopyToOutputDirectory="PreserveNewest" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,10 +24,12 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ZipP2P.Core\ZipP2P.Core.csproj" />
     <ProjectReference Include="..\ZipP2P.P2P\ZipP2P.P2P.csproj" />
+    <ProjectReference Include="..\ZipP2P.Server\ZipP2P.Server.csproj" />
   </ItemGroup>
 </Project>
