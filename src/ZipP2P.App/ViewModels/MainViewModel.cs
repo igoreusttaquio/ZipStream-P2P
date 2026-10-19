@@ -20,7 +20,7 @@ public partial class MainViewModel : ViewModelBase
     private const long MB = 1024 * 1024;
     private const long GB = 1024 * 1024 * 1024;
 
-    private const string SignalingServerUrl = "http://localhost:5000/signaling";
+    private readonly AppSettings _settings = AppSettings.Load(AppContext.BaseDirectory);
 
     private IStorageProvider? _storage;
     private CancellationTokenSource? _cts;
@@ -374,8 +374,8 @@ public partial class MainViewModel : ViewModelBase
     {
         RoomCode = GenerateRoomCode();
 
-        var transport = new LibDataChannelTransport();
-        var signaling = new SignalRSignalingClient(SignalingServerUrl);
+        var transport = new LibDataChannelTransport(_settings.IceServers);
+        var signaling = new SignalRSignalingClient(_settings.SignalingUrl);
         await using var session = new TransferSession(transport);
         session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         var peer = new PeerConnection(transport, signaling, RoomCode);
@@ -401,8 +401,8 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task ReceiveTransferAsync(CancellationToken cancellationToken)
     {
-        var transport = new LibDataChannelTransport();
-        var signaling = new SignalRSignalingClient(SignalingServerUrl);
+        var transport = new LibDataChannelTransport(_settings.IceServers);
+        var signaling = new SignalRSignalingClient(_settings.SignalingUrl);
         await using var session = new TransferSession(transport);
         session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         var peer = new PeerConnection(transport, signaling, RoomCode);

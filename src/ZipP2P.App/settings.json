@@ -1,0 +1,4 @@
+{
+  "SignalingUrl": "http://localhost:5000/signaling",
+  "IceServers": []
+}
