@@ -1,6 +1,5 @@
 name: Release
 
-# Dispara ao criar uma tag "v*" (ex.: v1.0.0), ou manualmente pela aba Actions.
 on:
   push:
     tags:
@@ -15,13 +14,10 @@ jobs:
         include:
           - os: windows-latest
             rid: win-x64
-            ext: zip
           - os: ubuntu-latest
             rid: linux-x64
-            ext: tar.gz
           - os: macos-latest
             rid: osx-x64
-            ext: tar.gz
 
     runs-on: ${{ matrix.os }}
 
@@ -34,28 +30,20 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish
-        run: >
-          dotnet publish src/ZipP2P.App/ZipP2P.App.csproj
-          -c Release
-          -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -o publish/${{ matrix.rid }}
+        run: dotnet publish src/ZipP2P.App/ZipP2P.App.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish/${{ matrix.rid }}
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
-        shell: bash
+        shell: pwsh
         run: |
-          cd publish/${{ matrix.rid }}
-          powershell -NoProfile -Command "Compress-Archive -Path '*' -DestinationPath '../ZipStream-${{ matrix.rid }}.zip'"
+          Compress-Archive -Path "publish/${{ matrix.rid }}/*" -DestinationPath "publish/ZipStream-${{ matrix.rid }}.zip"
 
       - name: Package (Linux/macOS)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
-          cd publish/${{ matrix.rid }}
-          tar -czf ../ZipStream-${{ matrix.rid }}.tar.gz .
+          cd "publish/${{ matrix.rid }}"
+          tar -czf "../ZipStream-${{ matrix.rid }}.tar.gz" .
 
       - name: Release
         uses: softprops/action-gh-release@v2
