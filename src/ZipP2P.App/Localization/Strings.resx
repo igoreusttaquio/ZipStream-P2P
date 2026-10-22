@@ -22,16 +22,16 @@
     <value>Drop files here or click to browse</value>
   </data>
   <data name="Label.InputFile" xml:space="preserve">
-    <value>Input file</value>
+    <value>FILE OR FOLDER</value>
   </data>
   <data name="Label.OutputFile" xml:space="preserve">
     <value>Output file</value>
   </data>
   <data name="Label.Mode" xml:space="preserve">
-    <value>Mode</value>
+    <value>MODE</value>
   </data>
   <data name="Label.CompressionLevel" xml:space="preserve">
-    <value>Compression level</value>
+    <value>COMPRESSION LEVEL</value>
   </data>
   <data name="Mode.Compress" xml:space="preserve">
     <value>Compress</value>
@@ -326,5 +326,8 @@
   </data>
   <data name="Receive.Intro" xml:space="preserve">
     <value>Type the code shown on the sender's screen and choose where to save. The file arrives directly from the other computer.</value>
+  </data>
+  <data name="Tools.InputPlaceholder" xml:space="preserve">
+    <value>Use the buttons on the right or drag an item here</value>
   </data>
 </root>

@@ -41,7 +41,7 @@
                         </Grid>
                     </StackPanel>
 
-                    <Button AutomationProperties.Name="{Binding [Receive.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding ReceiveCommand}" HorizontalAlignment="Center">
+                    <Button AutomationProperties.Name="{Binding [Receive.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding ReceiveCommand}" HorizontalAlignment="Right">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <icons:MaterialIcon Kind="Download" Width="18" Height="18" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding [Receive.Start], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />

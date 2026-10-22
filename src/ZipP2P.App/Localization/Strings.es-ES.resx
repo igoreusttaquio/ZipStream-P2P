@@ -22,16 +22,16 @@
     <value>Arrastra archivos aquí o haz clic para elegir</value>
   </data>
   <data name="Label.InputFile" xml:space="preserve">
-    <value>Archivo de entrada</value>
+    <value>ARCHIVO O CARPETA</value>
   </data>
   <data name="Label.OutputFile" xml:space="preserve">
     <value>Archivo de salida</value>
   </data>
   <data name="Label.Mode" xml:space="preserve">
-    <value>Modo</value>
+    <value>MODO</value>
   </data>
   <data name="Label.CompressionLevel" xml:space="preserve">
-    <value>Nivel de compresión</value>
+    <value>NIVEL DE COMPRESIÓN</value>
   </data>
   <data name="Mode.Compress" xml:space="preserve">
     <value>Comprimir</value>
@@ -326,5 +326,8 @@
   </data>
   <data name="Receive.Intro" xml:space="preserve">
     <value>Escriba el código que aparece en la pantalla de quien envía y elija dónde guardar. El archivo llega directamente del otro equipo.</value>
+  </data>
+  <data name="Tools.InputPlaceholder" xml:space="preserve">
+    <value>Use los botones al lado o arrastre un elemento aquí</value>
   </data>
 </root>

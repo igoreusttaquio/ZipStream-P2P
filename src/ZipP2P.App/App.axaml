@@ -52,7 +52,10 @@
         <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Opacity" Value="0.45" />
         </Style>
+        <!-- Botão de ação principal das abas: mesmo tamanho em todas -->
         <Style Selector="Button.large">
+            <Setter Property="MinWidth" Value="240" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="Padding" Value="22,11" />
             <Setter Property="FontSize" Value="15" />
             <Setter Property="FontWeight" Value="SemiBold" />

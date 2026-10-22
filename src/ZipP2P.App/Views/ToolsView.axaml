@@ -38,7 +38,7 @@
                         <TextBlock Classes="label" Text="{Binding [Label.InputFile], Source={x:Static loc:Localizer.Instance}}" />
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                             <TextBox Grid.Column="0" Text="{Binding InputPath}" IsReadOnly="True" VerticalContentAlignment="Center"
-                                     PlaceholderText="{Binding [Home.DropHint], Source={x:Static loc:Localizer.Instance}}" />
+                                     PlaceholderText="{Binding [Tools.InputPlaceholder], Source={x:Static loc:Localizer.Instance}}" />
                             <Button AutomationProperties.Name="{Binding [Send.PickFile], Source={x:Static loc:Localizer.Instance}}" Grid.Column="1" Command="{Binding PickFileCommand}"
                                     ToolTip.Tip="{Binding [Send.PickFile], Source={x:Static loc:Localizer.Instance}}">
                                 <icons:MaterialIcon Kind="FileOutline" Width="18" Height="18" />

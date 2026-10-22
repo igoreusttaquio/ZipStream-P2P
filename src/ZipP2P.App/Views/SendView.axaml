@@ -61,20 +61,20 @@
             </Border>
 
             <!-- 2. Gerar código e enviar -->
-            <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <StackPanel Spacing="8" HorizontalAlignment="Right">
                 <StackPanel.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                         <Binding Path="HasSelection" />
                         <Binding Path="IsIdle" />
                     </MultiBinding>
                 </StackPanel.IsVisible>
-                <Button AutomationProperties.Name="{Binding [Send.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding SendCommand}" HorizontalAlignment="Center">
+                <Button AutomationProperties.Name="{Binding [Send.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding SendCommand}" HorizontalAlignment="Right">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <icons:MaterialIcon Kind="Send" Width="18" Height="18" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding [Send.Start], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <TextBlock Classes="hint" HorizontalAlignment="Center" TextAlignment="Center"
+                <TextBlock Classes="hint" HorizontalAlignment="Right" TextAlignment="Right"
                            Text="{Binding [Send.StartHint], Source={x:Static loc:Localizer.Instance}}" />
             </StackPanel>
 
