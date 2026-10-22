@@ -9,6 +9,10 @@ public sealed record StartupCommand(string? SendPath, string? ReceiveCode)
 {
     public static StartupCommand None { get; } = new(null, null);
 
+    /// <summary>Resolve caminhos relativos (a outra instância tem outro diretório de trabalho).</summary>
+    public StartupCommand WithAbsolutePaths()
+        => SendPath is null ? this : this with { SendPath = Path.GetFullPath(SendPath) };
+
     public static StartupCommand Parse(IReadOnlyList<string> args)
     {
         for (var i = 0; i < args.Count; i++)

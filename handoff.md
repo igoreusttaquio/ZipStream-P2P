@@ -39,6 +39,7 @@ Aplicativo desktop multiplataforma para **compactar e transferir arquivos/pastas
 - **Sinalização:** no máximo 2 dispositivos por sala; `PeerJoined` também para quem entra depois (necessário na reconexão).
 - **UI em abas** (Enviar/Receber/Ferramentas) com `OperationViewModel` comum (status, progresso, erro amigável + "Ver log"), lista de interrompidos com Retomar/Descartar, pasta de destino escolhida e lembrada.
 - **Log técnico** (`AppLog`, `ILoggerProvider` em memória) com Copiar/Exportar; P2P/WebRTC/sinalização logam via `ILoggerFactory`.
+- **Bandeja + instância única:** `ShutdownMode.OnExplicitShutdown`, `TrayIcon` (Abrir/Sair), fechar a janela só esconde (`AppSettings.CloseToTray`). `SingleInstance` (named pipe `CurrentUserOnly`) repassa `--send`/`--receive` para a instância aberta. `--send` abre `QuickSendWindow` (código copiado automaticamente), sem a janela principal.
 - **Menu de contexto** (`ShellIntegration/`): Windows (HKCU), Linux (Nautilus/Caja/Nemo/Dolphin), macOS (Ação Rápida, experimental, não testada em Mac real). Linha de comando `--send`/`--receive`.
 - **Servidor local embutido:** o app pode hospedar o servidor de sinalização (configurações → iniciar), com indicador no cabeçalho e porta configurável.
 - **Configurações via SQLite** (URL do servidor, porta), editáveis pela UI.
@@ -65,7 +66,6 @@ Teste na mesma rede: uma máquina inicia o servidor local (app → engrenagem �
 
 1. **TURN/relay (coturn):** o código aceita ICE servers (`IceServers` em SQLite via `AppSettings`), mas não há tela nem teste com coturn real. `deploy/docker-compose.yml` tem o coturn pronto.
 2. **Empacotar o app:** instalador (o menu de contexto aponta para o executável atual; depois de instalar, reinstalar a entrada em Configurações).
-3. **Instância única:** cada "Enviar com ZipStream" abre uma nova janela; poderia repassar para a instância aberta.
 4. **Envio a partir da pasta original:** hoje o remetente comprime para um `.zpp2` em cache antes de enviar (precisa de espaço em disco ≈ tamanho comprimido).
 5. **Landing page** (`docs/index.html`) — em melhoria.
 6. **Monetização** (Stripe, cotas) — por último.

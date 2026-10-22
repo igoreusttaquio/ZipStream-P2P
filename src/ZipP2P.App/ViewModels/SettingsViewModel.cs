@@ -31,12 +31,19 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string ServerStatus { get; set; } = string.Empty;
 
+    /// <summary>Fechar a janela mantém o ZipStream na bandeja (salvo na hora).</summary>
+    [ObservableProperty]
+    public partial bool CloseToTray { get; set; }
+
+    partial void OnCloseToTrayChanged(bool value) => _settings.CloseToTray = value;
+
     public SettingsViewModel(AppSettings settings, Action back)
     {
         _settings = settings;
         _back = back;
         ServerUrl = settings.SignalingUrl;
         Port = settings.Port;
+        CloseToTray = settings.CloseToTray;
         IsServerRunning = EmbeddedSignalingServer.Instance.IsRunning;
         if (IsServerRunning)
             ServerStatus = BuildStatus();

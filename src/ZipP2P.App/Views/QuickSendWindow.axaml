@@ -1,0 +1,84 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ZipP2P.App.ViewModels"
+        xmlns:views="using:ZipP2P.App.Views"
+        xmlns:loc="using:ZipP2P.App.Localization"
+        xmlns:icons="using:Material.Icons.Avalonia"
+        x:Class="ZipP2P.App.Views.QuickSendWindow"
+        x:DataType="vm:SendViewModel"
+        Icon="/Assets/zipstream.ico"
+        Title="{Binding [Shell.MenuLabel], Source={x:Static loc:Localizer.Instance}}"
+        Width="400" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="Manual" Topmost="True"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}">
+
+    <!-- Painel compacto do "Enviar com ZipStream": código (já copiado) + progresso. -->
+    <StackPanel Margin="18" Spacing="14">
+
+        <!-- Item -->
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Grid Grid.Column="0" VerticalAlignment="Center">
+                <icons:MaterialIcon Kind="FolderOutline" Width="28" Height="28" IsVisible="{Binding SelectedIsFolder}"
+                                    Foreground="{DynamicResource AccentBrush}" />
+                <icons:MaterialIcon Kind="FileOutline" Width="28" Height="28" IsVisible="{Binding !SelectedIsFolder}"
+                                    Foreground="{DynamicResource AccentBrush}" />
+            </Grid>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SelectedName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="hint" Text="{Binding SelectedSizeText}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Código -->
+        <Border Classes="card" Padding="14" IsVisible="{Binding HasRoomCode}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock Classes="label" Text="{Binding [Send.CodeLabel], Source={x:Static loc:Localizer.Instance}}" />
+                    <SelectableTextBlock Text="{Binding RoomCode}" FontSize="30" FontWeight="Bold" LetterSpacing="5"
+                                         FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"
+                                         Foreground="{DynamicResource AccentBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="ContentCopy" Width="13" Height="13" VerticalAlignment="Center"
+                                            Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <TextBlock Classes="hint" Text="{Binding [QuickSend.Copied], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding CopyCodeCommand}"
+                        AutomationProperties.Name="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}"
+                        ToolTip.Tip="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}">
+                    <icons:MaterialIcon Kind="ContentCopy" Width="16" Height="16" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <views:StatusPanel />
+
+        <!-- Ações -->
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Button Grid.Column="0" Classes="link" HorizontalAlignment="Left" Click="OnOpenMainClick"
+                    AutomationProperties.Name="{Binding [Tray.Open], Source={x:Static loc:Localizer.Instance}}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:MaterialIcon Kind="OpenInNew" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding [Tray.Open], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}"
+                        AutomationProperties.Name="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="Cancel" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnCloseClick" IsVisible="{Binding !IsBusy}" Classes="primary"
+                        AutomationProperties.Name="{Binding [QuickSend.Close], Source={x:Static loc:Localizer.Instance}}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="Close" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [QuickSend.Close], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</Window>

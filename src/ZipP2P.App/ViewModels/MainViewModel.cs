@@ -49,18 +49,12 @@ public partial class MainViewModel : ViewModelBase
         RefreshServerStatus();
     }
 
-    public async Task RunStartupCommandAsync(StartupCommand command)
+    /// <summary>Abre a aba Receber com o código preenchido (linha de comando <c>--receive</c>).</summary>
+    public void ShowReceive(string code)
     {
-        if (command.SendPath is { } path)
-        {
-            AppLog.Instance.CreateLogger("App").LogInformation("Started to send {Path}", path);
-            await Home.SendFromShellAsync(path);
-        }
-        else if (command.ReceiveCode is { } code)
-        {
-            Home.SelectedTab = HomeViewModel.ReceiveTab;
-            Home.Receive.RoomCode = code;
-        }
+        CurrentPage = Home;
+        Home.SelectedTab = HomeViewModel.ReceiveTab;
+        Home.Receive.RoomCode = code;
     }
 
     private void RefreshServerStatus()

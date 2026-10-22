@@ -52,6 +52,15 @@ public partial class SendViewModel : OperationViewModel
 
     public bool HasRoomCode => !string.IsNullOrEmpty(RoomCode);
 
+    /// <summary>Copia o código para a área de transferência assim que é gerado (envio pelo menu de contexto).</summary>
+    public bool CopyCodeAutomatically { get; init; }
+
+    partial void OnRoomCodeChanged(string value)
+    {
+        if (CopyCodeAutomatically && !string.IsNullOrEmpty(value))
+            _ = CopyCodeAsync();
+    }
+
     [ObservableProperty]
     public partial string CopyFeedback { get; set; } = string.Empty;
 

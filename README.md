@@ -8,7 +8,8 @@ Aplicativo desktop multiplataforma (Windows, Linux, macOS) para **compactar e tr
 - **Código de envio** de 6 caracteres para parear os dois lados e **código de segurança (SAS)** para conferir que ninguém está no meio.
 - **Retomada automática:** se a conexão cair, reconecta e continua de onde parou. Funciona inclusive depois de **fechar e reabrir o app** (lista "Envios/Recebimentos interrompidos" → **Retomar**).
 - **Escolha onde salvar** ao receber (padrão: `Downloads`); nunca sobrescreve — usa `nome (1)`, `nome (2)`...
-- **Menu de contexto** "Enviar com ZipStream" no gerenciador de arquivos (Windows; Linux e macOS em melhor esforço).
+- **Menu de contexto** "Enviar com ZipStream" no gerenciador de arquivos (Windows; Linux e macOS em melhor esforço): abre só um painel compacto com o código **já copiado** para a área de transferência.
+- **Fica na bandeja do sistema** (área de notificação no Windows/Linux, barra de menus no macOS): fechar a janela não interrompe transferências; **Sair** fica no menu do ícone. Uma única instância por usuário — novos pedidos vão para a que já está aberta.
 - **Log técnico** com o que aconteceu em cada etapa (conexão, ICE, transferência, erros), com **Copiar** e **Exportar**.
 - **Ferramentas:** compactar/descompactar `.zpp2` localmente, sem rede.
 - Temas claro/escuro e idiomas en-US, pt-BR e es-ES.
@@ -18,7 +19,7 @@ Aplicativo desktop multiplataforma (Windows, Linux, macOS) para **compactar e tr
 ### Enviar
 
 1. Aba **Enviar** → arraste um arquivo ou pasta, ou use **Escolher arquivo** / **Escolher pasta**.
-   (Ou clique com o botão direito no arquivo → **Enviar com ZipStream**.)
+   (Ou clique com o botão direito no arquivo → **Enviar com ZipStream**: aparece um painel no canto da tela com o código já copiado.)
 2. **Gerar código e enviar** → passe o **código de envio** para quem vai receber.
 3. Quando o outro lado conectar, confira se o **código de segurança** é o mesmo nas duas telas.
 
@@ -96,7 +97,7 @@ Linha de comando:
 
 | Argumento | Efeito |
 |---|---|
-| `--send <caminho>` | Abre a aba Enviar com o item e já começa a enviar (usado pelo menu de contexto) |
+| `--send <caminho>` | Abre o painel compacto e já começa a enviar (usado pelo menu de contexto) |
 | `--receive <código>` | Abre a aba Receber com o código preenchido |
 | `<caminho>` | Igual a `--send` |
 
@@ -129,6 +130,13 @@ As configurações ficam em SQLite (`%LOCALAPPDATA%/ZipStream/settings.db`) e s�
 | macOS | Ação Rápida do Automator em `~/Library/Services` | Experimental; melhor com o app em /Applications |
 
 Se o app mudar de lugar, Configurações mostra que a entrada aponta para outra cópia — é só clicar em **Instalar** de novo.
+
+No Linux, o ícone da bandeja usa o protocolo StatusNotifierItem (KDE, Cinnamon, XFCE...); no GNOME é preciso a extensão *AppIndicator*. Sem bandeja, abrir o app de novo traz a janela de volta.
+
+## Problemas comuns
+
+- **"You must install or update .NET" ao abrir (rodando pelo código-fonte):** o app usa os runtimes `Microsoft.NETCore.App` **e** `Microsoft.AspNetCore.App` (servidor embutido). Instalar só o ASP.NET Core de uma versão mais nova que o .NET Runtime quebra a resolução — instale o .NET Runtime da mesma versão (`dotnet --list-runtimes` mostra o que há). Os pacotes do release já trazem o runtime.
+- **"No precompiled XAML found":** build interrompido (ex.: compilar pela linha de comando com o app aberto pelo Visual Studio). Faça *Rebuild*.
 
 ## Testes
 

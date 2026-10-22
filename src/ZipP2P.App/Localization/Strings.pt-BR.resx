@@ -330,4 +330,22 @@
   <data name="Tools.InputPlaceholder" xml:space="preserve">
     <value>Use os botões ao lado ou arraste um item para cá</value>
   </data>
+  <data name="Tray.Open" xml:space="preserve">
+    <value>Abrir ZipStream</value>
+  </data>
+  <data name="Tray.Exit" xml:space="preserve">
+    <value>Sair</value>
+  </data>
+  <data name="QuickSend.Copied" xml:space="preserve">
+    <value>Já copiado — é só colar para quem vai receber</value>
+  </data>
+  <data name="QuickSend.Close" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="Settings.CloseToTray" xml:space="preserve">
+    <value>Manter o ZipStream na bandeja ao fechar a janela</value>
+  </data>
+  <data name="Settings.CloseToTrayHint" xml:space="preserve">
+    <value>As transferências continuam e o “Enviar com ZipStream” abre na hora. Para encerrar, use Sair no menu do ícone da bandeja.</value>
+  </data>
 </root>

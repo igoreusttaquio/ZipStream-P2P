@@ -330,4 +330,22 @@
   <data name="Tools.InputPlaceholder" xml:space="preserve">
     <value>Use the buttons on the right or drag an item here</value>
   </data>
+  <data name="Tray.Open" xml:space="preserve">
+    <value>Open ZipStream</value>
+  </data>
+  <data name="Tray.Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="QuickSend.Copied" xml:space="preserve">
+    <value>Already copied — just paste it to the receiver</value>
+  </data>
+  <data name="QuickSend.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Settings.CloseToTray" xml:space="preserve">
+    <value>Keep ZipStream in the system tray when closing the window</value>
+  </data>
+  <data name="Settings.CloseToTrayHint" xml:space="preserve">
+    <value>Transfers keep running and “Send with ZipStream” opens instantly. Use Exit in the tray icon menu to quit.</value>
+  </data>
 </root>

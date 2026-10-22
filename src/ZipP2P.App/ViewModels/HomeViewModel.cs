@@ -30,11 +30,4 @@ public partial class HomeViewModel : ViewModelBase
         SelectedTab = SendTab;
         Send.SetPath(path);
     }
-
-    /// <summary>Aberto pelo menu de contexto ("Enviar com ZipStream").</summary>
-    public Task SendFromShellAsync(string path)
-    {
-        SelectedTab = SendTab;
-        return Send.SendFromShellAsync(path);
-    }
 }

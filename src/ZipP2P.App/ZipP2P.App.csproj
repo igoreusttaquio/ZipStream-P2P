@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Ícone do executável: aparece no Explorer, na barra de tarefas e no menu de contexto. -->
+    <ApplicationIcon>Assets\zipstream.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

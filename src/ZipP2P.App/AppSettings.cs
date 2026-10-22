@@ -12,6 +12,7 @@ public sealed class AppSettings
     private const string IceServersKey = "IceServers";
     private const string PortKey = "Port";
     private const string DownloadDirectoryKey = "DownloadDirectory";
+    private const string CloseToTrayKey = "CloseToTray";
 
     private readonly SettingsStore _store;
 
@@ -37,6 +38,13 @@ public sealed class AppSettings
     {
         get => _store.Get(DownloadDirectoryKey) is { Length: > 0 } dir ? dir : DefaultDownloadDirectory;
         set => _store.Set(DownloadDirectoryKey, value);
+    }
+
+    /// <summary>Fechar a janela principal mantém o app na bandeja (padrão: sim).</summary>
+    public bool CloseToTray
+    {
+        get => _store.Get(CloseToTrayKey) != "false";
+        set => _store.Set(CloseToTrayKey, value ? "true" : "false");
     }
 
     public static string DefaultDownloadDirectory =>

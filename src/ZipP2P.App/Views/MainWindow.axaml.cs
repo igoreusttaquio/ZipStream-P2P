@@ -56,8 +56,6 @@ public partial class MainWindow : Window
     {
         base.OnOpened(e);
 
-        AppServices.Storage = StorageProvider;
-        AppServices.Clipboard = Clipboard;
-        AppServices.Launcher = Launcher;
+        AppServices.Attach(this, overwrite: true);
     }
 }
