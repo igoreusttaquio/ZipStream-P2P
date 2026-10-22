@@ -13,12 +13,12 @@
     <ScrollViewer>
         <StackPanel Spacing="16" Margin="0,4,4,4">
 
+            <TextBlock Classes="hint" Text="{Binding [Send.Intro], Source={x:Static loc:Localizer.Instance}}" />
+
             <!-- 1. Escolher o que enviar -->
-            <Grid Height="190" IsVisible="{Binding ShowPicker}">
-                <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
-                           StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="12" RadiusY="12"
-                           Fill="{DynamicResource CardBackgroundBrush}" />
-                <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <ContentControl Classes="dashed" MinHeight="190" IsVisible="{Binding ShowPicker}"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                <StackPanel Spacing="12">
                     <icons:MaterialIcon Kind="CloudUpload" Width="48" Height="48" HorizontalAlignment="Center"
                                         Foreground="{DynamicResource SecondaryTextBrush}" />
                     <TextBlock Text="{Binding [Send.DropHint], Source={x:Static loc:Localizer.Instance}}"
@@ -38,7 +38,7 @@
                         </Button>
                     </StackPanel>
                 </StackPanel>
-            </Grid>
+            </ContentControl>
 
             <!-- Item selecionado -->
             <Border Classes="card" IsVisible="{Binding HasSelection}">

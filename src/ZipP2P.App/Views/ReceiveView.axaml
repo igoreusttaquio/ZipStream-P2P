@@ -13,8 +13,10 @@
     <ScrollViewer>
         <StackPanel Spacing="16" Margin="0,4,4,4">
 
+            <TextBlock Classes="hint" Text="{Binding [Receive.Intro], Source={x:Static loc:Localizer.Instance}}" />
+
             <!-- Formulário: código + destino -->
-            <Border Classes="card" IsVisible="{Binding ShowForm}">
+            <ContentControl Classes="dashed" IsVisible="{Binding ShowForm}">
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="6">
                         <TextBlock Classes="label" Text="{Binding [Receive.CodeLabel], Source={x:Static loc:Localizer.Instance}}" />
@@ -46,7 +48,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-            </Border>
+            </ContentControl>
 
             <views:StatusPanel />
 

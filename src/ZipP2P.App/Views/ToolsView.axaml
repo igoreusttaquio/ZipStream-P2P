@@ -14,7 +14,7 @@
         <StackPanel Spacing="16" Margin="0,4,4,4">
             <TextBlock Classes="hint" Text="{Binding [Tools.Hint], Source={x:Static loc:Localizer.Instance}}" />
 
-            <Border Classes="card" IsEnabled="{Binding !IsBusy}">
+            <ContentControl Classes="dashed" IsEnabled="{Binding !IsBusy}">
                 <StackPanel Spacing="16">
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
                         <StackPanel Grid.Column="0" Spacing="6">
@@ -67,7 +67,7 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
-            </Border>
+            </ContentControl>
 
             <views:StatusPanel />
 

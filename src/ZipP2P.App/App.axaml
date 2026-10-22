@@ -70,6 +70,24 @@
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="18" />
         </Style>
+        <!-- Card principal de cada aba: borda pontilhada (mesmo visual da área de soltar arquivos) -->
+        <Style Selector="ContentControl.dashed">
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid>
+                        <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
+                                   StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="12" RadiusY="12"
+                                   Fill="{DynamicResource CardBackgroundBrush}" />
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Padding="{TemplateBinding Padding}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
         <Style Selector="TextBlock.label">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
