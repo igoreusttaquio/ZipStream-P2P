@@ -3,105 +3,476 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZipStream — Transferência de arquivos P2P</title>
-  <meta name="description" content="Compacte e envie arquivos grandes ponto a ponto, sem nuvem, com criptografia de ponta a ponta." />
+  <title>ZipStream — Envie arquivos grandes direto para outro computador</title>
+  <meta name="description" content="Compacte e envie arquivos e pastas grandes ponto a ponto, sem nuvem, com criptografia de ponta a ponta e retomada automática. Windows, Linux e macOS." />
+  <meta property="og:title" content="ZipStream — arquivos grandes, direto entre computadores" />
+  <meta property="og:description" content="Sem nuvem, sem cadastro, com criptografia de ponta a ponta. Se a conexão cair, continua de onde parou." />
+  <meta name="theme-color" content="#1E1E24" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 78 30'%3E%3Cpath fill='%233B82F6' d='M18.5 0C15.5 0 12.5 1.2 10.4 3.4L3.4 10.4C1.2 12.5 0 15.5 0 18.5 0 24.9 5.1 30 11.5 30c3 0 6-1.2 8.1-3.4l19-19C39.7 6.6 41.1 6 42.5 6c2.4 0 4.5 1.6 5.2 3.8l4.5-4.5C50.2 2.1 46.6 0 42.5 0c-3 0-6 1.2-8.1 3.4l-19 19c-1.1 1-2.5 1.6-3.9 1.6C8.5 24 6 21.5 6 18.5c0-1.5.6-2.9 1.6-3.9l7-7C15.6 6.6 17.1 6 18.5 6c2.4 0 4.5 1.6 5.2 3.8l4.5-4.5C26.2 2.1 22.6 0 18.5 0Z'/%3E%3C/svg%3E" />
   <style>
     :root {
-      --bg: #1E1E24;
-      --card: #2A2B36;
-      --border: #3F4050;
-      --text: #F1F5F9;
-      --muted: #94A3B8;
-      --accent: #3B82F6;
+      --bg: #F8FAFC;
+      --bg-alt: #EEF2F7;
+      --card: #FFFFFF;
+      --border: #E2E8F0;
+      --text: #0F172A;
+      --muted: #5B6B82;
+      --accent: #2563EB;
+      --accent-strong: #1D4ED8;
+      --accent-soft: rgba(37, 99, 235, .10);
+      --success: #16A34A;
+      --mock-bg: #1E1E24;
+      --mock-card: #2A2B36;
+      --mock-border: #3F4050;
+      --mock-text: #F1F5F9;
+      --mock-muted: #94A3B8;
+      --shadow: 0 24px 60px -24px rgba(15, 23, 42, .35);
+      --radius: 14px;
+      color-scheme: light;
     }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16161B;
+        --bg-alt: #1E1E24;
+        --card: #24252F;
+        --border: #363746;
+        --text: #F1F5F9;
+        --muted: #A0AEC2;
+        --accent: #3B82F6;
+        --accent-strong: #60A5FA;
+        --accent-soft: rgba(59, 130, 246, .14);
+        --success: #22C55E;
+        --shadow: 0 24px 60px -24px rgba(0, 0, 0, .7);
+        color-scheme: dark;
+      }
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-    header {
-      padding: 28px 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    a { color: var(--accent); }
+    img, svg { max-width: 100%; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 24px; }
+    .skip { position: absolute; left: -999px; }
+    .skip:focus { left: 16px; top: 16px; background: var(--card); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+    /* Navegação */
+    .nav {
+      position: sticky; top: 0; z-index: 5;
+      background: color-mix(in srgb, var(--bg) 85%, transparent);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
     }
-    header .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; }
-    header .tag { font-size: 12px; color: var(--muted); }
-    .hero { text-align: center; padding: 80px 0 48px; }
-    .hero h1 { font-size: 48px; line-height: 1.15; margin-bottom: 16px; }
-    .hero p { font-size: 18px; color: var(--muted); max-width: 620px; margin: 0 auto 32px; }
-    .cta {
-      display: inline-block;
-      background: var(--accent);
-      color: #fff;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 16px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      transition: transform .15s ease, box-shadow .15s ease;
+    .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav ul { display: flex; gap: 22px; list-style: none; align-items: center; }
+    .nav ul a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .nav ul a:hover { color: var(--text); }
+    .nav .btn-sm { color: #fff; background: var(--accent); padding: 7px 14px; border-radius: 8px; }
+    .nav .btn-sm:hover { color: #fff; background: var(--accent-strong); }
+
+    /* Botões */
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-weight: 600; font-size: 16px; text-decoration: none;
+      padding: 13px 24px; border-radius: 10px; border: 1px solid transparent;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
     }
-    .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,.35); }
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding: 48px 0 72px; }
-    .feature { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
-    .feature h3 { font-size: 17px; margin-bottom: 8px; }
-    .feature p { font-size: 14px; color: var(--muted); }
-    .icon { font-size: 26px; margin-bottom: 12px; }
-    footer { border-top: 1px solid var(--border); padding: 28px 0; color: var(--muted); font-size: 13px; text-align: center; }
-    footer a { color: var(--accent); text-decoration: none; }
-    @media (max-width: 600px) {
-      .hero h1 { font-size: 34px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-strong); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(37, 99, 235, .55); }
+    .btn-ghost { color: var(--text); border-color: var(--border); background: var(--card); }
+    .btn-ghost:hover { border-color: var(--accent); }
+
+    /* Hero */
+    .hero > *, .security > *, .steps > *, .features > *, .downloads > * { min-width: 0; }
+    .hero { padding-block: 72px 56px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin-bottom: 18px; }
+    .hero h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 18px; }
+    .hero h1 span { color: var(--accent); }
+    .hero .lead { font-size: 18px; color: var(--muted); margin-bottom: 30px; max-width: 34em; }
+    .hero .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+    .hero .note { font-size: 13px; color: var(--muted); }
+
+    /* Maquete da janela do app */
+    .mock {
+      background: var(--mock-bg); color: var(--mock-text);
+      border: 1px solid var(--mock-border); border-radius: 14px;
+      box-shadow: var(--shadow); overflow: hidden; font-size: 13px;
+    }
+    .mock-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border-bottom: 1px solid var(--mock-border); }
+    .mock-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--mock-border); }
+    .mock-bar b { margin-left: 8px; font-weight: 500; color: var(--mock-muted); font-size: 12px; }
+    .mock-body { padding: 18px; display: grid; gap: 12px; }
+    .mock-tabs { display: flex; gap: 18px; color: var(--mock-muted); font-weight: 500; }
+    .mock-tabs .on { color: var(--mock-text); border-bottom: 2px solid #3B82F6; padding-bottom: 4px; }
+    .mock-card { background: var(--mock-card); border: 1px solid var(--mock-border); border-radius: 10px; padding: 14px; }
+    .mock-file { display: flex; align-items: center; gap: 12px; }
+    .mock-file small, .mock-label, .mock-hint { color: var(--mock-muted); }
+    .mock-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+    .mock-code { font-family: "Cascadia Mono", Consolas, Menlo, monospace; font-size: 30px; font-weight: 700; letter-spacing: .3em; color: #3B82F6; }
+    .mock-status { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; }
+    .mock-status small { font-weight: 400; color: var(--mock-muted); }
+    .bar { height: 6px; background: var(--mock-border); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+    .bar span { display: block; height: 100%; width: 64%; background: #3B82F6; border-radius: inherit; animation: fill 4s ease-in-out infinite alternate; }
+    @keyframes fill { from { width: 38%; } to { width: 86%; } }
+    .mock-sas { display: flex; gap: 10px; align-items: center; background: rgba(59, 130, 246, .12); border-radius: 8px; padding: 9px 12px; margin-top: 12px; }
+    .mock-sas b { font-family: "Cascadia Mono", Consolas, Menlo, monospace; letter-spacing: .12em; }
+    @media (prefers-reduced-motion: reduce) { .bar span { animation: none; } html { scroll-behavior: auto; } }
+
+    /* Seções */
+    section { padding-block: 72px; }
+    .alt { background: var(--bg-alt); }
+    .section-head { max-width: 640px; margin-bottom: 40px; }
+    .section-head h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .section-head p { color: var(--muted); font-size: 17px; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
+    .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; position: relative; }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-weight: 700; margin-bottom: 14px;
+    }
+    .step h3 { font-size: 17px; margin-bottom: 6px; }
+    .step p { color: var(--muted); font-size: 15px; }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feature { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .feature .ico { width: 42px; height: 42px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 14px; }
+    .feature h3 { font-size: 16px; margin-bottom: 6px; }
+    .feature p { font-size: 14.5px; color: var(--muted); }
+
+    .security { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .security ul { list-style: none; display: grid; gap: 16px; }
+    .security li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; }
+    .security li svg { color: var(--success); margin-top: 3px; }
+    .security li p { color: var(--muted); font-size: 15px; }
+    .diagram { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .diagram svg { display: block; width: 100%; height: auto; }
+    .diagram text { font-family: inherit; }
+
+    .downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .dl { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+    .dl.mine { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .dl h3 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .dl .badge { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; display: none; }
+    .dl.mine .badge { display: inline; }
+    .dl p { color: var(--muted); font-size: 14px; flex: 1; }
+    .dl .btn { justify-content: center; }
+    .dl-note { color: var(--muted); font-size: 14px; margin-top: 18px; }
+
+    .faq { max-width: 760px; display: grid; gap: 12px; }
+    details { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+    summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--accent); font-size: 20px; line-height: 1; }
+    details[open] summary::after { content: "−"; }
+    details p { color: var(--muted); margin-top: 10px; font-size: 15px; }
+    code { font-family: "Cascadia Mono", Consolas, Menlo, monospace; font-size: .92em; background: var(--accent-soft); padding: 1px 6px; border-radius: 5px; }
+
+    footer { border-top: 1px solid var(--border); padding-block: 28px; color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+    footer a { text-decoration: none; }
+
+    @media (max-width: 900px) {
+      .hero, .security { grid-template-columns: 1fr; }
+      .hero { padding-block: 48px 32px; }
+      .features, .downloads { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav ul li:not(:last-child) { display: none; }
+      .steps, .features, .downloads { grid-template-columns: 1fr; }
+      section { padding-block: 56px; }
+      .mock-code { font-size: 24px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <svg width="70" height="27" viewBox="0 0 78 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M18.5147 0C15.4686 0 12.5473 1.21005 10.3934 3.36396L3.36396 10.3934C1.21005 12.5473 0 15.4686 0 18.5147C0 24.8579 5.14214 30 11.4853 30C14.5314 30 17.4527 28.7899 19.6066 26.636L24.4689 21.7737C24.4689 21.7736 24.469 21.7738 24.4689 21.7737L38.636 7.6066C39.6647 6.57791 41.0599 6 42.5147 6C44.9503 6 47.0152 7.58741 47.7311 9.78407L52.2022 5.31296C50.1625 2.11834 46.586 0 42.5147 0C39.4686 0 36.5473 1.21005 34.3934 3.36396L15.364 22.3934C14.3353 23.4221 12.9401 24 11.4853 24C8.45584 24 6 21.5442 6 18.5147C6 17.0599 6.57791 15.6647 7.6066 14.636L14.636 7.6066C15.6647 6.57791 17.0599 6 18.5147 6C20.9504 6 23.0152 7.58748 23.7311 9.78421L28.2023 5.31307C26.1626 2.1184 22.5861 0 18.5147 0Z M39.3646 22.3934C38.3359 23.4221 36.9407 24 35.4859 24C33.0506 24 30.9859 22.413 30.2698 20.2167L25.7988 24.6877C27.8386 27.8819 31.4149 30 35.4859 30C38.532 30 41.4533 28.7899 43.6072 26.636L62.6366 7.6066C63.6653 6.57791 65.0605 6 66.5153 6C69.5448 6 72.0006 8.45584 72.0006 11.4853C72.0006 12.9401 71.4227 14.3353 70.394 15.364L63.3646 22.3934C62.3359 23.4221 60.9407 24 59.4859 24C57.0504 24 54.9856 22.4127 54.2696 20.2162L49.7986 24.6873C51.8383 27.8818 55.4147 30 59.4859 30C62.532 30 65.4533 28.7899 67.6072 26.636L74.6366 19.6066C76.7905 17.4527 78.0006 14.5314 78.0006 11.4853C78.0006 5.14214 72.8585 0 66.5153 0C63.4692 0 60.5479 1.21005 58.394 3.36396L39.3646 22.3934Z" fill="#3B82F6"/>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+  <nav class="nav" aria-label="Principal">
+    <div class="wrap">
+      <a class="brand" href="#">
+        <svg width="56" height="22" viewBox="0 0 78 30" aria-hidden="true">
+          <path fill="#3B82F6" d="M18.5147 0C15.4686 0 12.5473 1.21005 10.3934 3.36396L3.36396 10.3934C1.21005 12.5473 0 15.4686 0 18.5147C0 24.8579 5.14214 30 11.4853 30C14.5314 30 17.4527 28.7899 19.6066 26.636L24.4689 21.7737C24.4689 21.7736 24.469 21.7738 24.4689 21.7737L38.636 7.6066C39.6647 6.57791 41.0599 6 42.5147 6C44.9503 6 47.0152 7.58741 47.7311 9.78407L52.2022 5.31296C50.1625 2.11834 46.586 0 42.5147 0C39.4686 0 36.5473 1.21005 34.3934 3.36396L15.364 22.3934C14.3353 23.4221 12.9401 24 11.4853 24C8.45584 24 6 21.5442 6 18.5147C6 17.0599 6.57791 15.6647 7.6066 14.636L14.636 7.6066C15.6647 6.57791 17.0599 6 18.5147 6C20.9504 6 23.0152 7.58748 23.7311 9.78421L28.2023 5.31307C26.1626 2.1184 22.5861 0 18.5147 0Z M39.3646 22.3934C38.3359 23.4221 36.9407 24 35.4859 24C33.0506 24 30.9859 22.413 30.2698 20.2167L25.7988 24.6877C27.8386 27.8819 31.4149 30 35.4859 30C38.532 30 41.4533 28.7899 43.6072 26.636L62.6366 7.6066C63.6653 6.57791 65.0605 6 66.5153 6C69.5448 6 72.0006 8.45584 72.0006 11.4853C72.0006 12.9401 71.4227 14.3353 70.394 15.364L63.3646 22.3934C62.3359 23.4221 60.9407 24 59.4859 24C57.0504 24 54.9856 22.4127 54.2696 20.2162L49.7986 24.6873C51.8383 27.8818 55.4147 30 59.4859 30C62.532 30 65.4533 28.7899 67.6072 26.636L74.6366 19.6066C76.7905 17.4527 78.0006 14.5314 78.0006 11.4853C78.0006 5.14214 72.8585 0 66.5153 0C63.4692 0 60.5479 1.21005 58.394 3.36396L39.3646 22.3934Z"/>
         </svg>
-        <span>ZipStream</span>
-      </div>
-    </header>
+        ZipStream
+      </a>
+      <ul>
+        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#recursos">Recursos</a></li>
+        <li><a href="#seguranca">Segurança</a></li>
+        <li><a href="#perguntas">Perguntas</a></li>
+        <li><a class="btn-sm" href="#download">Baixar</a></li>
+      </ul>
+    </div>
+  </nav>
 
-    <section class="hero">
-      <h1>Envie arquivos grandes.<br/>Ponto a ponto, sem nuvem.</h1>
-      <p>Compacte e transfira arquivos e pastas diretamente entre dispositivos, com criptografia de ponta a ponta — seus dados nunca ficam armazenados em um servidor.</p>
-      <a class="cta" href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest" target="_blank" rel="noopener">Baixar agora</a>
+  <main id="conteudo">
+    <div class="wrap hero">
+      <div>
+        <span class="eyebrow">Código aberto · Windows, Linux e macOS</span>
+        <h1>Arquivos grandes, <span>direto</span> para o outro computador.</h1>
+        <p class="lead">Escolha um arquivo ou pasta, passe um código de 6 letras e pronto. Sem nuvem, sem cadastro, com criptografia de ponta a ponta. Se a conexão cair, o ZipStream continua de onde parou.</p>
+        <div class="actions">
+          <a class="btn btn-primary" id="hero-download" href="#download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>
+            <span>Baixar grátis</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/igoreusttaquio/ZipStream-P2P" target="_blank" rel="noopener">Ver no GitHub</a>
+        </div>
+        <p class="note">Seus arquivos nunca passam por um servidor de armazenamento.</p>
+      </div>
+
+      <div class="mock" role="img" aria-label="Janela do ZipStream enviando um arquivo: código de envio LY5V7E, 64% enviado e código de segurança 891 989">
+        <div class="mock-bar"><i></i><i></i><i></i><b>ZipStream</b></div>
+        <div class="mock-body">
+          <div class="mock-tabs"><span class="on">Enviar</span><span>Receber</span><span>Ferramentas</span></div>
+          <div class="mock-card mock-file">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>
+            <div><strong>Projeto-final.mov</strong><br/><small>4,2 GB</small></div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-label">CÓDIGO DE ENVIO</div>
+            <div class="mock-code">LY5V7E</div>
+            <div class="mock-hint">No outro computador: Receber → digite este código.</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-status"><span>Enviando…</span><small>2,7 GB / 4,2 GB · 48 MB/s</small></div>
+            <div class="bar"><span></span></div>
+            <div class="mock-sas">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+              <span>Código de segurança <b>891989</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="como-funciona" class="alt">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Três passos, nenhum cadastro</h2>
+          <p>Quem envia e quem recebe usam o mesmo app. O código serve só para os dois computadores se encontrarem.</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <h3>Escolha o que enviar</h3>
+            <p>Arraste um arquivo ou pasta para o app, use os botões, ou clique com o botão direito no arquivo → <strong>Enviar com ZipStream</strong>.</p>
+          </div>
+          <div class="step">
+            <h3>Passe o código</h3>
+            <p>O app mostra um código de 6 caracteres. Mande para quem vai receber, que digita o código na aba <strong>Receber</strong> e escolhe onde salvar.</p>
+          </div>
+          <div class="step">
+            <h3>Confira e pronto</h3>
+            <p>Os dois veem o mesmo código de segurança. Se bater, ninguém está no meio. O arquivo chega compactado, verificado e já extraído.</p>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="features">
-      <div class="feature">
-        <div class="icon">🔒</div>
-        <h3>Criptografia ponta a ponta</h3>
-        <p>ECDH + AES-256-GCM por bloco. O servidor nunca lê o conteúdo dos seus arquivos.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">⚡</div>
-        <h3>P2P direto</h3>
-        <p>Transferência direta entre dispositivos via WebRTC, com retomada de transferências interrompidas.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">🗜️</div>
-        <h3>Compressão em streaming</h3>
-        <p>zstd em blocos — arquivos e pastas grandes sem carregar tudo na memória.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">🖥️</div>
-        <h3>Multiplataforma</h3>
-        <p>Windows, macOS e Linux. Interface em português, inglês e espanhol.</p>
+    <section id="recursos">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Feito para arquivos que não cabem no e-mail</h2>
+          <p>Vídeos, backups, pastas de projeto: o ZipStream compacta em streaming e envia em blocos, sem carregar tudo na memória.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+            <h3>Continua de onde parou</h3>
+            <p>Caiu a conexão? Reconecta sozinho. Fechou o app? Abra de novo e clique em <strong>Retomar</strong>: o que já chegou é aproveitado.</p>
+          </div>
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+            <h3>Criptografia ponta a ponta</h3>
+            <p>Chave combinada entre os dois computadores (ECDH) e AES-256-GCM em cada bloco. O servidor nunca vê o conteúdo.</p>
+          </div>
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
+            <h3>Direto entre os computadores</h3>
+            <p>Conexão P2P via WebRTC, com controle de fluxo para não sobrecarregar a rede nem a memória.</p>
+          </div>
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/><path d="m16 15 3 3 3-3"/></svg></div>
+            <h3>Compressão zstd</h3>
+            <p>Arquivos e pastas inteiras compactados em blocos, cada um com verificação SHA-256 de integridade.</p>
+          </div>
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6m0 0-2.5-2.5M12 16l2.5-2.5"/></svg></div>
+            <h3>Você escolhe onde salvar</h3>
+            <p>A pasta de destino fica lembrada. Nada é sobrescrito: se já existir, o novo vira <code>nome (1)</code>.</p>
+          </div>
+          <div class="feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg></div>
+            <h3>Log técnico quando precisar</h3>
+            <p>Se algo der errado, a tela explica o motivo e o log mostra cada etapa. Dá para copiar ou exportar e mandar para o suporte.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <footer>
-      <p>ZipStream — código-fonte no <a href="https://github.com/igoreusttaquio/ZipStream-P2P" target="_blank" rel="noopener">GitHub</a>. Distribuído sob licença própria.</p>
-    </footer>
-  </div>
+    <section id="seguranca" class="alt">
+      <div class="wrap security">
+        <div>
+          <div class="section-head">
+            <h2>O servidor só apresenta os dois</h2>
+            <p>Um servidor de sinalização ajuda os computadores a se encontrarem. Depois disso, os dados vão direto de um para o outro.</p>
+          </div>
+          <ul>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+              <div><strong>Nada fica armazenado</strong><p>O arquivo sai do seu computador e chega no outro. Nenhuma cópia em nuvem.</p></div>
+            </li>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+              <div><strong>Código de segurança</strong><p>Os dois lados veem o mesmo código de 6 dígitos derivado da chave. Se for diferente, alguém está no meio: cancele.</p></div>
+            </li>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+              <div><strong>Um código, dois computadores</strong><p>Cada código aceita só dois dispositivos. Um terceiro não consegue entrar na transferência.</p></div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="diagram">
+          <svg viewBox="0 0 420 260" role="img" aria-labelledby="diag-title">
+            <title id="diag-title">Os dois computadores trocam apenas dados de conexão com o servidor; o arquivo cifrado vai direto entre eles.</title>
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="currentColor"/></marker>
+            </defs>
+            <g fill="none" stroke="var(--border)" stroke-width="1.5">
+              <rect x="150" y="16" width="120" height="54" rx="10" fill="var(--bg-alt)"/>
+              <rect x="16" y="176" width="130" height="64" rx="10" fill="var(--bg-alt)"/>
+              <rect x="274" y="176" width="130" height="64" rx="10" fill="var(--bg-alt)"/>
+            </g>
+            <g fill="var(--text)" font-size="13" font-weight="600" text-anchor="middle">
+              <text x="210" y="40">Servidor de</text>
+              <text x="210" y="57">sinalização</text>
+              <text x="81" y="205">Quem envia</text>
+              <text x="339" y="205">Quem recebe</text>
+            </g>
+            <g fill="var(--muted)" font-size="11" text-anchor="middle">
+              <text x="81" y="224">comprime + cifra</text>
+              <text x="339" y="224">verifica + extrai</text>
+            </g>
+            <g stroke="var(--muted)" color="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+              <path d="M150 62 96 170" marker-end="url(#arr)" marker-start="url(#arr)"/>
+              <path d="M270 62 324 170" marker-end="url(#arr)" marker-start="url(#arr)"/>
+            </g>
+            <g fill="var(--muted)" font-size="11">
+              <text x="22" y="118">código + dados</text>
+              <text x="22" y="132">de conexão</text>
+              <text x="318" y="118">código + dados</text>
+              <text x="318" y="132">de conexão</text>
+            </g>
+            <path d="M150 208h120" stroke="var(--accent)" color="var(--accent)" stroke-width="3" marker-end="url(#arr)"/>
+            <g fill="var(--accent)" font-size="11.5" font-weight="700" text-anchor="middle">
+              <text x="210" y="196">arquivo cifrado</text>
+              <text x="210" y="228">P2P direto</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Baixe para o seu sistema</h2>
+          <p>Gratuito. Descompacte e abra o <code>ZipP2P.App</code>, sem instalar nada. Quem recebe precisa do app também.</p>
+        </div>
+        <div class="downloads">
+          <div class="dl" data-os="windows">
+            <h3>Windows <span class="badge">Seu sistema</span></h3>
+            <p>Windows 10 e 11 (64 bits). Opção de menu “Enviar com ZipStream” no Explorer (ative em Configurações).</p>
+            <a class="btn btn-primary" href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest/download/ZipStream-win-x64.zip">Baixar .zip</a>
+          </div>
+          <div class="dl" data-os="linux">
+            <h3>Linux <span class="badge">Seu sistema</span></h3>
+            <p>x64. Menu de contexto para Nautilus, Caja, Nemo e Dolphin.</p>
+            <a class="btn btn-primary" href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest/download/ZipStream-linux-x64.tar.gz">Baixar .tar.gz</a>
+          </div>
+          <div class="dl" data-os="mac">
+            <h3>macOS <span class="badge">Seu sistema</span></h3>
+            <p>Intel (x64); em Macs com Apple Silicon roda pelo Rosetta.</p>
+            <a class="btn btn-primary" href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest/download/ZipStream-osx-x64.tar.gz">Baixar .tar.gz</a>
+          </div>
+        </div>
+        <p class="dl-note">Todas as versões e notas de lançamento: <a href="https://github.com/igoreusttaquio/ZipStream-P2P/releases" target="_blank" rel="noopener">página de releases</a>.</p>
+      </div>
+    </section>
+
+    <section id="perguntas" class="alt">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Perguntas frequentes</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Existe limite de tamanho?</summary>
+            <p>Não há limite fixo. O envio é feito em blocos e com retomada, então arquivos de vários GB funcionam. Quem envia precisa de espaço livre para a versão compactada, que fica em cache até a transferência terminar.</p>
+          </details>
+          <details>
+            <summary>E se a internet cair no meio?</summary>
+            <p>O app tenta reconectar sozinho e continua do último bloco confirmado. Se você fechar o app, a transferência aparece em “interrompidas”: os dois lados clicam em <strong>Retomar</strong> e ela segue de onde parou.</p>
+          </details>
+          <details>
+            <summary>Funciona entre redes diferentes, pela internet?</summary>
+            <p>Na mesma rede funciona direto: um dos computadores liga o servidor local em Configurações. Pela internet, hoje é preciso apontar os dois apps para um servidor de sinalização acessível e, em redes mais restritas, um servidor TURN. O repositório traz um <code>docker-compose</code> pronto para isso.</p>
+          </details>
+          <details>
+            <summary>Preciso criar conta?</summary>
+            <p>Não. O código de envio é tudo o que os dois lados precisam.</p>
+          </details>
+          <details>
+            <summary>O que é o código de segurança?</summary>
+            <p>Um número de 6 dígitos calculado a partir da chave de criptografia combinada entre os dois computadores. Se aparecer o mesmo número nas duas telas, a conexão é mesmo entre vocês dois.</p>
+          </details>
+          <details>
+            <summary>Deu erro. Como descubro o motivo?</summary>
+            <p>A tela mostra uma explicação e o detalhe técnico. O botão <strong>Ver log</strong> abre o registro completo de cada etapa, que pode ser copiado ou exportado em <code>.txt</code>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>ZipStream — transferência de arquivos P2P com criptografia de ponta a ponta.</span>
+      <a href="https://github.com/igoreusttaquio/ZipStream-P2P" target="_blank" rel="noopener">Código-fonte no GitHub</a>
+    </div>
+  </footer>
+
+  <script>
+    // Destaca o download do sistema de quem visita e aponta o botão principal para ele.
+    (function () {
+      var ua = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || "";
+      ua = ua.toLowerCase();
+      var os = ua.indexOf("win") >= 0 ? "windows"
+        : (ua.indexOf("mac") >= 0 || ua.indexOf("iphone") >= 0 || ua.indexOf("ipad") >= 0) ? "mac"
+        : ua.indexOf("linux") >= 0 ? "linux" : null;
+      if (!os) return;
+      var card = document.querySelector('.dl[data-os="' + os + '"]');
+      if (!card) return;
+      card.classList.add("mine");
+      var link = card.querySelector("a");
+      var hero = document.getElementById("hero-download");
+      var names = { windows: "Windows", linux: "Linux", mac: "macOS" };
+      if (link && hero) {
+        hero.href = link.href;
+        hero.querySelector("span").textContent = "Baixar para " + names[os];
+      }
+    })();
+  </script>
 </body>
 </html>
