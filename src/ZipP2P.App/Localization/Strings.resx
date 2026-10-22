@@ -288,4 +288,43 @@
   <data name="Settings.Theme" xml:space="preserve">
     <value>Light/dark theme</value>
   </data>
+  <data name="Shell.MenuLabel" xml:space="preserve">
+    <value>Send with ZipStream</value>
+  </data>
+  <data name="Settings.ShellTitle" xml:space="preserve">
+    <value>Context menu</value>
+  </data>
+  <data name="Settings.ShellHint" xml:space="preserve">
+    <value>Adds “Send with ZipStream” when you right-click files and folders ({0}).</value>
+  </data>
+  <data name="Settings.ShellInstall" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="Settings.ShellRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Settings.ShellInstalled" xml:space="preserve">
+    <value>Installed</value>
+  </data>
+  <data name="Settings.ShellNotInstalled" xml:space="preserve">
+    <value>Not installed</value>
+  </data>
+  <data name="Settings.ShellOutdated" xml:space="preserve">
+    <value>Points to another copy of the app — click Install to update</value>
+  </data>
+  <data name="Settings.ShellNoteWindows" xml:space="preserve">
+    <value>On Windows 11 the item is under “Show more options”.</value>
+  </data>
+  <data name="Settings.ShellNoteLinux" xml:space="preserve">
+    <value>Best effort: supports Nautilus/GNOME Files, Caja, Nemo and Dolphin. You may need to restart the file manager (e.g. nautilus -q).</value>
+  </data>
+  <data name="Settings.ShellNoteMac" xml:space="preserve">
+    <value>Experimental: appears under Quick Actions/Services in the Finder. Works best with the app installed in /Applications.</value>
+  </data>
+  <data name="Send.Intro" xml:space="preserve">
+    <value>Choose a file or folder. ZipStream compresses it, encrypts it end to end and sends it directly to the other computer.</value>
+  </data>
+  <data name="Receive.Intro" xml:space="preserve">
+    <value>Type the code shown on the sender's screen and choose where to save. The file arrives directly from the other computer.</value>
+  </data>
 </root>

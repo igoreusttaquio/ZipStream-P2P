@@ -288,4 +288,43 @@
   <data name="Settings.Theme" xml:space="preserve">
     <value>Tema claro/oscuro</value>
   </data>
+  <data name="Shell.MenuLabel" xml:space="preserve">
+    <value>Enviar con ZipStream</value>
+  </data>
+  <data name="Settings.ShellTitle" xml:space="preserve">
+    <value>Menú contextual</value>
+  </data>
+  <data name="Settings.ShellHint" xml:space="preserve">
+    <value>Agrega “Enviar con ZipStream” al hacer clic derecho en archivos y carpetas ({0}).</value>
+  </data>
+  <data name="Settings.ShellInstall" xml:space="preserve">
+    <value>Instalar</value>
+  </data>
+  <data name="Settings.ShellRemove" xml:space="preserve">
+    <value>Quitar</value>
+  </data>
+  <data name="Settings.ShellInstalled" xml:space="preserve">
+    <value>Instalado</value>
+  </data>
+  <data name="Settings.ShellNotInstalled" xml:space="preserve">
+    <value>No instalado</value>
+  </data>
+  <data name="Settings.ShellOutdated" xml:space="preserve">
+    <value>Apunta a otra copia de la app — pulse Instalar para actualizar</value>
+  </data>
+  <data name="Settings.ShellNoteWindows" xml:space="preserve">
+    <value>En Windows 11 el elemento está en “Mostrar más opciones”.</value>
+  </data>
+  <data name="Settings.ShellNoteLinux" xml:space="preserve">
+    <value>Mejor esfuerzo: admite Nautilus/Archivos de GNOME, Caja, Nemo y Dolphin. Puede ser necesario reiniciar el gestor de archivos (p. ej. nautilus -q).</value>
+  </data>
+  <data name="Settings.ShellNoteMac" xml:space="preserve">
+    <value>Experimental: aparece en Acciones rápidas/Servicios del Finder. Funciona mejor con la app instalada en /Aplicaciones.</value>
+  </data>
+  <data name="Send.Intro" xml:space="preserve">
+    <value>Elija un archivo o carpeta. ZipStream lo comprime, lo cifra de extremo a extremo y lo envía directamente al otro equipo.</value>
+  </data>
+  <data name="Receive.Intro" xml:space="preserve">
+    <value>Escriba el código que aparece en la pantalla de quien envía y elija dónde guardar. El archivo llega directamente del otro equipo.</value>
+  </data>
 </root>

@@ -288,4 +288,43 @@
   <data name="Settings.Theme" xml:space="preserve">
     <value>Tema claro/escuro</value>
   </data>
+  <data name="Shell.MenuLabel" xml:space="preserve">
+    <value>Enviar com ZipStream</value>
+  </data>
+  <data name="Settings.ShellTitle" xml:space="preserve">
+    <value>Menu de contexto</value>
+  </data>
+  <data name="Settings.ShellHint" xml:space="preserve">
+    <value>Adiciona “Enviar com ZipStream” ao clicar com o botão direito em arquivos e pastas ({0}).</value>
+  </data>
+  <data name="Settings.ShellInstall" xml:space="preserve">
+    <value>Instalar</value>
+  </data>
+  <data name="Settings.ShellRemove" xml:space="preserve">
+    <value>Remover</value>
+  </data>
+  <data name="Settings.ShellInstalled" xml:space="preserve">
+    <value>Instalado</value>
+  </data>
+  <data name="Settings.ShellNotInstalled" xml:space="preserve">
+    <value>Não instalado</value>
+  </data>
+  <data name="Settings.ShellOutdated" xml:space="preserve">
+    <value>Aponta para outra cópia do app — clique em Instalar para atualizar</value>
+  </data>
+  <data name="Settings.ShellNoteWindows" xml:space="preserve">
+    <value>No Windows 11 o item fica em “Mostrar mais opções”.</value>
+  </data>
+  <data name="Settings.ShellNoteLinux" xml:space="preserve">
+    <value>Melhor esforço: suporta Nautilus/Arquivos do GNOME, Caja, Nemo e Dolphin. Pode ser preciso reiniciar o gerenciador de arquivos (ex.: nautilus -q).</value>
+  </data>
+  <data name="Settings.ShellNoteMac" xml:space="preserve">
+    <value>Experimental: aparece em Ações Rápidas/Serviços do Finder. Funciona melhor com o app instalado em /Aplicativos.</value>
+  </data>
+  <data name="Send.Intro" xml:space="preserve">
+    <value>Escolha um arquivo ou pasta. O ZipStream compacta, criptografa de ponta a ponta e envia direto para o outro computador.</value>
+  </data>
+  <data name="Receive.Intro" xml:space="preserve">
+    <value>Digite o código que aparece na tela de quem envia e escolha onde salvar. O arquivo chega direto do outro computador.</value>
+  </data>
 </root>
