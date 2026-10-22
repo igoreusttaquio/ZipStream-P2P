@@ -55,6 +55,10 @@
                         <icons:MaterialIcon Kind="WeatherNight" Width="20" Height="20" IsVisible="{Binding IsLightMode}" />
                     </Grid>
                 </Button>
+                <Button Command="{Binding GoLogsCommand}" Padding="8" VerticalAlignment="Center"
+                        ToolTip.Tip="{Binding [Logs.Title], Source={x:Static loc:Localizer.Instance}}">
+                    <icons:MaterialIcon Kind="TextBoxSearchOutline" Width="20" Height="20" />
+                </Button>
                 <Button Command="{Binding GoSettingsCommand}" Padding="8" VerticalAlignment="Center">
                     <icons:MaterialIcon Kind="Cog" Width="20" Height="20" />
                 </Button>

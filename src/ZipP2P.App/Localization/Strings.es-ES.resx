@@ -135,4 +135,31 @@
   <data name="Settings.ServerUrlHint" xml:space="preserve">
     <value>URL del servidor remoto al que conectarse (para transferencias por internet)</value>
   </data>
+  <data name="Logs.Title" xml:space="preserve">
+    <value>Registro técnico</value>
+  </data>
+  <data name="Logs.Copy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Logs.Export" xml:space="preserve">
+    <value>Exportar</value>
+  </data>
+  <data name="Logs.Clear" xml:space="preserve">
+    <value>Limpiar registro</value>
+  </data>
+  <data name="Logs.ShowDebug" xml:space="preserve">
+    <value>Mostrar detalles de depuración (ICE, SDP, candidatos)</value>
+  </data>
+  <data name="Logs.Empty" xml:space="preserve">
+    <value>Nada registrado todavía.</value>
+  </data>
+  <data name="Logs.Copied" xml:space="preserve">
+    <value>Copiado al portapapeles</value>
+  </data>
+  <data name="Logs.Exported" xml:space="preserve">
+    <value>Registro exportado</value>
+  </data>
+  <data name="Action.ViewLogs" xml:space="preserve">
+    <value>Ver registro</value>
+  </data>
 </root>

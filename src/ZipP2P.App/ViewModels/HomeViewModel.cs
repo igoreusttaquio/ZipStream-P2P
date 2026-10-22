@@ -5,7 +5,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
+using Microsoft.Extensions.Logging;
 using ZipP2P.App.Localization;
+using ZipP2P.App.Logging;
 using ZipP2P.Core.Compression;
 using ZipP2P.P2P;
 using ZipP2P.P2P.Transfer;
@@ -20,7 +22,8 @@ public partial class HomeViewModel : ViewModelBase
 
     private readonly AppSettings _settings = new(new SettingsStore());
 
-    private IStorageProvider? _storage;
+    private static readonly ILogger Logger = AppLog.Instance.CreateLogger("Transfer");
+
     private CancellationTokenSource? _cts;
     private string _statusKey = "Status.Ready";
 
@@ -114,8 +117,6 @@ public partial class HomeViewModel : ViewModelBase
         _ => 19,
     };
 
-    public void SetStorageProvider(IStorageProvider storage) => _storage = storage;
-
     public void SetInputPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -190,12 +191,12 @@ public partial class HomeViewModel : ViewModelBase
     [RelayCommand]
     private async Task BrowseInputAsync()
     {
-        if (_storage is null)
+        if (AppServices.Storage is not { } storage)
             return;
 
         if (IsCompressMode || IsSendMode)
         {
-            var folders = await _storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 AllowMultiple = false,
                 Title = Localizer.Instance["Home.DropHint"],
@@ -207,7 +208,7 @@ public partial class HomeViewModel : ViewModelBase
         }
         else
         {
-            var files = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 AllowMultiple = false,
                 Title = Localizer.Instance["Home.DropHint"],
@@ -226,12 +227,12 @@ public partial class HomeViewModel : ViewModelBase
     [RelayCommand]
     private async Task BrowseOutputAsync()
     {
-        if (_storage is null)
+        if (AppServices.Storage is not { } storage)
             return;
 
         if (IsDecompressMode && IsFolderArchive)
         {
-            var folders = await _storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
                 AllowMultiple = false,
                 Title = Localizer.Instance["Action.Browse"],
@@ -243,7 +244,7 @@ public partial class HomeViewModel : ViewModelBase
         }
         else
         {
-            var file = await _storage.SaveFilePickerAsync(new FilePickerSaveOptions
+            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 SuggestedFileName = SuggestedOutputName(),
                 Title = Localizer.Instance["Action.Browse"],
@@ -281,9 +282,11 @@ public partial class HomeViewModel : ViewModelBase
         {
             SetStatus("Status.Cancelled");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Operation failed");
             SetStatus("Status.Failed");
+            Details = ex.Message;
         }
         finally
         {
@@ -381,7 +384,8 @@ public partial class HomeViewModel : ViewModelBase
 
     private TransferRunner CreateRunner(TransferStore store)
     {
-        var runner = new TransferRunner(new SignalingPeerLinkFactory(_settings.SignalingUrl, _settings.IceServers), store);
+        var factory = new SignalingPeerLinkFactory(_settings.SignalingUrl, _settings.IceServers, AppLog.Instance.Factory);
+        var runner = new TransferRunner(factory, store, Logger);
         runner.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         runner.StatusChanged += status => Dispatcher.UIThread.Post(() => SetStatus(status.Stage switch
         {

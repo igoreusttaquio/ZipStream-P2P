@@ -56,7 +56,8 @@ public partial class MainWindow : Window
     {
         base.OnOpened(e);
 
-        if (DataContext is MainViewModel vm)
-            vm.SetStorageProvider(StorageProvider);
+        AppServices.Storage = StorageProvider;
+        AppServices.Clipboard = Clipboard;
+        AppServices.Launcher = Launcher;
     }
 }

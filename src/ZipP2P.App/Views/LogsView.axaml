@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:log="using:ZipP2P.App.Logging"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="600"
+             x:Class="ZipP2P.App.Views.LogsView"
+             x:DataType="vm:LogsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.level">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        </Style>
+        <Style Selector="TextBlock.level.warning">
+            <Setter Property="Foreground" Value="#F59E0B" />
+        </Style>
+        <Style Selector="TextBlock.level.error">
+            <Setter Property="Foreground" Value="#EF4444" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+
+        <!-- Voltar + título + ações -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+            <Button Grid.Column="0" Command="{Binding BackCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:MaterialIcon Kind="ArrowLeft" Width="16" Height="16" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding [Settings.Back], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <TextBlock Grid.Column="1" Margin="14,0" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold"
+                       Text="{Binding [Logs.Title], Source={x:Static loc:Localizer.Instance}}" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button Command="{Binding CopyCommand}" ToolTip.Tip="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="ContentCopy" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ExportCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:MaterialIcon Kind="ContentSaveOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Logs.Export], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{Binding ClearCommand}" ToolTip.Tip="{Binding [Logs.Clear], Source={x:Static loc:Localizer.Instance}}">
+                    <icons:MaterialIcon Kind="DeleteOutline" Width="16" Height="16" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+            <CheckBox Grid.Column="0" IsChecked="{Binding ShowDebug}"
+                      Content="{Binding [Logs.ShowDebug], Source={x:Static loc:Localizer.Instance}}" />
+            <TextBlock Grid.Column="1" Text="{Binding Feedback}" VerticalAlignment="Center"
+                       Foreground="{DynamicResource AccentBrush}" />
+        </Grid>
+
+        <!-- Entradas -->
+        <Border Grid.Row="2" CornerRadius="8" BorderThickness="1"
+                BorderBrush="{DynamicResource BorderColorBrush}" Background="{DynamicResource CardBackgroundBrush}">
+            <Grid>
+                <TextBlock Text="{Binding [Logs.Empty], Source={x:Static loc:Localizer.Instance}}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           IsVisible="{Binding !Entries.Count}" />
+                <ListBox x:Name="EntriesList" ItemsSource="{Binding Entries}" Background="Transparent"
+                         FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace" FontSize="12">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="log:LogEntry">
+                            <StackPanel Spacing="2">
+                                <Grid ColumnDefinitions="92,50,96,*">
+                                    <TextBlock Grid.Column="0" Text="{Binding TimeText}" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding LevelText}" Classes="level"
+                                               Classes.warning="{Binding IsWarning}" Classes.error="{Binding IsError}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Category}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <SelectableTextBlock Grid.Column="3" Text="{Binding Message}" TextWrapping="Wrap" />
+                                </Grid>
+                                <SelectableTextBlock Text="{Binding Exception}" IsVisible="{Binding HasException}"
+                                                     TextWrapping="Wrap" FontSize="11" Margin="238,0,0,0"
+                                                     Foreground="{DynamicResource SecondaryTextBrush}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

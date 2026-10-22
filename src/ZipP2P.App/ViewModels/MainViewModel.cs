@@ -1,6 +1,5 @@
 using System.Globalization;
 using Avalonia;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,6 +14,7 @@ public partial class MainViewModel : ViewModelBase
 
     public HomeViewModel Home { get; }
     public SettingsViewModel Settings { get; }
+    public LogsViewModel Logs { get; }
 
     [ObservableProperty]
     public partial ViewModelBase CurrentPage { get; set; }
@@ -38,14 +38,13 @@ public partial class MainViewModel : ViewModelBase
     {
         Home = new HomeViewModel();
         Settings = new SettingsViewModel(new AppSettings(new SettingsStore()), GoHome);
+        Logs = new LogsViewModel(GoHome);
         CurrentPage = Home;
         LanguageIndex = DetectLanguageIndex();
 
         EmbeddedSignalingServer.Instance.StateChanged += () => Dispatcher.UIThread.Post(RefreshServerStatus);
         RefreshServerStatus();
     }
-
-    public void SetStorageProvider(IStorageProvider storage) => Home.SetStorageProvider(storage);
 
     private void RefreshServerStatus()
     {
@@ -60,6 +59,9 @@ public partial class MainViewModel : ViewModelBase
 
     [RelayCommand]
     private void GoSettings() => CurrentPage = Settings;
+
+    [RelayCommand]
+    private void GoLogs() => CurrentPage = Logs;
 
     [RelayCommand]
     private void ToggleTheme()

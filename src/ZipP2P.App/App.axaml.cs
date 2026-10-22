@@ -1,6 +1,9 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.Logging;
+using ZipP2P.App.Logging;
 using ZipP2P.App.ViewModels;
 using ZipP2P.App.Views;
 
@@ -15,6 +18,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        AppLog.Instance.CaptureUnhandledExceptions();
+        AppLog.Instance.CreateLogger("App").LogInformation(
+            "ZipStream {Version} started on {OS} ({Arch}), .NET {Runtime}",
+            AppLog.AppVersion, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture, Environment.Version);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow
