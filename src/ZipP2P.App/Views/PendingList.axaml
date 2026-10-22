@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="ZipP2P.App.Views.PendingList"
+             x:Name="Root">
+
+    <!-- Transferências interrompidas, com Retomar / Descartar. -->
+    <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <icons:MaterialIcon Kind="History" Width="18" Height="18" VerticalAlignment="Center"
+                                Foreground="{DynamicResource SecondaryTextBrush}" />
+            <TextBlock Classes="section" Text="{Binding #Root.Title}" VerticalAlignment="Center" />
+        </StackPanel>
+        <TextBlock Classes="hint" Text="{Binding #Root.Hint}" />
+        <ItemsControl ItemsSource="{Binding #Root.Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="8" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PendingTransferItem">
+                    <Border Classes="card" Padding="12,10">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Grid Grid.Column="0" VerticalAlignment="Center">
+                                <icons:MaterialIcon Kind="FolderOutline" Width="22" Height="22" IsVisible="{Binding IsFolder}"
+                                                    Foreground="{DynamicResource SecondaryTextBrush}" />
+                                <icons:MaterialIcon Kind="FileOutline" Width="22" Height="22" IsVisible="{Binding IsFile}"
+                                                    Foreground="{DynamicResource SecondaryTextBrush}" />
+                            </Grid>
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Classes="hint" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <Button AutomationProperties.Name="{Binding [Action.Resume], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ResumeCommand}" Classes="primary" MinWidth="0">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <icons:MaterialIcon Kind="PlayCircleOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding [Action.Resume], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button AutomationProperties.Name="{Binding [Action.Discard], Source={x:Static loc:Localizer.Instance}}" Command="{Binding DiscardCommand}"
+                                        ToolTip.Tip="{Binding [Action.Discard], Source={x:Static loc:Localizer.Instance}}">
+                                    <icons:MaterialIcon Kind="DeleteOutline" Width="16" Height="16" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

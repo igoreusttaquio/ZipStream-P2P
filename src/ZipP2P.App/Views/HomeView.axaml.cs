@@ -10,6 +10,8 @@ public partial class HomeView : UserControl
     public HomeView()
     {
         InitializeComponent();
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
     }
 
     private void OnDragOver(object? sender, DragEventArgs e)
@@ -21,15 +23,8 @@ public partial class HomeView : UserControl
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        var item = e.DataTransfer.TryGetFiles()?.FirstOrDefault();
-        if (item is null)
-            return;
-
-        var path = item.TryGetLocalPath();
-        if (string.IsNullOrWhiteSpace(path))
-            return;
-
-        if (DataContext is HomeViewModel vm)
-            vm.SetInputPath(path);
+        var path = e.DataTransfer.TryGetFiles()?.FirstOrDefault()?.TryGetLocalPath();
+        if (!string.IsNullOrWhiteSpace(path) && DataContext is HomeViewModel vm)
+            vm.OnItemDropped(path);
     }
 }

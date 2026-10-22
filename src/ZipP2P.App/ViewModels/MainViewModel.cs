@@ -4,7 +4,9 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using ZipP2P.App.Localization;
+using ZipP2P.App.Logging;
 
 namespace ZipP2P.App.ViewModels;
 
@@ -39,11 +41,26 @@ public partial class MainViewModel : ViewModelBase
         Home = new HomeViewModel();
         Settings = new SettingsViewModel(new AppSettings(new SettingsStore()), GoHome);
         Logs = new LogsViewModel(GoHome);
+        OperationViewModel.ShowLogs = GoLogs;
         CurrentPage = Home;
         LanguageIndex = DetectLanguageIndex();
 
         EmbeddedSignalingServer.Instance.StateChanged += () => Dispatcher.UIThread.Post(RefreshServerStatus);
         RefreshServerStatus();
+    }
+
+    public async Task RunStartupCommandAsync(StartupCommand command)
+    {
+        if (command.SendPath is { } path)
+        {
+            AppLog.Instance.CreateLogger("App").LogInformation("Started to send {Path}", path);
+            await Home.SendFromShellAsync(path);
+        }
+        else if (command.ReceiveCode is { } code)
+        {
+            Home.SelectedTab = HomeViewModel.ReceiveTab;
+            Home.Receive.RoomCode = code;
+        }
     }
 
     private void RefreshServerStatus()

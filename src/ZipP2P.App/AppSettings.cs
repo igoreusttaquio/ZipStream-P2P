@@ -11,6 +11,7 @@ public sealed class AppSettings
     private const string SignalingUrlKey = "SignalingUrl";
     private const string IceServersKey = "IceServers";
     private const string PortKey = "Port";
+    private const string DownloadDirectoryKey = "DownloadDirectory";
 
     private readonly SettingsStore _store;
 
@@ -30,6 +31,16 @@ public sealed class AppSettings
         get => int.TryParse(_store.Get(PortKey), out var p) ? p : DefaultPort;
         set => _store.Set(PortKey, value.ToString());
     }
+
+    /// <summary>Pasta onde os recebimentos são salvos (padrão: Downloads do usuário).</summary>
+    public string DownloadDirectory
+    {
+        get => _store.Get(DownloadDirectoryKey) is { Length: > 0 } dir ? dir : DefaultDownloadDirectory;
+        set => _store.Set(DownloadDirectoryKey, value);
+    }
+
+    public static string DefaultDownloadDirectory =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
     public IReadOnlyList<string> IceServers
     {

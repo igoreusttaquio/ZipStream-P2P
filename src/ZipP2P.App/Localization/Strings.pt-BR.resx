@@ -88,13 +88,13 @@
     <value>Código da sala</value>
   </data>
   <data name="Status.WaitingForPeer" xml:space="preserve">
-    <value>Aguardando par...</value>
+    <value>Aguardando o outro computador…</value>
   </data>
   <data name="Status.Sending" xml:space="preserve">
-    <value>Enviando...</value>
+    <value>Enviando…</value>
   </data>
   <data name="Status.Receiving" xml:space="preserve">
-    <value>Recebendo...</value>
+    <value>Recebendo…</value>
   </data>
   <data name="Action.Send" xml:space="preserve">
     <value>Enviar</value>
@@ -161,5 +161,131 @@
   </data>
   <data name="Action.ViewLogs" xml:space="preserve">
     <value>Ver log</value>
+  </data>
+  <data name="Tools.Title" xml:space="preserve">
+    <value>Ferramentas</value>
+  </data>
+  <data name="Tools.Hint" xml:space="preserve">
+    <value>Compacte ou extraia arquivos .zpp2 neste computador, sem enviar nada.</value>
+  </data>
+  <data name="Send.DropHint" xml:space="preserve">
+    <value>Arraste um arquivo ou pasta para cá</value>
+  </data>
+  <data name="Send.PickFile" xml:space="preserve">
+    <value>Escolher arquivo</value>
+  </data>
+  <data name="Send.PickFolder" xml:space="preserve">
+    <value>Escolher pasta</value>
+  </data>
+  <data name="Send.Change" xml:space="preserve">
+    <value>Trocar</value>
+  </data>
+  <data name="Send.Start" xml:space="preserve">
+    <value>Gerar código e enviar</value>
+  </data>
+  <data name="Send.StartHint" xml:space="preserve">
+    <value>Você vai receber um código para passar a quem vai receber.</value>
+  </data>
+  <data name="Send.CodeLabel" xml:space="preserve">
+    <value>CÓDIGO DE ENVIO</value>
+  </data>
+  <data name="Send.CodeHint" xml:space="preserve">
+    <value>No outro computador: abra o ZipStream → Receber → digite este código.</value>
+  </data>
+  <data name="Send.CodeCopied" xml:space="preserve">
+    <value>Copiado!</value>
+  </data>
+  <data name="Send.Another" xml:space="preserve">
+    <value>Enviar outro</value>
+  </data>
+  <data name="Receive.CodeLabel" xml:space="preserve">
+    <value>CÓDIGO DE ENVIO</value>
+  </data>
+  <data name="Receive.CodeHint" xml:space="preserve">
+    <value>Peça o código que aparece na tela de quem está enviando.</value>
+  </data>
+  <data name="Receive.SaveTo" xml:space="preserve">
+    <value>SALVAR EM</value>
+  </data>
+  <data name="Receive.Change" xml:space="preserve">
+    <value>Alterar…</value>
+  </data>
+  <data name="Receive.Start" xml:space="preserve">
+    <value>Receber</value>
+  </data>
+  <data name="Receive.SavedAt" xml:space="preserve">
+    <value>SALVO EM</value>
+  </data>
+  <data name="Receive.OpenFolder" xml:space="preserve">
+    <value>Abrir pasta</value>
+  </data>
+  <data name="Receive.Another" xml:space="preserve">
+    <value>Receber outro</value>
+  </data>
+  <data name="Pending.SendTitle" xml:space="preserve">
+    <value>Envios interrompidos</value>
+  </data>
+  <data name="Pending.SendHint" xml:space="preserve">
+    <value>Retome e peça para quem recebe usar o mesmo código (ou retomar do lado dele): a transferência continua de onde parou.</value>
+  </data>
+  <data name="Pending.SendDetail" xml:space="preserve">
+    <value>{0} · código {1} · {2}</value>
+  </data>
+  <data name="Pending.ReceiveTitle" xml:space="preserve">
+    <value>Recebimentos interrompidos</value>
+  </data>
+  <data name="Pending.ReceiveHint" xml:space="preserve">
+    <value>Quem envia também precisa retomar (mesmo código). O que já chegou é aproveitado.</value>
+  </data>
+  <data name="Pending.ReceiveDetail" xml:space="preserve">
+    <value>{0}% de {1} · código {2} · {3}</value>
+  </data>
+  <data name="Action.Resume" xml:space="preserve">
+    <value>Retomar</value>
+  </data>
+  <data name="Action.Discard" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="Status.Preparing" xml:space="preserve">
+    <value>Preparando (compactando)…</value>
+  </data>
+  <data name="Status.Reconnecting" xml:space="preserve">
+    <value>Conexão caiu — reconectando (tentativa {0})…</value>
+  </data>
+  <data name="Status.Extracting" xml:space="preserve">
+    <value>Extraindo…</value>
+  </data>
+  <data name="Status.SasHint" xml:space="preserve">
+    <value>Confira se o outro computador mostra o mesmo código. Se não, cancele.</value>
+  </data>
+  <data name="Progress.Remaining" xml:space="preserve">
+    <value>~{0} restantes</value>
+  </data>
+  <data name="Error.Signaling" xml:space="preserve">
+    <value>Não foi possível falar com o servidor de sinalização. Confira o endereço em Configurações (ou inicie o servidor local).</value>
+  </data>
+  <data name="Error.ConnectionLost" xml:space="preserve">
+    <value>Não foi possível conectar ao outro computador.</value>
+  </data>
+  <data name="Error.Aborted" xml:space="preserve">
+    <value>O outro computador encerrou a transferência.</value>
+  </data>
+  <data name="Error.Corrupted" xml:space="preserve">
+    <value>Os dados recebidos são inválidos ou estão corrompidos.</value>
+  </data>
+  <data name="Error.Access" xml:space="preserve">
+    <value>Sem permissão. Escolha outra pasta.</value>
+  </data>
+  <data name="Error.Disk" xml:space="preserve">
+    <value>Erro ao ler ou gravar arquivos (disco cheio?).</value>
+  </data>
+  <data name="Error.Unexpected" xml:space="preserve">
+    <value>Erro inesperado.</value>
+  </data>
+  <data name="Status.Connecting" xml:space="preserve">
+    <value>Conectando ao servidor…</value>
+  </data>
+  <data name="Settings.Theme" xml:space="preserve">
+    <value>Tema claro/escuro</value>
   </data>
 </root>

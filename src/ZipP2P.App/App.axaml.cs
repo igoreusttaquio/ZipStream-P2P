@@ -25,10 +25,13 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainViewModel(),
-            };
+            var command = StartupCommand.Parse(desktop.Args ?? Array.Empty<string>());
+            var viewModel = new MainViewModel();
+            var window = new MainWindow { DataContext = viewModel };
+
+            // Executa depois de abrir: os seletores/área de transferência vêm da janela.
+            window.Opened += async (_, _) => await viewModel.RunStartupCommandAsync(command);
+            desktop.MainWindow = window;
         }
 
         base.OnFrameworkInitializationCompleted();

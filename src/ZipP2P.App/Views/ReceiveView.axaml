@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:views="using:ZipP2P.App.Views"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="560"
+             x:Class="ZipP2P.App.Views.ReceiveView"
+             x:DataType="vm:ReceiveViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="0,4,4,4">
+
+            <!-- Formulário: código + destino -->
+            <Border Classes="card" IsVisible="{Binding ShowForm}">
+                <StackPanel Spacing="18">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="label" Text="{Binding [Receive.CodeLabel], Source={x:Static loc:Localizer.Instance}}" />
+                        <TextBox Text="{Binding RoomCode}" MaxLength="8" PlaceholderText="ABC123" HorizontalAlignment="Left" Width="260"
+                                 FontSize="28" FontWeight="Bold" LetterSpacing="6" Padding="14,8"
+                                 FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace" />
+                        <TextBlock Classes="hint" Text="{Binding [Receive.CodeHint], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="label" Text="{Binding [Receive.SaveTo], Source={x:Static loc:Localizer.Instance}}" />
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <icons:MaterialIcon Grid.Column="0" Kind="FolderOutline" Width="20" Height="20" VerticalAlignment="Center"
+                                                Foreground="{DynamicResource SecondaryTextBrush}" />
+                            <TextBox Grid.Column="1" Text="{Binding DestinationDir}" IsReadOnly="True" VerticalContentAlignment="Center" />
+                            <Button AutomationProperties.Name="{Binding [Receive.Change], Source={x:Static loc:Localizer.Instance}}" Grid.Column="2" Command="{Binding ChangeDestinationCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <icons:MaterialIcon Kind="FolderOpen" Width="16" Height="16" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding [Receive.Change], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <Button AutomationProperties.Name="{Binding [Receive.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding ReceiveCommand}" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:MaterialIcon Kind="Download" Width="18" Height="18" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding [Receive.Start], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <views:StatusPanel />
+
+            <!-- Resultado -->
+            <Border Classes="card" IsVisible="{Binding HasResult}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <icons:MaterialIcon Grid.Column="0" Kind="CheckCircle" Width="30" Height="30" Foreground="#22C55E" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Classes="label" Text="{Binding [Receive.SavedAt], Source={x:Static loc:Localizer.Instance}}" />
+                        <SelectableTextBlock Text="{Binding ResultPath}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button AutomationProperties.Name="{Binding [Receive.OpenFolder], Source={x:Static loc:Localizer.Instance}}" Grid.Column="2" Command="{Binding OpenResultFolderCommand}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:MaterialIcon Kind="FolderOpen" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding [Receive.OpenFolder], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Ações -->
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button AutomationProperties.Name="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" MinWidth="120">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Close" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="{Binding [Receive.Another], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ReceiveAnotherCommand}" IsVisible="{Binding IsCompleted}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Download" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Receive.Another], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Recebimentos interrompidos -->
+            <views:PendingList Items="{Binding Pending}"
+                               Title="{Binding [Pending.ReceiveTitle], Source={x:Static loc:Localizer.Instance}}"
+                               Hint="{Binding [Pending.ReceiveHint], Source={x:Static loc:Localizer.Instance}}">
+                <views:PendingList.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="HasPending" />
+                        <Binding Path="!IsBusy" />
+                    </MultiBinding>
+                </views:PendingList.IsVisible>
+            </views:PendingList>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -40,6 +40,16 @@ public sealed class SignalingPeerLinkFactory : IPeerLinkFactory
         _openTimeout = openTimeout ?? TimeSpan.FromSeconds(45);
     }
 
+    /// <summary>
+    /// Verifica se o servidor de sinalização responde (lança <see cref="SignalingException"/> se não).
+    /// Útil antes de etapas demoradas, como comprimir um arquivo grande.
+    /// </summary>
+    public async Task CheckServerAsync(CancellationToken cancellationToken)
+    {
+        await using var signaling = new SignalRSignalingClient(_signalingUrl, _loggerFactory.CreateLogger("Signaling"));
+        await signaling.StartAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<IPeerLink> ConnectAsync(string roomCode, bool asOfferer, CancellationToken cancellationToken)
     {
         var transport = new LibDataChannelTransport(_iceServers, _loggerFactory.CreateLogger("WebRTC"));

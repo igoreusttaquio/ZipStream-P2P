@@ -88,13 +88,13 @@
     <value>Room code</value>
   </data>
   <data name="Status.WaitingForPeer" xml:space="preserve">
-    <value>Waiting for peer...</value>
+    <value>Waiting for the other computer…</value>
   </data>
   <data name="Status.Sending" xml:space="preserve">
-    <value>Sending...</value>
+    <value>Sending…</value>
   </data>
   <data name="Status.Receiving" xml:space="preserve">
-    <value>Receiving...</value>
+    <value>Receiving…</value>
   </data>
   <data name="Action.Send" xml:space="preserve">
     <value>Send</value>
@@ -161,5 +161,131 @@
   </data>
   <data name="Action.ViewLogs" xml:space="preserve">
     <value>View log</value>
+  </data>
+  <data name="Tools.Title" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="Tools.Hint" xml:space="preserve">
+    <value>Compress or extract .zpp2 files on this computer, without sending anything.</value>
+  </data>
+  <data name="Send.DropHint" xml:space="preserve">
+    <value>Drag a file or folder here</value>
+  </data>
+  <data name="Send.PickFile" xml:space="preserve">
+    <value>Choose file</value>
+  </data>
+  <data name="Send.PickFolder" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="Send.Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Send.Start" xml:space="preserve">
+    <value>Generate code and send</value>
+  </data>
+  <data name="Send.StartHint" xml:space="preserve">
+    <value>You will get a code to give to the person receiving.</value>
+  </data>
+  <data name="Send.CodeLabel" xml:space="preserve">
+    <value>TRANSFER CODE</value>
+  </data>
+  <data name="Send.CodeHint" xml:space="preserve">
+    <value>On the other computer: open ZipStream → Receive → type this code.</value>
+  </data>
+  <data name="Send.CodeCopied" xml:space="preserve">
+    <value>Copied!</value>
+  </data>
+  <data name="Send.Another" xml:space="preserve">
+    <value>Send another</value>
+  </data>
+  <data name="Receive.CodeLabel" xml:space="preserve">
+    <value>TRANSFER CODE</value>
+  </data>
+  <data name="Receive.CodeHint" xml:space="preserve">
+    <value>Ask the sender for the code shown on their screen.</value>
+  </data>
+  <data name="Receive.SaveTo" xml:space="preserve">
+    <value>SAVE TO</value>
+  </data>
+  <data name="Receive.Change" xml:space="preserve">
+    <value>Change…</value>
+  </data>
+  <data name="Receive.Start" xml:space="preserve">
+    <value>Receive</value>
+  </data>
+  <data name="Receive.SavedAt" xml:space="preserve">
+    <value>SAVED TO</value>
+  </data>
+  <data name="Receive.OpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="Receive.Another" xml:space="preserve">
+    <value>Receive another</value>
+  </data>
+  <data name="Pending.SendTitle" xml:space="preserve">
+    <value>Interrupted sends</value>
+  </data>
+  <data name="Pending.SendHint" xml:space="preserve">
+    <value>Resume and ask the receiver to use the same code (or resume on their side): the transfer continues where it stopped.</value>
+  </data>
+  <data name="Pending.SendDetail" xml:space="preserve">
+    <value>{0} · code {1} · {2}</value>
+  </data>
+  <data name="Pending.ReceiveTitle" xml:space="preserve">
+    <value>Interrupted downloads</value>
+  </data>
+  <data name="Pending.ReceiveHint" xml:space="preserve">
+    <value>The sender also needs to resume (same code). Already received data is kept.</value>
+  </data>
+  <data name="Pending.ReceiveDetail" xml:space="preserve">
+    <value>{0}% of {1} · code {2} · {3}</value>
+  </data>
+  <data name="Action.Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Action.Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="Status.Preparing" xml:space="preserve">
+    <value>Preparing (compressing)…</value>
+  </data>
+  <data name="Status.Reconnecting" xml:space="preserve">
+    <value>Connection lost — reconnecting (attempt {0})…</value>
+  </data>
+  <data name="Status.Extracting" xml:space="preserve">
+    <value>Extracting…</value>
+  </data>
+  <data name="Status.SasHint" xml:space="preserve">
+    <value>Check that the other computer shows the same code. If not, cancel.</value>
+  </data>
+  <data name="Progress.Remaining" xml:space="preserve">
+    <value>~{0} left</value>
+  </data>
+  <data name="Error.Signaling" xml:space="preserve">
+    <value>Could not reach the signaling server. Check the server address in Settings (or start the local server).</value>
+  </data>
+  <data name="Error.ConnectionLost" xml:space="preserve">
+    <value>Could not connect to the other computer.</value>
+  </data>
+  <data name="Error.Aborted" xml:space="preserve">
+    <value>The other computer ended the transfer.</value>
+  </data>
+  <data name="Error.Corrupted" xml:space="preserve">
+    <value>The received data is invalid or corrupted.</value>
+  </data>
+  <data name="Error.Access" xml:space="preserve">
+    <value>Permission denied. Choose another folder.</value>
+  </data>
+  <data name="Error.Disk" xml:space="preserve">
+    <value>Error reading or writing files (disk full?).</value>
+  </data>
+  <data name="Error.Unexpected" xml:space="preserve">
+    <value>Unexpected error.</value>
+  </data>
+  <data name="Status.Connecting" xml:space="preserve">
+    <value>Connecting to the server…</value>
+  </data>
+  <data name="Settings.Theme" xml:space="preserve">
+    <value>Light/dark theme</value>
   </data>
 </root>

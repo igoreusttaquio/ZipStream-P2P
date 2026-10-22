@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:views="using:ZipP2P.App.Views"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="560"
+             x:Class="ZipP2P.App.Views.SendView"
+             x:DataType="vm:SendViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="0,4,4,4">
+
+            <!-- 1. Escolher o que enviar -->
+            <Grid Height="190" IsVisible="{Binding ShowPicker}">
+                <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
+                           StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="12" RadiusY="12"
+                           Fill="{DynamicResource CardBackgroundBrush}" />
+                <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:MaterialIcon Kind="CloudUpload" Width="48" Height="48" HorizontalAlignment="Center"
+                                        Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBlock Text="{Binding [Send.DropHint], Source={x:Static loc:Localizer.Instance}}"
+                               HorizontalAlignment="Center" FontSize="15" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                        <Button AutomationProperties.Name="{Binding [Send.PickFile], Source={x:Static loc:Localizer.Instance}}" Command="{Binding PickFileCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="FileOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Send.PickFile], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{Binding [Send.PickFolder], Source={x:Static loc:Localizer.Instance}}" Command="{Binding PickFolderCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="FolderOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Send.PickFolder], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- Item selecionado -->
+            <Border Classes="card" IsVisible="{Binding HasSelection}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <Grid Grid.Column="0" VerticalAlignment="Center">
+                        <icons:MaterialIcon Kind="FolderOutline" Width="34" Height="34" IsVisible="{Binding SelectedIsFolder}"
+                                            Foreground="{DynamicResource AccentBrush}" />
+                        <icons:MaterialIcon Kind="FileOutline" Width="34" Height="34" IsVisible="{Binding !SelectedIsFolder}"
+                                            Foreground="{DynamicResource AccentBrush}" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SelectedName}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Classes="hint" Text="{Binding SelectedSizeText}" />
+                        <TextBlock Classes="hint" Text="{Binding SelectedPath}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <Button AutomationProperties.Name="{Binding [Send.Change], Source={x:Static loc:Localizer.Instance}}" Grid.Column="2" Classes="link" Command="{Binding ClearSelectionCommand}"
+                            IsVisible="{Binding !IsBusy}" VerticalAlignment="Center"
+                            Content="{Binding [Send.Change], Source={x:Static loc:Localizer.Instance}}" />
+                </Grid>
+            </Border>
+
+            <!-- 2. Gerar código e enviar -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <StackPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="HasSelection" />
+                        <Binding Path="IsIdle" />
+                    </MultiBinding>
+                </StackPanel.IsVisible>
+                <Button AutomationProperties.Name="{Binding [Send.Start], Source={x:Static loc:Localizer.Instance}}" Classes="primary large" Command="{Binding SendCommand}" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Send" Width="18" Height="18" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Send.Start], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Classes="hint" HorizontalAlignment="Center" TextAlignment="Center"
+                           Text="{Binding [Send.StartHint], Source={x:Static loc:Localizer.Instance}}" />
+            </StackPanel>
+
+            <!-- 3. Código para o destinatário -->
+            <Border Classes="card">
+                <Border.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="HasRoomCode" />
+                        <Binding Path="IsActiveOrFinished" />
+                    </MultiBinding>
+                </Border.IsVisible>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="label" Text="{Binding [Send.CodeLabel], Source={x:Static loc:Localizer.Instance}}" />
+                        <SelectableTextBlock Text="{Binding RoomCode}" FontSize="36" FontWeight="Bold" LetterSpacing="6"
+                                             FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"
+                                             Foreground="{DynamicResource AccentBrush}" />
+                        <TextBlock Classes="hint" Text="{Binding [Send.CodeHint], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                        <Button AutomationProperties.Name="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}" Command="{Binding CopyCodeCommand}" HorizontalAlignment="Right">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="ContentCopy" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Logs.Copy], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding CopyFeedback}" FontSize="11" HorizontalAlignment="Right"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <views:StatusPanel />
+
+            <!-- Ações -->
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button AutomationProperties.Name="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" MinWidth="120">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Close" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Action.Cancel], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="{Binding [Send.Another], Source={x:Static loc:Localizer.Instance}}" Command="{Binding SendAnotherCommand}" Classes="primary">
+                    <Button.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="IsActiveOrFinished" />
+                            <Binding Path="!IsBusy" />
+                        </MultiBinding>
+                    </Button.IsVisible>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <icons:MaterialIcon Kind="Send" Width="16" Height="16" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Send.Another], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- Envios interrompidos -->
+            <views:PendingList Items="{Binding Pending}"
+                               Title="{Binding [Pending.SendTitle], Source={x:Static loc:Localizer.Instance}}"
+                               Hint="{Binding [Pending.SendHint], Source={x:Static loc:Localizer.Instance}}">
+                <views:PendingList.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="HasPending" />
+                        <Binding Path="!IsBusy" />
+                    </MultiBinding>
+                </views:PendingList.IsVisible>
+            </views:PendingList>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

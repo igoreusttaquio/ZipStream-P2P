@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ZipP2P.App.ViewModels"
+             xmlns:loc="using:ZipP2P.App.Localization"
+             xmlns:icons="using:Material.Icons.Avalonia"
+             x:Class="ZipP2P.App.Views.StatusPanel"
+             x:DataType="vm:OperationViewModel">
+
+    <!-- Status da operação: etapa, progresso, código de segurança e erros. -->
+    <Border Classes="card" IsVisible="{Binding IsActiveOrFinished}">
+        <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <icons:MaterialIcon Grid.Column="0" Kind="{Binding StatusIcon}" Width="22" Height="22"
+                                    Foreground="{Binding StatusBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="15" FontWeight="SemiBold"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Grid.Column="2" Text="{Binding Details}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryTextBrush}" />
+            </Grid>
+
+            <ProgressBar Value="{Binding ProgressPercent}" IsIndeterminate="{Binding IsProgressIndeterminate}"
+                         Minimum="0" Maximum="100" Height="6" IsVisible="{Binding IsBusy}" />
+
+            <!-- SAS: os dois lados devem ver o mesmo código -->
+            <Border IsVisible="{Binding IsSasVisible}" CornerRadius="8" Padding="12,8" Background="#143B82F6">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <icons:MaterialIcon Grid.Column="0" Kind="ShieldCheck" Width="20" Height="20"
+                                        Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding [Label.SecurityCode], Source={x:Static loc:Localizer.Instance}}" />
+                            <TextBlock Text="{Binding SasCode}" FontWeight="Bold" LetterSpacing="2"
+                                       FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace" />
+                        </StackPanel>
+                        <TextBlock Classes="hint" Text="{Binding [Status.SasHint], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Erro: mensagem amigável + detalhe técnico + atalho para o log -->
+            <Border IsVisible="{Binding HasError}" CornerRadius="8" Padding="12,10" Background="#14EF4444">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <SelectableTextBlock Grid.Column="0" Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                    <Button AutomationProperties.Name="{Binding [Action.ViewLogs], Source={x:Static loc:Localizer.Instance}}" Grid.Column="1" Command="{Binding ViewLogsCommand}" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:MaterialIcon Kind="TextBoxSearchOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding [Action.ViewLogs], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>
