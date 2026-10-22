@@ -346,59 +346,55 @@ public partial class HomeViewModel : ViewModelBase
     private async Task SendTransferAsync(CancellationToken cancellationToken)
     {
         RoomCode = GenerateRoomCode();
+        var store = new TransferStore(TransferStore.DefaultRoot);
 
-        var transport = new LibDataChannelTransport(_settings.IceServers);
-        var signaling = new SignalRSignalingClient(_settings.SignalingUrl);
-        await using var session = new TransferSession(transport);
-        session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
-        var peer = new PeerConnection(transport, signaling, RoomCode);
+        SetStatus("Status.Compressing");
+        var id = Guid.NewGuid();
+        var contentType = await TransferPackage.CreateAsync(
+            InputPath, store.PackagePath(id), null, new Progress<CompressionProgress>(OnProgress), cancellationToken).ConfigureAwait(true);
+        var name = Path.GetFileName(InputPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var transfer = new OutgoingTransfer(
+            id, InputPath, name, contentType, new FileInfo(store.PackagePath(id)).Length, RoomCode, DateTimeOffset.Now);
+        store.Save(transfer);
 
-        try
-        {
-            var connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            transport.Connected += () => connected.TrySetResult();
-
-            SetStatus("Status.WaitingForPeer");
-            await peer.ConnectAsync(asOfferer: true, cancellationToken).ConfigureAwait(true);
-            await connected.Task.WaitAsync(cancellationToken).ConfigureAwait(true);
-
-            SetStatus("Status.Sending");
-            var progress = new Progress<CompressionProgress>(OnProgress);
-            await session.SendAsync(InputPath, progress, cancellationToken).ConfigureAwait(true);
-        }
-        finally
-        {
-            await peer.DisposeAsync().ConfigureAwait(true);
-        }
+        var runner = CreateRunner(store);
+        SetStatus("Status.WaitingForPeer");
+        await runner.SendAsync(transfer, new Progress<TransferProgress>(OnTransferProgress), cancellationToken).ConfigureAwait(true);
     }
 
     private async Task ReceiveTransferAsync(CancellationToken cancellationToken)
     {
-        var transport = new LibDataChannelTransport(_settings.IceServers);
-        var signaling = new SignalRSignalingClient(_settings.SignalingUrl);
-        await using var session = new TransferSession(transport);
-        session.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
-        var peer = new PeerConnection(transport, signaling, RoomCode);
+        var store = new TransferStore(TransferStore.DefaultRoot);
+        var runner = CreateRunner(store);
+        var destinationDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
-        try
+        var incoming = await runner.ReceiveAsync(
+            RoomCode.Trim().ToUpperInvariant(), destinationDir, new Progress<TransferProgress>(OnTransferProgress), cancellationToken).ConfigureAwait(true);
+
+        SetStatus("Status.Decompressing");
+        var result = await TransferPackage.ExtractAsync(
+            store.PartialPath(incoming.Id), incoming.FileName, incoming.ContentType, incoming.DestinationDir,
+            new Progress<CompressionProgress>(OnProgress), cancellationToken).ConfigureAwait(true);
+        store.Delete(incoming);
+        Details = result;
+    }
+
+    private TransferRunner CreateRunner(TransferStore store)
+    {
+        var runner = new TransferRunner(new SignalingPeerLinkFactory(_settings.SignalingUrl, _settings.IceServers), store);
+        runner.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
+        runner.StatusChanged += status => Dispatcher.UIThread.Post(() => SetStatus(status.Stage switch
         {
-            var connected = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            transport.Connected += () => connected.TrySetResult();
+            TransferStage.Transferring => IsSendMode ? "Status.Sending" : "Status.Receiving",
+            _ => "Status.WaitingForPeer",
+        }));
+        return runner;
+    }
 
-            await peer.ConnectAsync(asOfferer: false, cancellationToken).ConfigureAwait(true);
-            await connected.Task.WaitAsync(cancellationToken).ConfigureAwait(true);
-
-            SetStatus("Status.Receiving");
-            var progress = new Progress<CompressionProgress>(OnProgress);
-            var destinationDir = Path.Combine(Path.GetTempPath(), "ZipStream-Recebidos");
-            await session.ReceiveAsync(destinationDir, null, progress, cancellationToken).ConfigureAwait(true);
-
-            Details = destinationDir;
-        }
-        finally
-        {
-            await peer.DisposeAsync().ConfigureAwait(true);
-        }
+    private void OnTransferProgress(TransferProgress p)
+    {
+        ProgressPercent = p.TotalBytes > 0 ? (double)p.BytesTransferred / p.TotalBytes * 100.0 : 0;
+        Details = $"{FormatBytes(p.BytesTransferred)} / {FormatBytes(p.TotalBytes)}";
     }
 
     private static string GenerateRoomCode()

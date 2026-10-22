@@ -8,5 +8,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ZipP2P.Core.Tests/ZipP2P.Core.Tests.csproj" />
+    <Project Path="tests/ZipP2P.P2P.Tests/ZipP2P.P2P.Tests.csproj" />
   </Folder>
 </Solution>

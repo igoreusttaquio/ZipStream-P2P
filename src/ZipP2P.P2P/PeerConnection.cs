@@ -23,7 +23,7 @@ public sealed class PeerConnection : IAsyncDisposable
 
     /// <summary>
     /// Conecta ao servidor de sinalização, entra na sala e estabelece a conexão.
-    /// O lado <paramref name="asOfferer"/> cria o canal de dados (após o par entrar na sala).
+    /// O lado <paramref name="asOfferer"/> cria o canal de dados (após o par estar na sala).
     /// </summary>
     public async Task ConnectAsync(bool asOfferer, CancellationToken cancellationToken = default)
     {
@@ -35,14 +35,16 @@ public sealed class PeerConnection : IAsyncDisposable
         _signaling.DescriptionReceived += d => _transport.OnRemoteDescription(d);
         _signaling.CandidateReceived += c => _transport.OnRemoteCandidate(c);
 
+        // Assina antes de entrar na sala: o servidor avisa "PeerJoined" durante o JoinRoom
+        // quando o par já está lá (caso comum numa reconexão).
+        var peerJoined = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _signaling.PeerJoined += () => peerJoined.TrySetResult();
+
         await _signaling.StartAsync(cancellationToken).ConfigureAwait(false);
         await _signaling.JoinRoomAsync(_roomCode, cancellationToken).ConfigureAwait(false);
 
         if (asOfferer)
         {
-            var peerJoined = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            _signaling.PeerJoined += () => peerJoined.TrySetResult();
-
             await peerJoined.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
             _transport.CreateDataChannel(_label);
         }
