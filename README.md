@@ -143,7 +143,7 @@ Firewall: liberar `3478/tcp+udp` e `49160-49200/udp` (80/443 já são do Caddy).
 
 1. Suba o servidor e o coturn (seção acima).
 2. Nas duas máquinas, **URL do servidor** = `https://zipstream.seudominio.com/signaling`.
-3. ⚙️ Configurações → **Servidor STUN/TURN**: host `zipstream.seudominio.com:3478`, usuário `zipstream` e a senha do `TURN_PASSWORD` → **Salvar**. Sem usuário, o servidor vale só como STUN.
+3. ⚙️ Configurações → **Servidor STUN/TURN**: host `zipstream.seudominio.com:3478`, usuário `zipstream` e a senha do `TURN_PASSWORD` → **Salvar**. Sem usuário, o servidor vale só como STUN. Sem nada configurado, o app usa o STUN público do Google (`stun.l.google.com:19302`), suficiente para a maioria das redes; o TURN só é necessário quando a conexão direta é bloqueada.
 
 ## Menu de contexto
 

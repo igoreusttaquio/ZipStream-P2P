@@ -50,15 +50,19 @@ public sealed class AppSettings
     public static string DefaultDownloadDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
+    /// <summary>
+    /// STUN público usado quando nada foi configurado: sem STUN, cada lado só conhece os
+    /// próprios IPs da rede local e a conexão entre redes diferentes falha.
+    /// </summary>
+    public static readonly IReadOnlyList<string> DefaultIceServers = new[] { "stun:stun.l.google.com:19302" };
+
     public IReadOnlyList<string> IceServers
     {
         get
         {
             var json = _store.Get(IceServersKey);
-            if (string.IsNullOrEmpty(json))
-                return Array.Empty<string>();
-
-            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+            var servers = string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<List<string>>(json);
+            return servers is { Count: > 0 } ? servers : DefaultIceServers;
         }
         set => _store.Set(IceServersKey, JsonSerializer.Serialize(value));
     }

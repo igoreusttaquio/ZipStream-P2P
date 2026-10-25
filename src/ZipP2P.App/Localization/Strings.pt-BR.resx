@@ -361,6 +361,6 @@
     <value>Senha do TURN</value>
   </data>
   <data name="Settings.IceHint" xml:space="preserve">
-    <value>Opcional. Usado quando a conexão direta é bloqueada (redes corporativas, internet móvel). Sem usuário, vale só como STUN. Porta 3478 se omitida. Vale a partir da próxima transferência.</value>
+    <value>Permite que computadores em redes diferentes se encontrem. Vazio: STUN público do Google (stun.l.google.com:19302). Com usuário, também é usado como TURN (relay) quando a conexão direta é bloqueada. Porta 3478 se omitida. Vale a partir da próxima transferência.</value>
   </data>
 </root>

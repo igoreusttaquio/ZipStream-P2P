@@ -361,6 +361,6 @@
     <value>Contraseña de TURN</value>
   </data>
   <data name="Settings.IceHint" xml:space="preserve">
-    <value>Opcional. Se usa cuando la conexión directa está bloqueada (redes corporativas, internet móvil). Sin usuario, solo se usa como STUN. Puerto 3478 si se omite. Se aplica desde la próxima transferencia.</value>
+    <value>Permite que equipos en redes distintas se encuentren. Vacío: STUN público de Google (stun.l.google.com:19302). Con usuario, también se usa como TURN (relay) cuando la conexión directa está bloqueada. Puerto 3478 si se omite. Se aplica desde la próxima transferencia.</value>
   </data>
 </root>
