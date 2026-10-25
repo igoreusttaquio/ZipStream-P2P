@@ -9,7 +9,7 @@
              x:Class="ZipP2P.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="16">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
 
         <!-- Voltar -->
         <Button AutomationProperties.Name="{Binding [Settings.Back], Source={x:Static loc:Localizer.Instance}}" Grid.Row="0" Command="{Binding BackCommand}" HorizontalAlignment="Left">
@@ -20,80 +20,106 @@
             </StackPanel>
         </Button>
 
-        <!-- Servidor remoto -->
-        <StackPanel Grid.Row="1" Spacing="6">
-            <TextBlock Text="{Binding [Settings.ServerUrl], Source={x:Static loc:Localizer.Instance}}"
-                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
-            <TextBox Text="{Binding ServerUrl}" VerticalContentAlignment="Center" />
-            <TextBlock Text="{Binding [Settings.ServerUrlHint], Source={x:Static loc:Localizer.Instance}}"
-                       FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8"
-                       TextWrapping="Wrap" />
-        </StackPanel>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="16">
 
-        <!-- Servidor local (mesma rede) -->
-        <StackPanel Grid.Row="2" Spacing="8">
-            <TextBlock Text="{Binding [Settings.LocalServerHint], Source={x:Static loc:Localizer.Instance}}"
-                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <TextBlock Text="{Binding [Settings.Port], Source={x:Static loc:Localizer.Instance}}"
-                           VerticalAlignment="Center" />
-                <TextBox Text="{Binding Port}" Width="80" VerticalContentAlignment="Center" />
-                <Button AutomationProperties.Name="{Binding [Settings.StartServer], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerStopped}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:MaterialIcon Kind="Play" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding [Settings.StartServer], Source={x:Static loc:Localizer.Instance}}"
+                <!-- Servidor remoto -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding [Settings.ServerUrl], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBox Text="{Binding ServerUrl}" VerticalContentAlignment="Center" />
+                    <TextBlock Text="{Binding [Settings.ServerUrlHint], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- STUN/TURN (relay quando a conexão direta é bloqueada) -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding [Settings.IceTitle], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <Grid ColumnDefinitions="*,150,170" ColumnSpacing="10">
+                        <TextBox Grid.Column="0" Text="{Binding IceHost}" VerticalContentAlignment="Center"
+                                 PlaceholderText="{Binding [Settings.IceHost], Source={x:Static loc:Localizer.Instance}}"
+                                 AutomationProperties.Name="{Binding [Settings.IceHost], Source={x:Static loc:Localizer.Instance}}" />
+                        <TextBox Grid.Column="1" Text="{Binding IceUsername}" VerticalContentAlignment="Center"
+                                 PlaceholderText="{Binding [Settings.IceUsername], Source={x:Static loc:Localizer.Instance}}"
+                                 AutomationProperties.Name="{Binding [Settings.IceUsername], Source={x:Static loc:Localizer.Instance}}" />
+                        <TextBox Grid.Column="2" Text="{Binding IcePassword}" VerticalContentAlignment="Center" PasswordChar="•"
+                                 PlaceholderText="{Binding [Settings.IcePassword], Source={x:Static loc:Localizer.Instance}}"
+                                 AutomationProperties.Name="{Binding [Settings.IcePassword], Source={x:Static loc:Localizer.Instance}}" />
+                    </Grid>
+                    <TextBlock Text="{Binding [Settings.IceHint], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Servidor local (mesma rede) -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding [Settings.LocalServerHint], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="{Binding [Settings.Port], Source={x:Static loc:Localizer.Instance}}"
                                    VerticalAlignment="Center" />
+                        <TextBox Text="{Binding Port}" Width="80" VerticalContentAlignment="Center" />
+                        <Button AutomationProperties.Name="{Binding [Settings.StartServer], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerStopped}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="Play" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Settings.StartServer], Source={x:Static loc:Localizer.Instance}}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{Binding [Settings.StopServer], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerRunning}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="Stop" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Settings.StopServer], Source={x:Static loc:Localizer.Instance}}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding ServerStatus}" VerticalAlignment="Center" IsVisible="{Binding IsServerRunning}"
+                                   Foreground="{DynamicResource AccentBrush}" />
                     </StackPanel>
-                </Button>
-                <Button AutomationProperties.Name="{Binding [Settings.StopServer], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleServerCommand}" IsVisible="{Binding IsServerRunning}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:MaterialIcon Kind="Stop" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding [Settings.StopServer], Source={x:Static loc:Localizer.Instance}}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <TextBlock Text="{Binding ServerStatus}" VerticalAlignment="Center" IsVisible="{Binding IsServerRunning}"
-                           Foreground="{DynamicResource AccentBrush}" />
-            </StackPanel>
-        </StackPanel>
+                </StackPanel>
 
-        <!-- Menu de contexto do sistema ("Enviar com ZipStream") -->
-        <StackPanel Grid.Row="3" Spacing="8" IsVisible="{Binding IsShellSupported}">
-            <TextBlock Text="{Binding [Settings.ShellTitle], Source={x:Static loc:Localizer.Instance}}"
-                       FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
-            <TextBlock Text="{Binding ShellHint}" TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <Button AutomationProperties.Name="{Binding [Settings.ShellInstall], Source={x:Static loc:Localizer.Instance}}"
-                        Command="{Binding InstallShellCommand}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:MaterialIcon Kind="CursorDefaultClick" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding [Settings.ShellInstall], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                <!-- Menu de contexto do sistema ("Enviar com ZipStream") -->
+                <StackPanel Spacing="8" IsVisible="{Binding IsShellSupported}">
+                    <TextBlock Text="{Binding [Settings.ShellTitle], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBlock Text="{Binding ShellHint}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button AutomationProperties.Name="{Binding [Settings.ShellInstall], Source={x:Static loc:Localizer.Instance}}"
+                                Command="{Binding InstallShellCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="CursorDefaultClick" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Settings.ShellInstall], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{Binding [Settings.ShellRemove], Source={x:Static loc:Localizer.Instance}}"
+                                Command="{Binding UninstallShellCommand}" IsEnabled="{Binding IsShellInstalled}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="DeleteOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Settings.ShellRemove], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding ShellStatusText}" VerticalAlignment="Center" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AccentBrush}" />
                     </StackPanel>
-                </Button>
-                <Button AutomationProperties.Name="{Binding [Settings.ShellRemove], Source={x:Static loc:Localizer.Instance}}"
-                        Command="{Binding UninstallShellCommand}" IsEnabled="{Binding IsShellInstalled}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:MaterialIcon Kind="DeleteOutline" Width="16" Height="16" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding [Settings.ShellRemove], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <TextBlock Text="{Binding ShellStatusText}" VerticalAlignment="Center" TextWrapping="Wrap"
-                           Foreground="{DynamicResource AccentBrush}" />
-            </StackPanel>
-            <TextBlock Text="{Binding ShellNote}" FontSize="11" TextWrapping="Wrap"
-                       Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8" />
-        </StackPanel>
+                    <TextBlock Text="{Binding ShellNote}" FontSize="11" TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8" />
+                </StackPanel>
 
-        <!-- Bandeja do sistema -->
-        <StackPanel Grid.Row="4" Spacing="4">
-            <CheckBox IsChecked="{Binding CloseToTray}"
-                      Content="{Binding [Settings.CloseToTray], Source={x:Static loc:Localizer.Instance}}" />
-            <TextBlock Text="{Binding [Settings.CloseToTrayHint], Source={x:Static loc:Localizer.Instance}}"
-                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8" />
-        </StackPanel>
+                <!-- Bandeja do sistema -->
+                <StackPanel Spacing="4">
+                    <CheckBox IsChecked="{Binding CloseToTray}"
+                              Content="{Binding [Settings.CloseToTray], Source={x:Static loc:Localizer.Instance}}" />
+                    <TextBlock Text="{Binding [Settings.CloseToTrayHint], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
 
         <!-- Salvar -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button AutomationProperties.Name="{Binding [Settings.Save], Source={x:Static loc:Localizer.Instance}}" Command="{Binding SaveCommand}" Classes="primary" MinWidth="120">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                     <icons:MaterialIcon Kind="Check" Width="16" Height="16" VerticalAlignment="Center" />

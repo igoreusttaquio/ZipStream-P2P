@@ -348,4 +348,19 @@
   <data name="Settings.CloseToTrayHint" xml:space="preserve">
     <value>Transfers keep running and “Send with ZipStream” opens instantly. Use Exit in the tray icon menu to quit.</value>
   </data>
+  <data name="Settings.IceTitle" xml:space="preserve">
+    <value>STUN/TURN server (relay)</value>
+  </data>
+  <data name="Settings.IceHost" xml:space="preserve">
+    <value>host:port (e.g. turn.example.com:3478)</value>
+  </data>
+  <data name="Settings.IceUsername" xml:space="preserve">
+    <value>TURN username</value>
+  </data>
+  <data name="Settings.IcePassword" xml:space="preserve">
+    <value>TURN password</value>
+  </data>
+  <data name="Settings.IceHint" xml:space="preserve">
+    <value>Optional. Used when a direct connection is blocked (corporate networks, mobile internet). Without a username, it is used only as STUN. Port 3478 if omitted. Takes effect on the next transfer.</value>
+  </data>
 </root>

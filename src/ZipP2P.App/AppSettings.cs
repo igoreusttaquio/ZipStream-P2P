@@ -60,5 +60,6 @@ public sealed class AppSettings
 
             return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
         }
+        set => _store.Set(IceServersKey, JsonSerializer.Serialize(value));
     }
 }

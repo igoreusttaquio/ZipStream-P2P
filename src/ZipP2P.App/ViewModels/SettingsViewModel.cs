@@ -22,6 +22,16 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial int Port { get; set; }
 
+    /// <summary>STUN/TURN (host:porta); vazio = só conexão direta.</summary>
+    [ObservableProperty]
+    public partial string IceHost { get; set; }
+
+    [ObservableProperty]
+    public partial string IceUsername { get; set; }
+
+    [ObservableProperty]
+    public partial string IcePassword { get; set; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsServerStopped))]
     public partial bool IsServerRunning { get; set; }
@@ -43,6 +53,10 @@ public partial class SettingsViewModel : ViewModelBase
         _back = back;
         ServerUrl = settings.SignalingUrl;
         Port = settings.Port;
+        var ice = IceServerConfig.FromUrls(settings.IceServers);
+        IceHost = ice.Host;
+        IceUsername = ice.Username;
+        IcePassword = ice.Password;
         CloseToTray = settings.CloseToTray;
         IsServerRunning = EmbeddedSignalingServer.Instance.IsRunning;
         if (IsServerRunning)
@@ -71,6 +85,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         _settings.SignalingUrl = ServerUrl;
         _settings.Port = Port;
+        _settings.IceServers = new IceServerConfig(IceHost, IceUsername, IcePassword).ToUrls();
         Back();
     }
 

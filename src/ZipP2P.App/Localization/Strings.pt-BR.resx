@@ -348,4 +348,19 @@
   <data name="Settings.CloseToTrayHint" xml:space="preserve">
     <value>As transferências continuam e o “Enviar com ZipStream” abre na hora. Para encerrar, use Sair no menu do ícone da bandeja.</value>
   </data>
+  <data name="Settings.IceTitle" xml:space="preserve">
+    <value>Servidor STUN/TURN (relay)</value>
+  </data>
+  <data name="Settings.IceHost" xml:space="preserve">
+    <value>host:porta (ex.: turn.exemplo.com:3478)</value>
+  </data>
+  <data name="Settings.IceUsername" xml:space="preserve">
+    <value>Usuário do TURN</value>
+  </data>
+  <data name="Settings.IcePassword" xml:space="preserve">
+    <value>Senha do TURN</value>
+  </data>
+  <data name="Settings.IceHint" xml:space="preserve">
+    <value>Opcional. Usado quando a conexão direta é bloqueada (redes corporativas, internet móvel). Sem usuário, vale só como STUN. Porta 3478 se omitida. Vale a partir da próxima transferência.</value>
+  </data>
 </root>

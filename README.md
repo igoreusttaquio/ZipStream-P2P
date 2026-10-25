@@ -143,11 +143,7 @@ Firewall: liberar `3478/tcp+udp` e `49160-49200/udp` (80/443 já são do Caddy).
 
 1. Suba o servidor e o coturn (seção acima).
 2. Nas duas máquinas, **URL do servidor** = `https://zipstream.seudominio.com/signaling`.
-3. Servidores ICE (STUN/TURN): ainda **sem tela** — grave a chave `IceServers` (lista JSON) no `settings.db`:
-   ```sql
-   INSERT OR REPLACE INTO settings(key, value)
-   VALUES ('IceServers', '["stun:IP_DA_VPS:3478", "turn:zipstream:SUA_SENHA@IP_DA_VPS:3478"]');
-   ```
+3. ⚙️ Configurações → **Servidor STUN/TURN**: host `zipstream.seudominio.com:3478`, usuário `zipstream` e a senha do `TURN_PASSWORD` → **Salvar**. Sem usuário, o servidor vale só como STUN.
 
 ## Menu de contexto
 
@@ -182,7 +178,8 @@ dotnet test
 - [x] Arquivos grandes (controle de fluxo + confirmação)
 - [x] Retomada automática e após reabrir o app
 - [x] Log técnico, menu de contexto, escolha da pasta de destino
-- [ ] Tela para servidores STUN/TURN + teste com coturn real
+- [x] Tela para servidor STUN/TURN
+- [ ] Teste com coturn real
 - [x] Deploy do servidor em produção (Docker + HTTPS via Caddy)
 - [x] Empacotamento do app (instalador Windows e .deb)
 - [ ] Monetização
