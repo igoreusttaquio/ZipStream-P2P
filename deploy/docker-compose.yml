@@ -1,19 +1,44 @@
-# Servidor TURN (coturn) para fallback de relay do ZipStream.
-# Rode com: docker compose up -d
-# Depois configure o app (settings.json) com:
-#   "IceServers": ["stun:SEU_IP:3478", "turn:zipstream:CHANGE_ME@SEU_IP:3478"]
+# ZipStream na VPS: servidor de sinalização + relay TURN (coturn).
+# O HTTPS fica com um reverse proxy já existente na VPS (ex.: Caddy), que alcança o
+# servidor pela network externa "proxy" no alias "zipstream-server":
+#   zipstream.seudominio.com { reverse_proxy zipstream-server:5000 }
+# (crie a network uma vez com: docker network create proxy)
+#   cp .env.example .env    # e preencha
+#   docker compose up -d --build
+# Portas a liberar no firewall: 3478/tcp+udp, 49160-49200/udp (80/443 já são do Caddy).
+# No app: URL do servidor = https://zipstream.seudominio.com/signaling
+#         IceServers = ["stun:IP:3478", "turn:zipstream:SENHA@IP:3478"]
 services:
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/server.Dockerfile
+    restart: unless-stopped
+    expose:
+      - "5000"
+    networks:
+      proxy:
+        aliases:
+          - zipstream-server
+
   coturn:
     image: coturn/coturn:latest
+    restart: unless-stopped
     network_mode: host
     command: >
       -n --log-file=stdout
       --realm=zipstream
-      --user=zipstream:CHANGE_ME
+      --user=zipstream:${TURN_PASSWORD:?defina TURN_PASSWORD no .env}
+      --external-ip=${PUBLIC_IP:?defina PUBLIC_IP no .env}
       --listening-port=3478
       --min-port=49160
       --max-port=49200
+      --fingerprint
+      --lt-cred-mech
       --no-cli
       --no-tls
       --no-dtls
-    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true

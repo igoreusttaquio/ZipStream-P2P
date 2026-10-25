@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ZipStream
+Comment=Compress and send files peer-to-peer with end-to-end encryption
+Comment[pt_BR]=Compacte e envie arquivos ponto a ponto com criptografia de ponta a ponta
+Comment[es]=Comprime y envía archivos de punto a punto con cifrado de extremo a extremo
+Exec=/opt/zipstream/ZipP2P.App
+Icon=zipstream
+Terminal=false
+Categories=Network;FileTransfer;Utility;

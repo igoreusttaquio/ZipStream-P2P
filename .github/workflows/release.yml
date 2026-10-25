@@ -29,14 +29,33 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Tag v1.2.3 -> 1.2.3; execução manual -> 0.0.0-dev.
+      - name: Version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
       - name: Publish
-        run: dotnet publish src/ZipP2P.App/ZipP2P.App.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o publish/${{ matrix.rid }}
+        run: dotnet publish src/ZipP2P.App/ZipP2P.App.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:Version=${{ env.VERSION }} -o publish/${{ matrix.rid }}
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           Compress-Archive -Path "publish/${{ matrix.rid }}/*" -DestinationPath "publish/ZipStream-${{ matrix.rid }}.zip"
+
+      - name: Installer (Windows, Inno Setup)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup *\ISCC.exe", "$env:ProgramFiles\Inno Setup *\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $iscc) {
+            choco install innosetup -y --no-progress
+            $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup *\ISCC.exe", "$env:ProgramFiles\Inno Setup *\ISCC.exe" | Select-Object -First 1
+          }
+          & $iscc.FullName "/DAppVersion=$env:VERSION" "/DSourceDir=$PWD\publish\${{ matrix.rid }}" "/O$PWD\publish" packaging\windows\zipstream.iss
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
       - name: Package (Linux/macOS)
         if: matrix.os != 'windows-latest'
@@ -45,11 +64,30 @@ jobs:
           cd "publish/${{ matrix.rid }}"
           tar -czf "../ZipStream-${{ matrix.rid }}.tar.gz" .
 
+      - name: Installer (Linux, .deb)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: bash packaging/linux/build-deb.sh "publish/${{ matrix.rid }}" "$VERSION" publish
+
+      # Execução manual: os pacotes ficam nos artefatos da execução (sem criar release).
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZipStream-${{ matrix.rid }}
+          path: |
+            publish/ZipStream-*.zip
+            publish/ZipStream-*.tar.gz
+            publish/ZipStream-Setup-*.exe
+            publish/zipstream_*.deb
+
       - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
             publish/ZipStream-win-x64.zip
+            publish/ZipStream-Setup-*-win-x64.exe
             publish/ZipStream-linux-x64.tar.gz
+            publish/zipstream_*_amd64.deb
             publish/ZipStream-osx-x64.tar.gz

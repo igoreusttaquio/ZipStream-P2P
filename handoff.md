@@ -65,7 +65,7 @@ Teste na mesma rede: uma máquina inicia o servidor local (app → engrenagem �
 ## Pendências (por prioridade)
 
 1. **TURN/relay (coturn):** o código aceita ICE servers (`IceServers` em SQLite via `AppSettings`), mas não há tela nem teste com coturn real. `deploy/docker-compose.yml` tem o coturn pronto.
-2. **Empacotar o app:** instalador (o menu de contexto aponta para o executável atual; depois de instalar, reinstalar a entrada em Configurações).
+2. **Empacotamento — validar na prática:** `packaging/windows/zipstream.iss` (Inno Setup, por usuário, grava o menu de contexto no mesmo formato de `WindowsShellIntegration`) e `packaging/linux/build-deb.sh` (`/opt/zipstream`) rodam no `release.yml`; ainda não testados numa execução real. Servidor: `deploy/server.Dockerfile` + `deploy/docker-compose.yml` (network externa `proxy`, alias `zipstream-server`, atrás de um Caddy já existente na VPS). Repo público: não versionar domínio/IP/senhas reais.
 4. **Envio a partir da pasta original:** hoje o remetente comprime para um `.zpp2` em cache antes de enviar (precisa de espaço em disco ≈ tamanho comprimido).
 5. **Landing page** (`docs/index.html`) — em melhoria.
 6. **Monetização** (Stripe, cotas) — por último.

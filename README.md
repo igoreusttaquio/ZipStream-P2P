@@ -109,10 +109,40 @@ As configurações ficam em SQLite (`%LOCALAPPDATA%/ZipStream/settings.db`) e s�
 2. **Máquina B:** ⚙️ Configurações → **URL do servidor** = endereço da máquina A → **Salvar**.
 3. Uma máquina **Envia** (gera o código), a outra **Recebe** com o código.
 
+## Instalação
+
+Cada release (tag `v*`) gera pelo GitHub Actions:
+
+| Arquivo | Sistema |
+|---|---|
+| `ZipStream-Setup-<versão>-win-x64.exe` | Windows — instalador (Inno Setup), por usuário, sem administrador; opção de já adicionar o menu de contexto |
+| `zipstream_<versão>_amd64.deb` | Debian/Ubuntu/Mint — `sudo apt install ./zipstream_<versão>_amd64.deb`; instala em `/opt/zipstream`, atalho no menu e comando `zipstream` |
+| `ZipStream-win-x64.zip`, `ZipStream-linux-x64.tar.gz`, `ZipStream-osx-x64.tar.gz` | Versões portáteis |
+
+Para gerar uma release: `git tag v1.2.3 && git push origin v1.2.3`. Rodando o workflow manualmente (Actions → Release → *Run workflow*), os pacotes ficam nos artefatos da execução, sem criar release.
+
+## Deploy do servidor (VPS com Docker)
+
+`deploy/docker-compose.yml` sobe o servidor de sinalização e o coturn (TURN). O HTTPS fica com um reverse proxy que já rode na VPS (ex.: Caddy): o servidor entra na network externa `proxy` (`docker network create proxy`, se ainda não existir) com o alias `zipstream-server`. No Caddyfile, com o proxy também nessa network:
+
+```
+zipstream.seudominio.com {
+	reverse_proxy zipstream-server:5000
+}
+```
+
+```bash
+git clone https://github.com/igoreusttaquio/ZipStream-P2P.git && cd ZipStream-P2P/deploy
+cp .env.example .env            # PUBLIC_IP e TURN_PASSWORD
+docker compose up -d --build    # atualizar: git pull && docker compose up -d --build
+```
+
+Firewall: liberar `3478/tcp+udp` e `49160-49200/udp` (80/443 já são do Caddy). Teste: `https://zipstream.seudominio.com` responde "ZipStream signaling server".
+
 ## Testar entre redes (TURN/relay)
 
-1. Suba o servidor e o coturn numa máquina pública: `docker compose -f deploy/docker-compose.yml up -d`.
-2. Nas duas máquinas, **URL do servidor** = `http://IP_DA_VPS:5000/signaling`.
+1. Suba o servidor e o coturn (seção acima).
+2. Nas duas máquinas, **URL do servidor** = `https://zipstream.seudominio.com/signaling`.
 3. Servidores ICE (STUN/TURN): ainda **sem tela** — grave a chave `IceServers` (lista JSON) no `settings.db`:
    ```sql
    INSERT OR REPLACE INTO settings(key, value)
@@ -153,8 +183,8 @@ dotnet test
 - [x] Retomada automática e após reabrir o app
 - [x] Log técnico, menu de contexto, escolha da pasta de destino
 - [ ] Tela para servidores STUN/TURN + teste com coturn real
-- [ ] Deploy do servidor em produção (HTTPS)
-- [ ] Empacotamento do app (instalador)
+- [x] Deploy do servidor em produção (Docker + HTTPS via Caddy)
+- [x] Empacotamento do app (instalador Windows e .deb)
 - [ ] Monetização
 
 Detalhes no [`plan.md`](plan.md).
