@@ -188,7 +188,8 @@ public abstract partial class OperationViewModel : ViewModelBase
         IsProgressIndeterminate = false;
         ProgressPercent = p.TotalBytes > 0 ? (double)p.BytesTransferred / p.TotalBytes * 100.0 : 0;
 
-        var text = $"{FormatBytes(p.BytesTransferred)} / {FormatBytes(p.TotalBytes)}";
+        // "~": o remetente ainda está compactando, então o total é uma estimativa.
+        var text = $"{FormatBytes(p.BytesTransferred)} / {(p.TotalIsEstimate ? "~" : string.Empty)}{FormatBytes(p.TotalBytes)}";
         if (p.BytesPerSecond > 0)
         {
             text += $" · {FormatBytes((long)p.BytesPerSecond)}/s";

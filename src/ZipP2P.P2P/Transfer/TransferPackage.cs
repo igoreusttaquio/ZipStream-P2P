@@ -14,28 +14,47 @@ public static class TransferPackage
         IProgress<CompressionProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        var isFolder = Directory.Exists(sourcePath);
-        if (!isFolder && !File.Exists(sourcePath))
-            throw new FileNotFoundException("The file or folder to send was not found.", sourcePath);
-
         try
         {
             await using var output = new FileStream(packagePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
-            if (isFolder)
-            {
-                await FolderCodec.CompressAsync(sourcePath, output, options, progress, cancellationToken).ConfigureAwait(false);
-                return Zpp2Format.ContentTypeDirectory;
-            }
-
-            await using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
-            await ChunkedCompressor.CompressAsync(input, output, options, progress, cancellationToken).ConfigureAwait(false);
-            return Zpp2Format.ContentTypeFile;
+            return await CreateAsync(sourcePath, (Stream)output, options, progress, cancellationToken).ConfigureAwait(false);
         }
         catch
         {
             TryDelete(packagePath);
             throw;
         }
+    }
+
+    /// <summary>Comprime o arquivo ou pasta <paramref name="sourcePath"/> escrevendo em <paramref name="output"/>.</summary>
+    public static async Task<byte> CreateAsync(
+        string sourcePath,
+        Stream output,
+        CompressionOptions? options = null,
+        IProgress<CompressionProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var contentType = GetContentType(sourcePath);
+        if (contentType == Zpp2Format.ContentTypeDirectory)
+        {
+            await FolderCodec.CompressAsync(sourcePath, output, options, progress, cancellationToken).ConfigureAwait(false);
+            return contentType;
+        }
+
+        await using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+        await ChunkedCompressor.CompressAsync(input, output, options, progress, cancellationToken).ConfigureAwait(false);
+        return contentType;
+    }
+
+    /// <summary>Tipo de conteúdo do pacote gerado a partir de <paramref name="sourcePath"/>.</summary>
+    public static byte GetContentType(string sourcePath)
+    {
+        if (Directory.Exists(sourcePath))
+            return Zpp2Format.ContentTypeDirectory;
+        if (File.Exists(sourcePath))
+            return Zpp2Format.ContentTypeFile;
+
+        throw new FileNotFoundException("The file or folder to send was not found.", sourcePath);
     }
 
     /// <summary>

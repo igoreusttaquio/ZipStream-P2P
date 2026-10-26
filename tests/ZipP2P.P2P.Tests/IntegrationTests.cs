@@ -63,6 +63,45 @@ public sealed class IntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Folder_IsSentWhileStillCompressing_OverWebRtc()
+    {
+        // Compressão lenta de propósito (nível 19): o envio começa antes de ela terminar.
+        var folder = Path.Combine(_dir, "folder");
+        Directory.CreateDirectory(Path.Combine(folder, "sub"));
+        var random = new Random(5);
+        var files = new Dictionary<string, byte[]>();
+        foreach (var name in new[] { "a.txt", "b.txt", Path.Combine("sub", "c.txt") })
+        {
+            // Texto de alfabeto pequeno: comprimível, e lento no nível 19.
+            var content = new byte[8 * 1024 * 1024];
+            for (var i = 0; i < content.Length; i++)
+                content[i] = (byte)('a' + random.Next(16));
+            files[name] = content;
+            await File.WriteAllBytesAsync(Path.Combine(folder, name), content);
+        }
+
+        var senderStore = new TransferStore(Path.Combine(_dir, "s"));
+        var receiverStore = new TransferStore(Path.Combine(_dir, "r"));
+        var outgoing = new OutgoingTransfer(Guid.NewGuid(), folder, "folder", Zpp2Format.ContentTypeDirectory, -1, "IT2", DateTimeOffset.Now);
+        var package = PackageSource.Create(folder, senderStore.PackagePath(outgoing.Id), new CompressionOptions { Level = 19 });
+
+        var factory = new SignalingPeerLinkFactory(Url);
+        var receiverProgress = new List<TransferProgress>();
+        var receiving = new TransferRunner(factory, receiverStore)
+            .ReceiveAsync("IT2", Path.Combine(_dir, "dl"), new SyncProgress<TransferProgress>(receiverProgress.Add), CancellationToken.None);
+        await new TransferRunner(factory, senderStore)
+            .SendAsync(outgoing, package, null, CancellationToken.None).WaitAsync(TimeSpan.FromMinutes(2));
+        var incoming = await receiving.WaitAsync(TimeSpan.FromMinutes(2));
+
+        Assert.Contains(receiverProgress, p => p.TotalIsEstimate);
+        Assert.Equal(new FileInfo(receiverStore.PartialPath(incoming.Id)).Length, incoming.Size);
+        var extracted = await TransferPackage.ExtractAsync(
+            receiverStore.PartialPath(incoming.Id), incoming.FileName, incoming.ContentType, incoming.DestinationDir);
+        foreach (var (name, content) in files)
+            Assert.Equal(content, await File.ReadAllBytesAsync(Path.Combine(extracted, name)));
+    }
+
+    [Fact]
     public async Task ThirdDevice_CannotJoinAnOccupiedRoom()
     {
         await using var a = new SignalRSignalingClient(Url);

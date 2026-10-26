@@ -363,4 +363,10 @@
   <data name="Settings.IceHint" xml:space="preserve">
     <value>Permite que computadores em redes diferentes se encontrem. Vazio: STUN público do Google (stun.l.google.com:19302). Com usuário, também é usado como TURN (relay) quando a conexão direta é bloqueada. Porta 3478 se omitida. Vale a partir da próxima transferência.</value>
   </data>
+  <data name="Send.CompressingDetail" xml:space="preserve">
+    <value>Compactando: {0}</value>
+  </data>
+  <data name="Send.CompressedDetail" xml:space="preserve">
+    <value>Compactado ({0}), pronto para enviar</value>
+  </data>
 </root>

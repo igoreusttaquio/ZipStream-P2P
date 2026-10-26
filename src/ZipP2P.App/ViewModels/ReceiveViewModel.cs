@@ -131,7 +131,8 @@ public partial class ReceiveViewModel : OperationViewModel
         await RunAsync(async ct =>
         {
             // Já chegou tudo (ex.: falhou só a extração): conclui sem precisar do remetente.
-            var incoming = TransferServices.Store.BytesReceived(transfer) >= transfer.Size
+            // (Size -1: o remetente ainda não tinha anunciado o tamanho final.)
+            var incoming = transfer.Size >= 0 && TransferServices.Store.BytesReceived(transfer) >= transfer.Size
                 ? transfer
                 : await TransferAsync(transfer.RoomCode, transfer.DestinationDir, ct).ConfigureAwait(true);
             await ExtractAsync(incoming, ct).ConfigureAwait(true);

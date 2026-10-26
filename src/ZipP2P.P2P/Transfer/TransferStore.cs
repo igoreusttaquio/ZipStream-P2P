@@ -2,7 +2,10 @@ using System.Text.Json;
 
 namespace ZipP2P.P2P.Transfer;
 
-/// <summary>Envio pendente: o pacote já comprimido fica em cache até o destinatário confirmar o recebimento.</summary>
+/// <summary>
+/// Envio pendente: o pacote comprimido fica em cache até o destinatário confirmar o recebimento.
+/// <see cref="PackageSize"/> é -1 enquanto o pacote ainda está sendo compactado.
+/// </summary>
 public sealed record OutgoingTransfer(
     Guid Id,
     string SourcePath,
@@ -12,7 +15,10 @@ public sealed record OutgoingTransfer(
     string RoomCode,
     DateTimeOffset CreatedAt);
 
-/// <summary>Recebimento pendente: o pacote parcial fica em disco para ser retomado.</summary>
+/// <summary>
+/// Recebimento pendente: o pacote parcial fica em disco para ser retomado.
+/// <see cref="Size"/> é -1 enquanto o remetente ainda não anunciou o tamanho final.
+/// </summary>
 public sealed record IncomingTransfer(
     Guid Id,
     string FileName,
@@ -55,6 +61,9 @@ public sealed class TransferStore
         => ReadAll<OutgoingTransfer>(_outgoingDir).Where(t => File.Exists(PackagePath(t.Id))).ToList();
 
     public IReadOnlyList<IncomingTransfer> ListIncoming() => ReadAll<IncomingTransfer>(_incomingDir).ToList();
+
+    public OutgoingTransfer? FindOutgoing(Guid id)
+        => Read<OutgoingTransfer>(Path.Combine(_outgoingDir, $"{id:N}.json"));
 
     public IncomingTransfer? FindIncoming(Guid id)
         => Read<IncomingTransfer>(Path.Combine(_incomingDir, $"{id:N}.json"));

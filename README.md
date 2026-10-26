@@ -179,7 +179,9 @@ dotnet test
 - [x] Retomada automática e após reabrir o app
 - [x] Log técnico, menu de contexto, escolha da pasta de destino
 - [x] Tela para servidor STUN/TURN
-- [ ] Teste com coturn real
+- [x] Teste com coturn real
+- [x] Envio começa enquanto compacta (sem esperar a compressão terminar)
+- [ ] Instalador Windows assinado
 - [x] Deploy do servidor em produção (Docker + HTTPS via Caddy)
 - [x] Empacotamento do app (instalador Windows e .deb)
 - [ ] Monetização

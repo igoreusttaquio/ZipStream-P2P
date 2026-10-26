@@ -32,18 +32,18 @@ public sealed class TransferRateMeter
         _samples.Enqueue((_clock(), initialBytes));
     }
 
-    public void Report(IProgress<TransferProgress>? progress, long done, long total)
+    public void Report(IProgress<TransferProgress>? progress, long done, long total, bool totalIsEstimate = false)
     {
         var now = _clock();
         _samples.Enqueue((now, done));
         while (_samples.Count > 2 && now - _samples.Peek().Time > Window)
             _samples.Dequeue();
 
-        if (progress is null || (done < total && now - _lastReport < ReportInterval))
+        if (progress is null || ((totalIsEstimate || done < total) && now - _lastReport < ReportInterval))
             return;
 
         _lastReport = now;
-        progress.Report(new TransferProgress(done, total, BytesPerSecond(now, done)));
+        progress.Report(new TransferProgress(done, total, BytesPerSecond(now, done), totalIsEstimate));
     }
 
     private double BytesPerSecond(TimeSpan now, long done)

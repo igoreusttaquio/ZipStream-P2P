@@ -16,6 +16,10 @@ namespace ZipP2P.App.ViewModels;
 public partial class SendViewModel : OperationViewModel
 {
     private int _sizeVersion;
+    private int _sendVersion;
+
+    /// <summary>A transferência já começou: o progresso da compressão deixa de aparecer.</summary>
+    private bool _sending;
 
     public SendViewModel()
     {
@@ -144,10 +148,16 @@ public partial class SendViewModel : OperationViewModel
     private bool CanSend() => HasSelection && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanSend))]
-    private async Task SendAsync()
+    private Task SendAsync() => StartSendAsync(SelectedPath, TransferServices.GenerateRoomCode());
+
+    /// <summary>
+    /// Entra na sala logo e compacta ao mesmo tempo: o envio começa assim que o outro computador
+    /// conecta e acompanha a compressão, em vez de esperar ela terminar.
+    /// </summary>
+    private async Task StartSendAsync(string source, string roomCode)
     {
-        var source = SelectedPath;
-        RoomCode = TransferServices.GenerateRoomCode();
+        RoomCode = roomCode;
+        var version = ++_sendVersion;
 
         await RunAsync(async ct =>
         {
@@ -157,22 +167,32 @@ public partial class SendViewModel : OperationViewModel
             Logger.LogInformation("Preparing {Source} for sending (code {Room})", source, RoomCode);
             SetStatus("Status.Preparing");
 
-            var store = TransferServices.Store;
-            var id = Guid.NewGuid();
-            var contentType = await TransferPackage.CreateAsync(
-                source,
-                store.PackagePath(id),
-                new CompressionOptions { Level = 3 },
-                new Progress<CompressionProgress>(ReportCompression),
-                ct).ConfigureAwait(true);
-
             var transfer = new OutgoingTransfer(
-                id, source, SelectedName, contentType, new FileInfo(store.PackagePath(id)).Length, RoomCode, DateTimeOffset.Now);
-            store.Save(transfer);
-            Details = string.Empty;
+                Guid.NewGuid(), source, SelectedName, TransferPackage.GetContentType(source), -1, RoomCode, DateTimeOffset.Now);
+            TransferServices.Store.Save(transfer);
+            var package = TransferServices.StartPackage(
+                transfer,
+                // A compressão pode continuar depois desta tentativa: só este envio atualiza a tela.
+                new Progress<CompressionProgress>(p =>
+                {
+                    if (version == _sendVersion)
+                        ReportPreparation(p);
+                }));
 
-            await TransferAsync(transfer, ct).ConfigureAwait(true);
+            await TransferAsync(transfer, package, ct).ConfigureAwait(true);
         });
+    }
+
+    /// <summary>Progresso da compressão até o envio começar; depois, a barra mostra o envio.</summary>
+    private void ReportPreparation(CompressionProgress p)
+    {
+        if (_sending || !IsBusy)
+            return;
+
+        ReportCompression(p);
+        Details = p.TotalBytes > 0 && p.BytesProcessed >= p.TotalBytes
+            ? string.Format(CultureInfo.CurrentCulture, L("Send.CompressedDetail"), FormatBytes(p.TotalBytes))
+            : string.Format(CultureInfo.CurrentCulture, L("Send.CompressingDetail"), Details);
     }
 
     [RelayCommand]
@@ -192,12 +212,33 @@ public partial class SendViewModel : OperationViewModel
 
     private async Task ResumeAsync(PendingTransferItem item)
     {
-        if (IsBusy || item.Transfer is not OutgoingTransfer transfer)
+        if (IsBusy || item.Transfer is not OutgoingTransfer pending)
             return;
 
-        SelectedPath = transfer.SourcePath;
+        SelectedPath = pending.SourcePath;
+        ++_sendVersion;
+
+        // Ainda compactando neste processo (só a conexão caiu): retoma acompanhando a compressão.
+        if (TransferServices.FindPreparing(pending.Id) is { } preparing)
+        {
+            RoomCode = pending.RoomCode;
+            await RunAsync(ct => TransferAsync(pending, preparing, ct));
+            return;
+        }
+
+        var transfer = TransferServices.Store.FindOutgoing(pending.Id) ?? pending;
+        if (transfer.PackageSize < 0)
+        {
+            // O app fechou no meio da compressão: o pacote parcial não serve. Compacta de novo, com o mesmo código.
+            Logger.LogInformation("The package of {Id} was not fully prepared; preparing it again", transfer.Id);
+            TransferServices.Store.Delete(transfer);
+            await StartSendAsync(transfer.SourcePath, transfer.RoomCode);
+            return;
+        }
+
         RoomCode = transfer.RoomCode;
-        await RunAsync(ct => TransferAsync(transfer, ct));
+        var package = PackageSource.FromFile(TransferServices.Store.PackagePath(transfer.Id));
+        await RunAsync(ct => TransferAsync(transfer, package, ct));
     }
 
     private void Discard(PendingTransferItem item)
@@ -211,12 +252,22 @@ public partial class SendViewModel : OperationViewModel
         RefreshPending();
     }
 
-    private async Task TransferAsync(OutgoingTransfer transfer, CancellationToken ct)
+    private async Task TransferAsync(OutgoingTransfer transfer, PackageSource package, CancellationToken ct)
     {
+        _sending = false;
+
+        // Cancelar o envio cancela também a compressão; se só a conexão cair, ela continua e o envio fica retomável.
+        await using var cancelCompression = ct.Register(package.Cancel);
+
         var runner = TransferServices.CreateRunner();
         runner.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         runner.StatusChanged += status => Dispatcher.UIThread.Post(() => ApplyTransferStatus(status, "Status.Sending"));
-        await runner.SendAsync(transfer, new Progress<TransferProgress>(ReportTransfer), ct).ConfigureAwait(true);
+        var progress = new Progress<TransferProgress>(p =>
+        {
+            _sending = true;
+            ReportTransfer(p);
+        });
+        await runner.SendAsync(transfer, package, progress, ct).ConfigureAwait(true);
     }
 
     private void RefreshPending()

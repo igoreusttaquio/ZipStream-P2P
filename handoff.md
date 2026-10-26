@@ -25,7 +25,7 @@ Aplicativo desktop multiplataforma para **compactar e transferir arquivos/pastas
 | `src/ZipP2P.Server` | Servidor de sinalização (`SignalingHub`) |
 | `src/ZipP2P.App` | App Avalonia |
 | `tests/ZipP2P.Core.Tests` | 18 testes (compressão + criptografia) |
-| `tests/ZipP2P.P2P.Tests` | 20 testes: protocolo, retomada, reconexão (transporte em memória com queda injetada) e integração real SignalR + libdatachannel (40 MB) |
+| `tests/ZipP2P.P2P.Tests` | 31 testes: protocolo, retomada, reconexão (transporte em memória com queda injetada), envio durante a compressão, vazão e integração real SignalR + libdatachannel (40 MB; pasta enviada enquanto compacta) |
 | `tests/ZipP2P.App.Tests` | 27 testes: log, linha de comando, instância única, STUN/TURN, menu de contexto (Windows usa chave de registro isolada) |
 | `tools/resx_add.py` | Adiciona/atualiza textos nos 3 `.resx` a partir de um JSON |
 
@@ -48,7 +48,7 @@ Aplicativo desktop multiplataforma para **compactar e transferir arquivos/pastas
 ## Como rodar
 
 ```
-dotnet test                              # 65 testes
+dotnet test                              # 76 testes
 dotnet run --project src/ZipP2P.Server   # servidor standalone (VPS)
 dotnet run --project src/ZipP2P.App      # app (pode hospedar o servidor local)
 ```
@@ -64,9 +64,10 @@ Teste na mesma rede: uma máquina inicia o servidor local (app → engrenagem �
 
 ## Pendências (por prioridade)
 
-1. **TURN/relay (coturn):** tela em Configurações (`IceServerConfig` ↔ `AppSettings.IceServers`; credenciais com percent-encoding — confirmar que o libdatachannel decodifica, senão usar só senhas hex). Falta testar com coturn real (`deploy/docker-compose.yml`).
-2. **Empacotamento — validar na prática:** `packaging/windows/zipstream.iss` (Inno Setup, por usuário, grava o menu de contexto no mesmo formato de `WindowsShellIntegration`) e `packaging/linux/build-deb.sh` (`/opt/zipstream`) rodam no `release.yml`; ainda não testados numa execução real. Servidor: `deploy/server.Dockerfile` + `deploy/docker-compose.yml` (network externa `proxy`, alias `zipstream-server`, atrás de um Caddy já existente na VPS). Repo público: não versionar domínio/IP/senhas reais.
-4. **Envio a partir da pasta original:** hoje o remetente comprime para um `.zpp2` em cache antes de enviar (precisa de espaço em disco ≈ tamanho comprimido).
+1. **Assinatura do instalador Windows:** o repositório **não tem licença** (nem OSI). SignPath Foundation (grátis para OSS) exige licença OSI, MFA, página "Code signing policy" e aprovação manual por release; Azure Artifact Signing não atende pessoa física fora de EUA/Canadá; a alternativa é certificado OV pago (HSM na nuvem). `Product`/`AssemblyTitle` já definidos no csproj.
+2. **`.deb` e macOS:** gerados pelo `release.yml`, mas não testados numa máquina real. Instalador Windows e TURN (coturn) já testados.
+3. **Disco no envio:** o remetente agora envia **enquanto compacta** (`PackageSource` lê o `.zpp2` do cache conforme cresce; cabeçalho com `Size = -1` + `EstimatedSize`, tamanho final na mensagem `End` 0x08). O pacote continua em cache porque a retomada precisa dos mesmos bytes (o tar de uma pasta não é reproduzível). Remetente e destinatário precisam ser ≥ 1.2.0 quando o envio começa antes de a compressão terminar.
+4. Servidor: `deploy/server.Dockerfile` + `deploy/docker-compose.yml` (network externa `proxy`, alias `zipstream-server`, atrás de um Caddy já existente na VPS; coturn fixo em 4.18.0). Repo público: não versionar domínio/IP/senhas reais.
 5. **Landing page** (`docs/index.html`) — em melhoria.
 6. **Monetização** (Stripe, cotas) — por último.
 

@@ -17,10 +17,11 @@ namespace ZipP2P.P2P.Transfer;
 /// Protocolo (cada mensagem = 1 byte de tipo + payload):
 /// <list type="number">
 /// <item>Ambos enviam <c>PublicKey</c> (ECDH) e derivam a chave AES-GCM + código SAS.</item>
-/// <item>Remetente envia <c>Header</c> (cifrado): id, nome, tamanho e tipo do pacote.</item>
+/// <item>Remetente envia <c>Header</c> (cifrado): id, nome, tamanho e tipo do pacote. Se o pacote ainda
+/// está sendo compactado, o tamanho vai como -1 (com uma estimativa) e o final chega em <c>End</c>.</item>
 /// <item>Destinatário responde <c>ResumeOffset</c>: quantos bytes desse pacote já possui.</item>
 /// <item>Remetente envia <c>Chunk</c>s (cifrados) a partir do offset, com no máximo
-/// <see cref="WindowSize"/> bytes sem confirmação.</item>
+/// <see cref="WindowSize"/> bytes sem confirmação, e <c>End</c> com o tamanho se ele era desconhecido.</item>
 /// <item>Destinatário confirma com <c>Ack</c> (bytes gravados em disco) e, ao final, <c>Done</c>.</item>
 /// </list>
 /// Qualquer lado pode enviar <c>Abort</c> com o motivo antes de encerrar.
@@ -44,6 +45,7 @@ public sealed class TransferSession : IAsyncDisposable
     private const byte TypeAck = 0x05;
     private const byte TypeDone = 0x06;
     private const byte TypeAbort = 0x07;
+    private const byte TypeEnd = 0x08;
 
     private readonly ITransport _transport;
     private readonly ILogger _logger;
@@ -67,47 +69,63 @@ public sealed class TransferSession : IAsyncDisposable
     public event Action<string>? SasReady;
 
     /// <summary>Envia o pacote já comprimido em <paramref name="packagePath"/>, retomando do offset informado pelo destinatário.</summary>
-    public async Task SendAsync(
+    public Task SendAsync(
         string packagePath,
+        TransferHeader header,
+        IProgress<TransferProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+        => SendAsync(PackageSource.FromFile(packagePath), header, progress, cancellationToken);
+
+    /// <summary>
+    /// Envia o pacote, que pode ainda estar sendo compactado, retomando do offset informado pelo
+    /// destinatário. O tamanho e a estimativa do cabeçalho vêm do <paramref name="package"/>.
+    /// </summary>
+    public async Task SendAsync(
+        PackageSource package,
         TransferHeader header,
         IProgress<TransferProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         var cipher = await EstablishKeyAsync(cancellationToken).ConfigureAwait(false);
 
+        header = package.Length is { } length
+            ? header with { Size = length, EstimatedSize = 0 }
+            : header with { Size = -1, EstimatedSize = package.EstimatedLength };
         var headerJson = JsonSerializer.SerializeToUtf8Bytes(header);
         await SendTypedAsync(TypeHeader, cipher.Encrypt(headerJson), cancellationToken).ConfigureAwait(false);
 
         var offsetPayload = await ReadExpectedAsync(TypeResumeOffset, cancellationToken).ConfigureAwait(false);
         var offset = ReadInt64(offsetPayload);
-        if (offset < 0 || offset > header.Size)
+        if (offset < 0 || (header.Size >= 0 && offset > header.Size))
             throw new InvalidDataException($"Invalid resume offset {offset} for a package of {header.Size} bytes.");
 
         _logger.LogInformation(
-            "Sending {File} ({Size} bytes, id {Id}) starting at offset {Offset}",
-            header.FileName, header.Size, header.TransferId, offset);
+            "Sending {File} ({Size} bytes{Streaming}, id {Id}) starting at offset {Offset}",
+            header.FileName, header.Size >= 0 ? header.Size : header.EstimatedSize,
+            header.Size >= 0 ? string.Empty : " estimated, still compressing", header.TransferId, offset);
+
+        // Mesmo total que o destinatário vê: a estimativa do cabeçalho até o tamanho final ser anunciado.
+        var size = header.Size;
+        long Total(long done) => size >= 0 ? size : Math.Max(header.EstimatedSize, done);
 
         var stopwatch = Stopwatch.StartNew();
         var meter = new TransferRateMeter(offset);
-        meter.Report(progress, offset, header.Size);
+        meter.Report(progress, offset, Total(offset), size < 0);
         long sent = offset;
         long acked = offset;
         long reported = offset;
         var buffer = new byte[ChunkSize];
 
-        await using (var file = new FileStream(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true))
+        await using (var file = package.OpenRead())
         {
-            file.Seek(offset, SeekOrigin.Begin);
-
-            while (sent < header.Size)
+            while (true)
             {
                 while (sent - acked >= WindowSize)
                     acked = await WaitForAckAsync(cancellationToken).ConfigureAwait(false);
 
-                var toRead = (int)Math.Min(buffer.Length, header.Size - sent);
-                var read = await file.ReadAsync(buffer.AsMemory(0, toRead), cancellationToken).ConfigureAwait(false);
+                var read = await package.ReadAsync(file, sent, buffer, cancellationToken).ConfigureAwait(false);
                 if (read == 0)
-                    throw new InvalidDataException("The package file ended before the expected size.");
+                    break;
 
                 await SendTypedAsync(TypeChunk, cipher.Encrypt(buffer.AsSpan(0, read)), cancellationToken).ConfigureAwait(false);
                 sent += read;
@@ -117,32 +135,43 @@ public sealed class TransferSession : IAsyncDisposable
                 acked = DrainAcks(acked);
                 if (acked != reported)
                 {
-                    meter.Report(progress, acked, header.Size);
+                    meter.Report(progress, acked, Total(acked), size < 0);
                     reported = acked;
                 }
             }
         }
 
-        _logger.LogDebug("All {Size} bytes sent; waiting for the receiver to confirm", header.Size);
+        var finalLength = package.Length!.Value;
+        if (offset > finalLength || (size >= 0 && sent != size))
+            throw new InvalidDataException($"The package has {finalLength} bytes, but the transfer expected {Math.Max(size, offset)}.");
+
+        if (size < 0)
+        {
+            size = finalLength;
+            await SendTypedAsync(TypeEnd, WriteInt64(size), cancellationToken).ConfigureAwait(false);
+        }
+
+        _logger.LogDebug("All {Size} bytes sent; waiting for the receiver to confirm", size);
 
         try
         {
-            while (acked < header.Size)
+            meter.Report(progress, acked, size);
+            while (acked < size)
             {
                 acked = await WaitForAckAsync(cancellationToken).ConfigureAwait(false);
-                meter.Report(progress, acked, header.Size);
+                meter.Report(progress, acked, size);
             }
 
             await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
         }
-        catch (ConnectionLostException) when (acked >= header.Size)
+        catch (ConnectionLostException) when (acked >= size)
         {
             // Todos os bytes já foram confirmados como gravados; só o "Done" se perdeu.
             _logger.LogWarning("Connection closed after the receiver confirmed every byte; treating as complete");
         }
 
         _logger.LogInformation(
-            "Send completed: {Bytes} bytes in {Seconds:F1}s", header.Size - offset, stopwatch.Elapsed.TotalSeconds);
+            "Send completed: {Bytes} bytes in {Seconds:F1}s", size - offset, stopwatch.Elapsed.TotalSeconds);
     }
 
     /// <summary>
@@ -150,6 +179,7 @@ public sealed class TransferSession : IAsyncDisposable
     /// arquivo onde gravar; se ele já existir, a transferência é retomada do tamanho atual.
     /// O pacote não é descomprimido aqui (ver <see cref="TransferPackage"/>).
     /// </summary>
+    /// <returns>O cabeçalho, com o tamanho final do pacote.</returns>
     public async Task<TransferHeader> ReceiveAsync(
         Func<TransferHeader, string> resolvePartialPath,
         IProgress<TransferProgress>? progress = null,
@@ -160,26 +190,31 @@ public sealed class TransferSession : IAsyncDisposable
         var headerPayload = await ReadExpectedAsync(TypeHeader, cancellationToken).ConfigureAwait(false);
         var header = JsonSerializer.Deserialize<TransferHeader>(cipher.Decrypt(headerPayload.Span))
             ?? throw new InvalidDataException("Invalid transfer header.");
-        if (header.Size < 0 || string.IsNullOrWhiteSpace(header.FileName))
+        if (header.Size < -1 || string.IsNullOrWhiteSpace(header.FileName))
             throw new InvalidDataException("Invalid transfer header.");
 
         var partialPath = resolvePartialPath(header);
         long offset = File.Exists(partialPath) ? new FileInfo(partialPath).Length : 0;
-        if (offset > header.Size)
+        if (header.Size >= 0 && offset > header.Size)
         {
             _logger.LogWarning("Partial file is larger than the package ({Offset} > {Size}); restarting", offset, header.Size);
             offset = 0;
         }
 
         _logger.LogInformation(
-            "Receiving {File} ({Size} bytes, id {Id}) into {Partial}, resuming at {Offset}",
-            header.FileName, header.Size, header.TransferId, partialPath, offset);
+            "Receiving {File} ({Size} bytes{Streaming}, id {Id}) into {Partial}, resuming at {Offset}",
+            header.FileName, header.Size >= 0 ? header.Size : header.EstimatedSize,
+            header.Size >= 0 ? string.Empty : " estimated, sender still compressing", header.TransferId, partialPath, offset);
 
         await SendTypedAsync(TypeResumeOffset, WriteInt64(offset), cancellationToken).ConfigureAwait(false);
 
+        // -1: o remetente ainda está compactando; o tamanho final chega na mensagem End.
+        var size = header.Size;
+        long Total(long done) => size >= 0 ? size : Math.Max(header.EstimatedSize, done);
+
         var stopwatch = Stopwatch.StartNew();
         var meter = new TransferRateMeter(offset);
-        meter.Report(progress, offset, header.Size);
+        meter.Report(progress, offset, Total(offset), size < 0);
         long written = offset;
         long lastAck = offset;
 
@@ -188,31 +223,48 @@ public sealed class TransferSession : IAsyncDisposable
             file.SetLength(offset);
             file.Seek(offset, SeekOrigin.Begin);
 
-            while (written < header.Size)
+            while (size < 0 || written < size)
             {
-                var encrypted = await ReadExpectedAsync(TypeChunk, cancellationToken).ConfigureAwait(false);
-                var chunk = cipher.Decrypt(encrypted.Span);
-                if (written + chunk.Length > header.Size)
+                var (type, payload) = await ReadMessageAsync(cancellationToken, TypeChunk, TypeEnd).ConfigureAwait(false);
+                if (type == TypeEnd)
+                {
+                    size = ReadInt64(payload);
+                    if (size != written)
+                        throw new InvalidDataException($"The sender announced {size} bytes, but {written} were received.");
+                    break;
+                }
+
+                var chunk = cipher.Decrypt(payload.Span);
+                if (size >= 0 && written + chunk.Length > size)
                     throw new InvalidDataException("Received more data than announced in the header.");
 
                 await file.WriteAsync(chunk, cancellationToken).ConfigureAwait(false);
                 written += chunk.Length;
 
-                if (written - lastAck >= AckInterval || written == header.Size)
+                if (written - lastAck >= AckInterval || written == size)
                 {
                     await file.FlushAsync(cancellationToken).ConfigureAwait(false);
                     await SendTypedAsync(TypeAck, WriteInt64(written), cancellationToken).ConfigureAwait(false);
                     lastAck = written;
-                    meter.Report(progress, written, header.Size);
+                    meter.Report(progress, written, Total(written), size < 0);
                 }
             }
+
+            // Tamanho anunciado só no End: falta confirmar o último trecho.
+            if (lastAck != written)
+            {
+                await file.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await SendTypedAsync(TypeAck, WriteInt64(written), cancellationToken).ConfigureAwait(false);
+            }
+
+            meter.Report(progress, written, size);
         }
 
         await SendTypedAsync(TypeDone, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation(
-            "Receive completed: {Bytes} bytes in {Seconds:F1}s", header.Size - offset, stopwatch.Elapsed.TotalSeconds);
+            "Receive completed: {Bytes} bytes in {Seconds:F1}s", size - offset, stopwatch.Elapsed.TotalSeconds);
 
-        return header;
+        return header with { Size = size };
     }
 
     /// <summary>Avisa o par que a transferência foi encerrada (melhor esforço; nunca lança).</summary>
@@ -293,6 +345,10 @@ public sealed class TransferSession : IAsyncDisposable
     }
 
     private async Task<ReadOnlyMemory<byte>> ReadExpectedAsync(byte expectedType, CancellationToken cancellationToken)
+        => (await ReadMessageAsync(cancellationToken, expectedType).ConfigureAwait(false)).Payload;
+
+    private async Task<(byte Type, ReadOnlyMemory<byte> Payload)> ReadMessageAsync(
+        CancellationToken cancellationToken, params byte[] expectedTypes)
     {
         using var idle = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         idle.CancelAfter(_idleTimeout);
@@ -305,7 +361,7 @@ public sealed class TransferSession : IAsyncDisposable
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             throw new ConnectionLostException(
-                $"No response from the peer for {_idleTimeout.TotalSeconds:F0}s (waiting for message 0x{expectedType:X2}).");
+                $"No response from the peer for {_idleTimeout.TotalSeconds:F0}s (waiting for message 0x{expectedTypes[0]:X2}).");
         }
         catch (ChannelClosedException ex)
         {
@@ -319,10 +375,10 @@ public sealed class TransferSession : IAsyncDisposable
         var type = message.Span[0];
         if (type == TypeAbort)
             throw new TransferAbortedException(Encoding.UTF8.GetString(message.Span[1..]));
-        if (type != expectedType)
-            throw new InvalidDataException($"Unexpected message type 0x{type:X2} (expected 0x{expectedType:X2}).");
+        if (Array.IndexOf(expectedTypes, type) < 0)
+            throw new InvalidDataException($"Unexpected message type 0x{type:X2} (expected 0x{expectedTypes[0]:X2}).");
 
-        return message[1..];
+        return (type, message[1..]);
     }
 
     private static byte[] WriteInt64(long value)

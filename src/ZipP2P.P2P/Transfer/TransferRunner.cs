@@ -51,17 +51,58 @@ public sealed class TransferRunner
 
     public event Action<string>? SasReady;
 
-    /// <summary>Envia um pacote preparado. Ao concluir, remove-o do <see cref="TransferStore"/>.</summary>
-    public async Task SendAsync(OutgoingTransfer transfer, IProgress<TransferProgress>? progress, CancellationToken cancellationToken)
+    /// <summary>Envia um pacote já pronto. Ao concluir, remove-o do <see cref="TransferStore"/>.</summary>
+    public Task SendAsync(OutgoingTransfer transfer, IProgress<TransferProgress>? progress, CancellationToken cancellationToken)
+    {
+        if (transfer.PackageSize < 0)
+            throw new InvalidDataException("The package of this transfer was not fully prepared; send the file again.");
+
+        return SendAsync(transfer, PackageSource.FromFile(_store.PackagePath(transfer.Id)), progress, cancellationToken);
+    }
+
+    /// <summary>
+    /// Envia um pacote que pode ainda estar sendo compactado (o envio acompanha a compressão).
+    /// Ao concluir, remove-o do <see cref="TransferStore"/>.
+    /// </summary>
+    public async Task SendAsync(
+        OutgoingTransfer transfer,
+        PackageSource package,
+        IProgress<TransferProgress>? progress,
+        CancellationToken cancellationToken)
     {
         var header = new TransferHeader(transfer.Id, transfer.FileName, transfer.PackageSize, transfer.ContentType);
-        var packagePath = _store.PackagePath(transfer.Id);
 
-        await RunAsync(
-            transfer.RoomCode,
-            asOfferer: true,
-            session => session.SendAsync(packagePath, header, progress, cancellationToken),
-            cancellationToken).ConfigureAwait(false);
+        // Se a compressão falhar enquanto ainda espera o outro dispositivo, não fica esperando para sempre.
+        using var compressionFailed = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _ = package.Completion.ContinueWith(
+            _ =>
+            {
+                try
+                {
+                    compressionFailed.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // o envio já terminou
+                }
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
+
+        try
+        {
+            await RunAsync(
+                transfer.RoomCode,
+                asOfferer: true,
+                session => session.SendAsync(package, header, progress, compressionFailed.Token),
+                compressionFailed.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (package.Completion.IsFaulted && !cancellationToken.IsCancellationRequested)
+        {
+            await package.Completion.ConfigureAwait(false);
+            throw;
+        }
 
         _store.Delete(transfer);
     }
@@ -84,7 +125,7 @@ public sealed class TransferRunner
             asOfferer: false,
             async session =>
             {
-                await session.ReceiveAsync(
+                var header = await session.ReceiveAsync(
                     header =>
                     {
                         current = _store.FindIncoming(header.TransferId);
@@ -109,6 +150,13 @@ public sealed class TransferRunner
                     },
                     progress,
                     cancellationToken).ConfigureAwait(false);
+
+                // Recebido enquanto o remetente compactava: o tamanho só ficou conhecido no fim.
+                if (current!.Size != header.Size)
+                {
+                    current = current with { Size = header.Size };
+                    _store.Save(current);
+                }
             },
             cancellationToken).ConfigureAwait(false);
 
