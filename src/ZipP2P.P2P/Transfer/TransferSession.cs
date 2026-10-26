@@ -88,8 +88,11 @@ public sealed class TransferSession : IAsyncDisposable
             header.FileName, header.Size, header.TransferId, offset);
 
         var stopwatch = Stopwatch.StartNew();
+        var meter = new TransferRateMeter(offset);
+        meter.Report(progress, offset, header.Size);
         long sent = offset;
         long acked = offset;
+        long reported = offset;
         var buffer = new byte[ChunkSize];
 
         await using (var file = new FileStream(packagePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true))
@@ -109,10 +112,14 @@ public sealed class TransferSession : IAsyncDisposable
                 await SendTypedAsync(TypeChunk, cipher.Encrypt(buffer.AsSpan(0, read)), cancellationToken).ConfigureAwait(false);
                 sent += read;
 
-                var previous = acked;
+                // Inclui as confirmações recebidas na espera da janela acima (antes ficavam sem relatório
+                // e, com a janela quase sempre cheia, a barra do remetente só andava no final).
                 acked = DrainAcks(acked);
-                if (acked != previous)
-                    Report(progress, acked - offset, acked, header.Size, stopwatch);
+                if (acked != reported)
+                {
+                    meter.Report(progress, acked, header.Size);
+                    reported = acked;
+                }
             }
         }
 
@@ -123,7 +130,7 @@ public sealed class TransferSession : IAsyncDisposable
             while (acked < header.Size)
             {
                 acked = await WaitForAckAsync(cancellationToken).ConfigureAwait(false);
-                Report(progress, acked - offset, acked, header.Size, stopwatch);
+                meter.Report(progress, acked, header.Size);
             }
 
             await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
@@ -171,6 +178,8 @@ public sealed class TransferSession : IAsyncDisposable
         await SendTypedAsync(TypeResumeOffset, WriteInt64(offset), cancellationToken).ConfigureAwait(false);
 
         var stopwatch = Stopwatch.StartNew();
+        var meter = new TransferRateMeter(offset);
+        meter.Report(progress, offset, header.Size);
         long written = offset;
         long lastAck = offset;
 
@@ -194,7 +203,7 @@ public sealed class TransferSession : IAsyncDisposable
                     await file.FlushAsync(cancellationToken).ConfigureAwait(false);
                     await SendTypedAsync(TypeAck, WriteInt64(written), cancellationToken).ConfigureAwait(false);
                     lastAck = written;
-                    Report(progress, written - offset, written, header.Size, stopwatch);
+                    meter.Report(progress, written, header.Size);
                 }
             }
         }
@@ -314,15 +323,6 @@ public sealed class TransferSession : IAsyncDisposable
             throw new InvalidDataException($"Unexpected message type 0x{type:X2} (expected 0x{expectedType:X2}).");
 
         return message[1..];
-    }
-
-    private static void Report(IProgress<TransferProgress>? progress, long bytesThisConnection, long done, long total, Stopwatch stopwatch)
-    {
-        if (progress is null)
-            return;
-
-        var seconds = stopwatch.Elapsed.TotalSeconds;
-        progress.Report(new TransferProgress(done, total, seconds > 0 ? bytesThisConnection / seconds : 0));
     }
 
     private static byte[] WriteInt64(long value)
