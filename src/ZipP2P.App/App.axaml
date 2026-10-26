@@ -105,6 +105,14 @@
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <!-- Menus (ex.: Recortar/Copiar/Colar das caixas de texto) herdam a fonte de quem os abre;
+             o campo do código usa fonte 28 monoespaçada, e o menu saía gigante. -->
+        <Style Selector="MenuFlyoutPresenter, ContextMenu">
+            <Setter Property="FontFamily" Value="{x:Static FontFamily.Default}" />
+            <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="TextElement.LetterSpacing" Value="0" />
+        </Style>
         <Style Selector="TabControl.main > TabItem">
             <Setter Property="FontSize" Value="15" />
             <Setter Property="Padding" Value="14,6" />
