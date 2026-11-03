@@ -22,6 +22,9 @@ public sealed class MemoryTransport : ITransport
 
     public int MessagesSent => Volatile.Read(ref _sent);
 
+    /// <summary>Atraso antes de entregar cada mensagem recebida (simula uma rede lenta deste lado).</summary>
+    public TimeSpan ReceiveDelay { get; set; }
+
     public static (MemoryTransport A, MemoryTransport B) CreatePair()
     {
         var a = new MemoryTransport();
@@ -108,6 +111,8 @@ public sealed class MemoryTransport : ITransport
         await _hasSubscriber.Task;
         await foreach (var message in _inbound.Reader.ReadAllAsync())
         {
+            if (ReceiveDelay > TimeSpan.Zero)
+                await Task.Delay(ReceiveDelay);
             if (Volatile.Read(ref _closed) != 0)
                 break;
             _messageReceived?.Invoke(message);

@@ -90,6 +90,21 @@ public sealed class PairingTests : IDisposable
     }
 
     [Fact]
+    public async Task PeerClosingRightAfterConfirming_StillCompletesThePairing()
+    {
+        // Este lado recebe com atraso: o par conclui e fecha antes de o Done dele ser entregue aqui.
+        var (a, b) = MemoryTransport.CreatePair();
+        a.ReceiveDelay = TimeSpan.FromMilliseconds(150);
+        var slowSide = new TransferSession(a).PairAsync(_sender, "Notebook", Code);
+        var fastSide = new TransferSession(b).PairAsync(_receiver, "PC", Code);
+
+        await fastSide.WaitAsync(TimeSpan.FromSeconds(10));
+        b.Close();
+
+        Assert.Equal(_receiver.DeviceId, (await slowSide.WaitAsync(TimeSpan.FromSeconds(10))).DeviceId);
+    }
+
+    [Fact]
     public async Task DeviceName_IsSanitized()
     {
         var (a, b) = MemoryTransport.CreatePair();

@@ -345,7 +345,16 @@ public sealed class TransferSession : IAsyncDisposable
 
         // Os dois só confiam depois de saber que o outro também aceitou.
         await SendTypedAsync(TypeDone, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
-        await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
+        }
+        catch (ConnectionLostException) when (!_transport.IsConnected)
+        {
+            // O par fechou a conexão sem Abort, o que ele só faz depois de aceitar; o Done dele se perdeu
+            // no fechamento. Quem recusa envia Abort antes (chegaria aqui como TransferAbortedException).
+            _logger.LogWarning("Connection closed right after pairing; treating the other device as confirmed");
+        }
 
         PeerIdentityKey = peerIdentityKey;
         var peer = new PairedPeer(peerIdentityKey, SanitizeDeviceName(Encoding.UTF8.GetString(peerName)));
