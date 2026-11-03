@@ -19,7 +19,6 @@
                     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A" />
                     <SolidColorBrush x:Key="SecondaryTextBrush" Color="#64748B" />
                     <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
-                    <SolidColorBrush x:Key="LogoBrush" Color="#394149" />
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1E1E24" />
@@ -28,7 +27,6 @@
                     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F1F5F9" />
                     <SolidColorBrush x:Key="SecondaryTextBrush" Color="#94A3B8" />
                     <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
-                    <SolidColorBrush x:Key="LogoBrush" Color="#E2E8F0" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
