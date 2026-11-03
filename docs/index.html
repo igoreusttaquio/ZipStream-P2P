@@ -7,42 +7,51 @@
   <meta name="description" content="Compacte e envie arquivos e pastas grandes ponto a ponto, sem nuvem, com criptografia de ponta a ponta e retomada automática. Windows, Linux e macOS." />
   <meta property="og:title" content="ZipStream — arquivos grandes, direto entre computadores" />
   <meta property="og:description" content="Sem nuvem, sem cadastro, com criptografia de ponta a ponta. Se a conexão cair, continua de onde parou." />
-  <meta name="theme-color" content="#1E1E24" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 78 30'%3E%3Cpath fill='%233B82F6' d='M18.5 0C15.5 0 12.5 1.2 10.4 3.4L3.4 10.4C1.2 12.5 0 15.5 0 18.5 0 24.9 5.1 30 11.5 30c3 0 6-1.2 8.1-3.4l19-19C39.7 6.6 41.1 6 42.5 6c2.4 0 4.5 1.6 5.2 3.8l4.5-4.5C50.2 2.1 46.6 0 42.5 0c-3 0-6 1.2-8.1 3.4l-19 19c-1.1 1-2.5 1.6-3.9 1.6C8.5 24 6 21.5 6 18.5c0-1.5.6-2.9 1.6-3.9l7-7C15.6 6.6 17.1 6 18.5 6c2.4 0 4.5 1.6 5.2 3.8l4.5-4.5C26.2 2.1 22.6 0 18.5 0Z'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#0A1022" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Cpath d='M13 17H51L38 31H13Z' fill='%23fff'/%3E%3Cpath d='M26 33H51V47H13Z' fill='%2393C5FD'/%3E%3C/svg%3E" />
   <style>
+    /* Mesma paleta do app (derivada da logo: azul #1D4ED8 e azul claro #93C5FD). */
     :root {
-      --bg: #F8FAFC;
-      --bg-alt: #EEF2F7;
+      --bg: #F3F6FD;
+      --bg-alt: #E8EEFB;
       --card: #FFFFFF;
-      --border: #E2E8F0;
-      --text: #0F172A;
-      --muted: #5B6B82;
-      --accent: #2563EB;
-      --accent-strong: #1D4ED8;
-      --accent-soft: rgba(37, 99, 235, .10);
-      --success: #16A34A;
-      --mock-bg: #1E1E24;
-      --mock-card: #2A2B36;
-      --mock-border: #3F4050;
-      --mock-text: #F1F5F9;
-      --mock-muted: #94A3B8;
-      --shadow: 0 24px 60px -24px rgba(15, 23, 42, .35);
-      --radius: 14px;
+      --border: #D9E2F3;
+      --text: #0B1533;
+      --muted: #5B6A8A;
+      --accent: #1D4ED8;
+      --accent-strong: #1E40AF;
+      --accent-soft: #E3EBFF;
+      --success: #15803D;
+      --mock-bg: #0A1022;
+      --mock-card: #121A31;
+      --mock-border: #243154;
+      --mock-text: #E8EEFC;
+      --mock-muted: #8E9DC1;
+      --mock-accent: #93C5FD;
+      --mock-fill: #2563EB;
+      --mock-soft: #1B2B55;
+      --shadow: 0 24px 60px -24px rgba(11, 21, 51, .35);
+      /* Fundo de botões principais (texto branco); --accent é para texto e ícones. */
+      --fill: #1D4ED8;
+      --fill-hover: #1E40AF;
+      --radius: 16px;
       color-scheme: light;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #16161B;
-        --bg-alt: #1E1E24;
-        --card: #24252F;
-        --border: #363746;
-        --text: #F1F5F9;
-        --muted: #A0AEC2;
-        --accent: #3B82F6;
-        --accent-strong: #60A5FA;
-        --accent-soft: rgba(59, 130, 246, .14);
-        --success: #22C55E;
-        --shadow: 0 24px 60px -24px rgba(0, 0, 0, .7);
+        --bg: #0A1022;
+        --bg-alt: #0E1529;
+        --card: #121A31;
+        --border: #243154;
+        --text: #E8EEFC;
+        --muted: #8E9DC1;
+        --accent: #93C5FD;
+        --accent-strong: #BFDBFE;
+        --accent-soft: #1B2B55;
+        --success: #4ADE80;
+        --shadow: 0 24px 60px -24px rgba(0, 0, 0, .75);
+        --fill: #2563EB;
+        --fill-hover: #1D4ED8;
         color-scheme: dark;
       }
     }
@@ -73,20 +82,21 @@
     .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
     .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; color: var(--text); text-decoration: none; }
     .nav ul { display: flex; gap: 22px; list-style: none; align-items: center; }
+    @media (max-width: 900px) { .nav ul li:nth-child(2) { display: none; } }
     .nav ul a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; }
     .nav ul a:hover { color: var(--text); }
-    .nav .btn-sm { color: #fff; background: var(--accent); padding: 7px 14px; border-radius: 8px; }
-    .nav .btn-sm:hover { color: #fff; background: var(--accent-strong); }
+    .nav .btn-sm { color: #fff; background: var(--fill); padding: 7px 16px; border-radius: 999px; }
+    .nav .btn-sm:hover { color: #fff; background: var(--fill-hover); }
 
     /* Botões */
     .btn {
       display: inline-flex; align-items: center; gap: 10px;
       font-weight: 600; font-size: 16px; text-decoration: none;
-      padding: 13px 24px; border-radius: 10px; border: 1px solid transparent;
+      padding: 13px 24px; border-radius: 12px; border: 1px solid transparent;
       transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
     }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-strong); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(37, 99, 235, .55); }
+    .btn-primary { background: var(--fill); color: #fff; }
+    .btn-primary:hover { background: var(--fill-hover); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(29, 78, 216, .55); }
     .btn-ghost { color: var(--text); border-color: var(--border); background: var(--card); }
     .btn-ghost:hover { border-color: var(--accent); }
 
@@ -103,27 +113,41 @@
     /* Maquete da janela do app */
     .mock {
       background: var(--mock-bg); color: var(--mock-text);
-      border: 1px solid var(--mock-border); border-radius: 14px;
+      border: 1px solid var(--mock-border); border-radius: 16px;
       box-shadow: var(--shadow); overflow: hidden; font-size: 13px;
     }
     .mock-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border-bottom: 1px solid var(--mock-border); }
     .mock-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--mock-border); }
     .mock-bar b { margin-left: 8px; font-weight: 500; color: var(--mock-muted); font-size: 12px; }
     .mock-body { padding: 18px; display: grid; gap: 12px; }
-    .mock-tabs { display: flex; gap: 18px; color: var(--mock-muted); font-weight: 500; }
-    .mock-tabs .on { color: var(--mock-text); border-bottom: 2px solid #3B82F6; padding-bottom: 4px; }
-    .mock-card { background: var(--mock-card); border: 1px solid var(--mock-border); border-radius: 10px; padding: 14px; }
+    .mock-head { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+    .mock-tabs { display: flex; gap: 6px; color: var(--mock-muted); font-weight: 500; flex-wrap: wrap; }
+    .mock-tabs span { padding: 5px 12px; border-radius: 999px; }
+    .mock-tabs .on { color: var(--mock-accent); background: var(--mock-soft); }
+    .mock-card { background: var(--mock-card); border: 1px solid var(--mock-border); border-radius: 14px; padding: 14px; }
     .mock-file { display: flex; align-items: center; gap: 12px; }
     .mock-file small, .mock-label, .mock-hint { color: var(--mock-muted); }
     .mock-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; }
-    .mock-code { font-family: "Cascadia Mono", Consolas, Menlo, monospace; font-size: 30px; font-weight: 700; letter-spacing: .3em; color: #3B82F6; }
+    .mock-code { font-family: "Cascadia Mono", Consolas, Menlo, monospace; font-size: 30px; font-weight: 700; letter-spacing: .3em; color: var(--mock-accent); }
     .mock-status { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; }
     .mock-status small { font-weight: 400; color: var(--mock-muted); }
-    .bar { height: 6px; background: var(--mock-border); border-radius: 99px; overflow: hidden; margin-top: 10px; }
-    .bar span { display: block; height: 100%; width: 64%; background: #3B82F6; border-radius: inherit; animation: fill 4s ease-in-out infinite alternate; }
+    .bar { height: 8px; background: var(--mock-soft); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+    .bar span { display: block; height: 100%; width: 64%; background: var(--mock-fill); border-radius: inherit; animation: fill 4s ease-in-out infinite alternate; }
     @keyframes fill { from { width: 38%; } to { width: 86%; } }
-    .mock-sas { display: flex; gap: 10px; align-items: center; background: rgba(59, 130, 246, .12); border-radius: 8px; padding: 9px 12px; margin-top: 12px; }
+    .mock-sas { display: flex; gap: 10px; align-items: center; background: var(--mock-soft); border-radius: 12px; padding: 9px 12px; margin-top: 12px; }
     .mock-sas b { font-family: "Cascadia Mono", Consolas, Menlo, monospace; letter-spacing: .12em; }
+
+    /* Modo de recebimento: print real do app (claro/escuro conforme o sistema). */
+    .receive { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; align-items: center; }
+    .receive > * { min-width: 0; }
+    .receive ol { list-style: none; counter-reset: rstep; display: grid; gap: 18px; }
+    .receive li { display: grid; grid-template-columns: 34px 1fr; gap: 14px; counter-increment: rstep; }
+    .receive li::before {
+      content: counter(rstep); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent); font-weight: 700;
+    }
+    .receive li p { color: var(--muted); font-size: 15px; }
+    .shot { border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); display: block; width: 100%; height: auto; }
     @media (prefers-reduced-motion: reduce) { .bar span { animation: none; } html { scroll-behavior: auto; } }
 
     /* Seções */
@@ -138,7 +162,7 @@
     .step::before {
       counter-increment: step; content: counter(step);
       display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
-      background: var(--accent); color: #fff; font-weight: 700; margin-bottom: 14px;
+      background: var(--fill); color: #fff; font-weight: 700; margin-bottom: 14px;
     }
     .step h3 { font-size: 17px; margin-bottom: 6px; }
     .step p { color: var(--muted); font-size: 15px; }
@@ -182,7 +206,7 @@
     footer a { text-decoration: none; }
 
     @media (max-width: 900px) {
-      .hero, .security { grid-template-columns: 1fr; }
+      .hero, .security, .receive { grid-template-columns: 1fr; }
       .hero { padding-block: 48px 32px; }
       .features, .downloads { grid-template-columns: 1fr 1fr; }
     }
@@ -200,13 +224,14 @@
   <nav class="nav" aria-label="Principal">
     <div class="wrap">
       <a class="brand" href="#">
-        <svg width="56" height="22" viewBox="0 0 78 30" aria-hidden="true">
-          <path fill="#3B82F6" d="M18.5147 0C15.4686 0 12.5473 1.21005 10.3934 3.36396L3.36396 10.3934C1.21005 12.5473 0 15.4686 0 18.5147C0 24.8579 5.14214 30 11.4853 30C14.5314 30 17.4527 28.7899 19.6066 26.636L24.4689 21.7737C24.4689 21.7736 24.469 21.7738 24.4689 21.7737L38.636 7.6066C39.6647 6.57791 41.0599 6 42.5147 6C44.9503 6 47.0152 7.58741 47.7311 9.78407L52.2022 5.31296C50.1625 2.11834 46.586 0 42.5147 0C39.4686 0 36.5473 1.21005 34.3934 3.36396L15.364 22.3934C14.3353 23.4221 12.9401 24 11.4853 24C8.45584 24 6 21.5442 6 18.5147C6 17.0599 6.57791 15.6647 7.6066 14.636L14.636 7.6066C15.6647 6.57791 17.0599 6 18.5147 6C20.9504 6 23.0152 7.58748 23.7311 9.78421L28.2023 5.31307C26.1626 2.1184 22.5861 0 18.5147 0Z M39.3646 22.3934C38.3359 23.4221 36.9407 24 35.4859 24C33.0506 24 30.9859 22.413 30.2698 20.2167L25.7988 24.6877C27.8386 27.8819 31.4149 30 35.4859 30C38.532 30 41.4533 28.7899 43.6072 26.636L62.6366 7.6066C63.6653 6.57791 65.0605 6 66.5153 6C69.5448 6 72.0006 8.45584 72.0006 11.4853C72.0006 12.9401 71.4227 14.3353 70.394 15.364L63.3646 22.3934C62.3359 23.4221 60.9407 24 59.4859 24C57.0504 24 54.9856 22.4127 54.2696 20.2162L49.7986 24.6873C51.8383 27.8818 55.4147 30 59.4859 30C62.532 30 65.4533 28.7899 67.6072 26.636L74.6366 19.6066C76.7905 17.4527 78.0006 14.5314 78.0006 11.4853C78.0006 5.14214 72.8585 0 66.5153 0C63.4692 0 60.5479 1.21005 58.394 3.36396L39.3646 22.3934Z"/>
+        <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#1D4ED8"/><path d="M13 17H51L38 31H13Z" fill="#FFFFFF"/><path d="M26 33H51V47H13Z" fill="#93C5FD"/>
         </svg>
         ZipStream
       </a>
       <ul>
         <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#modo-recebimento">Modo de recebimento</a></li>
         <li><a href="#recursos">Recursos</a></li>
         <li><a href="#seguranca">Segurança</a></li>
         <li><a href="#perguntas">Perguntas</a></li>
@@ -234,9 +259,13 @@
       <div class="mock" role="img" aria-label="Janela do ZipStream enviando um arquivo: código de envio LY5V7E, 64% enviado e código de segurança 891 989">
         <div class="mock-bar"><i></i><i></i><i></i><b>ZipStream</b></div>
         <div class="mock-body">
-          <div class="mock-tabs"><span class="on">Enviar</span><span>Receber</span><span>Ferramentas</span></div>
+          <div class="mock-head">
+            <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1D4ED8"/><path d="M13 17H51L38 31H13Z" fill="#FFFFFF"/><path d="M26 33H51V47H13Z" fill="#93C5FD"/></svg>
+            ZipStream
+          </div>
+          <div class="mock-tabs"><span class="on">Enviar</span><span>Receber</span><span>Dispositivos</span><span>Ferramentas</span></div>
           <div class="mock-card mock-file">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#93C5FD" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>
             <div><strong>Projeto-final.mov</strong><br/><small>4,2 GB</small></div>
           </div>
           <div class="mock-card">
@@ -248,7 +277,7 @@
             <div class="mock-status"><span>Enviando…</span><small>2,7 GB / 4,2 GB · 48 MB/s</small></div>
             <div class="bar"><span></span></div>
             <div class="mock-sas">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#93C5FD" stroke-width="2" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
               <span>Código de segurança <b>891989</b></span>
             </div>
           </div>
@@ -279,7 +308,29 @@
       </div>
     </section>
 
-    <section id="recursos">
+    <section id="modo-recebimento">
+      <div class="wrap receive">
+        <div>
+          <div class="section-head">
+            <span class="eyebrow">Novo</span>
+            <h2>Um computador que só recebe. Sem código a cada envio.</h2>
+            <p>Deixe o computador do escritório (ou de casa) no modo de recebimento. Pareie seus outros computadores uma vez e, depois, é só escolher o arquivo e o destino.</p>
+          </div>
+          <ol>
+            <li><div><strong>Ligue o modo de recebimento</strong><p>Na aba <strong>Dispositivos</strong>. Com <em>Iniciar com o sistema</em>, ele já fica na bandeja quando o computador liga.</p></div></li>
+            <li><div><strong>Pareie uma vez</strong><p>No outro computador, <strong>Adicionar dispositivo</strong> com o código fixo deste (<code>K7P-2QX-9MRT-H4WZ</code>). O código nunca passa pelo servidor; se vazar, gere outro.</p></div></li>
+            <li><div><strong>Envie direto</strong><p>Na aba <strong>Enviar</strong>, escolha o computador pareado. Ele recebe sozinho e extrai na pasta escolhida. Só dispositivos confiáveis conseguem enviar.</p></div></li>
+          </ol>
+        </div>
+        <picture>
+          <source srcset="img/devices-dark.png" media="(prefers-color-scheme: dark)" />
+          <img class="shot" src="img/devices-light.png" width="782" height="752" loading="lazy"
+               alt="Aba Dispositivos do ZipStream: modo de recebimento online, código do computador K7P-2QX-9MRT-H4WZ, nome Escritório e a lista de dispositivos confiáveis com o Notebook online" />
+        </picture>
+      </div>
+    </section>
+
+    <section id="recursos" class="alt">
       <div class="wrap">
         <div class="section-head">
           <h2>Feito para arquivos que não cabem no e-mail</h2>
@@ -312,15 +363,15 @@
             <p>A pasta de destino fica lembrada. Nada é sobrescrito: se já existir, o novo vira <code>nome (1)</code>.</p>
           </div>
           <div class="feature">
-            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg></div>
-            <h3>Log técnico quando precisar</h3>
-            <p>Se algo der errado, a tela explica o motivo e o log mostra cada etapa. Dá para copiar ou exportar e mandar para o suporte.</p>
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg></div>
+            <h3>Atualiza sozinho</h3>
+            <p>O app avisa quando sai versão nova. No Windows, baixa, confere a integridade (SHA-256) e instala em um clique, reabrindo no fim.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="seguranca" class="alt">
+    <section id="seguranca">
       <div class="wrap security">
         <div>
           <div class="section-head">
@@ -384,16 +435,16 @@
       </div>
     </section>
 
-    <section id="download">
+    <section id="download" class="alt">
       <div class="wrap">
         <div class="section-head">
           <h2>Baixe para o seu sistema</h2>
-          <p>Gratuito. Descompacte e abra o <code>ZipP2P.App</code>, sem instalar nada. Quem recebe precisa do app também.</p>
+          <p>Gratuito. Quem recebe precisa do app também. Depois de instalado, o próprio app avisa e instala as novas versões.</p>
         </div>
         <div class="downloads">
           <div class="dl" data-os="windows">
             <h3>Windows <span class="badge">Seu sistema</span></h3>
-            <p>Windows 10 e 11 (64 bits). Opção de menu “Enviar com ZipStream” no Explorer (ative em Configurações).</p>
+            <p>Windows 10 e 11 (64 bits). O instalador (<code>ZipStream-Setup</code>, sem administrador) está na <a href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest" target="_blank" rel="noopener">última release</a> e já oferece o menu “Enviar com ZipStream”. Versão portátil:</p>
             <a class="btn btn-primary" href="https://github.com/igoreusttaquio/ZipStream-P2P/releases/latest/download/ZipStream-win-x64.zip">Baixar .zip</a>
           </div>
           <div class="dl" data-os="linux">
@@ -411,7 +462,7 @@
       </div>
     </section>
 
-    <section id="perguntas" class="alt">
+    <section id="perguntas">
       <div class="wrap">
         <div class="section-head">
           <h2>Perguntas frequentes</h2>
@@ -431,7 +482,15 @@
           </details>
           <details>
             <summary>Preciso criar conta?</summary>
-            <p>Não. O código de envio é tudo o que os dois lados precisam.</p>
+            <p>Não. O código de envio é tudo o que os dois lados precisam. No modo de recebimento, o pareamento é entre os próprios computadores, também sem conta.</p>
+          </details>
+          <details>
+            <summary>Posso deixar um computador recebendo sozinho?</summary>
+            <p>Sim: ligue o <strong>modo de recebimento</strong> na aba Dispositivos e pareie seus outros computadores uma vez, com o código fixo dele. Depois, os envios chegam sem ninguém na frente da tela. Só dispositivos pareados conseguem enviar; se o código vazar, gere outro (os já pareados continuam).</p>
+          </details>
+          <details>
+            <summary>Como atualizo o app?</summary>
+            <p>O app procura versões novas uma vez por dia e mostra <strong>Atualização disponível</strong> no topo. No Windows, <strong>Baixar e instalar</strong> faz tudo e reabre o app; no Linux e no macOS, o botão leva à página de download.</p>
           </details>
           <details>
             <summary>O que é o código de segurança?</summary>
