@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using ZipP2P.Core.Security;
 
 namespace ZipP2P.P2P.Transfer;
 
@@ -167,7 +168,35 @@ public sealed class TransferRunner
         return current!;
     }
 
-    private async Task RunAsync(string roomCode, bool asOfferer, Func<TransferSession, Task> work, CancellationToken cancellationToken)
+    /// <summary>
+    /// Pareia com o dispositivo na sala <paramref name="roomCode"/> usando o código do receptor. Roda sem a
+    /// autenticação do runner: ainda não há confiança entre os dois. O chamador salva o par como confiável.
+    /// </summary>
+    public async Task<PairedPeer> PairAsync(
+        string roomCode,
+        bool asOfferer,
+        DeviceIdentity identity,
+        string deviceName,
+        string receiverCode,
+        CancellationToken cancellationToken)
+    {
+        PairedPeer? peer = null;
+        await RunAsync(
+            roomCode,
+            asOfferer,
+            async session => peer = await session.PairAsync(identity, deviceName, receiverCode, cancellationToken).ConfigureAwait(false),
+            cancellationToken,
+            authenticate: false).ConfigureAwait(false);
+
+        return peer!;
+    }
+
+    private async Task RunAsync(
+        string roomCode,
+        bool asOfferer,
+        Func<TransferSession, Task> work,
+        CancellationToken cancellationToken,
+        bool authenticate = true)
     {
         var attempt = 0;
         var everConnected = false;
@@ -207,7 +236,7 @@ public sealed class TransferRunner
             string? lostReason = null;
             await using (link.ConfigureAwait(false))
             {
-                var session = new TransferSession(link.Transport, _logger, _idleTimeout, _authentication);
+                var session = new TransferSession(link.Transport, _logger, _idleTimeout, authenticate ? _authentication : null);
                 session.SasReady += sas => SasReady?.Invoke(sas);
                 StatusChanged?.Invoke(new TransferStatus(TransferStage.Transferring, attempt));
 

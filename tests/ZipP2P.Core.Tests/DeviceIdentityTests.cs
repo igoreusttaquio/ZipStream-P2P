@@ -77,6 +77,17 @@ public class DeviceIdentityTests
         Assert.Equal("K7P-2QX-9MRT-H4WZ", ReceiverCode.Format(code));
     }
 
+    [Fact]
+    public void ReceiverCode_PairingKeyDependsOnlyOnTheNormalizedCode()
+    {
+        var key = ReceiverCode.DerivePairingKey("K7P-2QX-9MRT-H4WZ");
+
+        Assert.Equal(32, key.Length);
+        Assert.Equal(key, ReceiverCode.DerivePairingKey("k7p 2qx 9mrt h4wz"));
+        Assert.NotEqual(key, ReceiverCode.DerivePairingKey("K7P-2QX-9MRT-H4WY"));
+        Assert.Throws<ArgumentException>(() => ReceiverCode.DerivePairingKey("ABC"));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

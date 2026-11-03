@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 
 namespace ZipP2P.Core.Security;
 
@@ -15,6 +16,7 @@ public static class ReceiverCode
     public const int Length = 14;
 
     private static readonly int[] GroupSizes = [3, 3, 4, 4];
+    private static readonly byte[] PairingInfo = Encoding.UTF8.GetBytes("ZipStream-Pairing-v1");
 
     /// <summary>Gera um código novo, já formatado.</summary>
     public static string Generate()
@@ -40,6 +42,19 @@ public static class ReceiverCode
 
         code = normalized;
         return true;
+    }
+
+    /// <summary>
+    /// Chave usada no pareamento para cada lado provar que conhece o código (HMAC). O código em si
+    /// nunca é enviado: nem ao par, nem ao servidor.
+    /// </summary>
+    public static byte[] DerivePairingKey(string code)
+    {
+        if (!TryNormalize(code, out var normalized))
+            throw new ArgumentException("Invalid receiver code.", nameof(code));
+
+        return HKDF.DeriveKey(
+            HashAlgorithmName.SHA256, Encoding.UTF8.GetBytes(normalized), 32, salt: null, info: PairingInfo);
     }
 
     /// <summary>Agrupa um código normalizado para exibição: <c>XXX-XXX-XXXX-XXXX</c>.</summary>

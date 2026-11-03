@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -27,6 +28,8 @@ namespace ZipP2P.P2P.Transfer;
 /// <item>Destinatário confirma com <c>Ack</c> (bytes gravados em disco) e, ao final, <c>Done</c>.</item>
 /// </list>
 /// Qualquer lado pode enviar <c>Abort</c> com o motivo antes de encerrar.
+/// No pareamento (<see cref="PairAsync"/>), depois do <c>PublicKey</c> ambos enviam <c>Pairing</c> (cifrado:
+/// identidade, nome, assinatura e a prova de que conhecem o código do receptor) e confirmam com <c>Done</c>.
 /// Sem controle de fluxo e sem o <c>Done</c>, o remetente fechava a conexão com dados ainda no
 /// buffer do libdatachannel, e arquivos grandes chegavam incompletos.
 /// </remarks>
@@ -49,6 +52,9 @@ public sealed class TransferSession : IAsyncDisposable
     private const byte TypeAbort = 0x07;
     private const byte TypeEnd = 0x08;
     private const byte TypeIdentity = 0x09;
+    private const byte TypePairing = 0x0A;
+
+    private const int MaxDeviceNameLength = 64;
 
     private readonly ITransport _transport;
     private readonly ILogger _logger;
@@ -301,7 +307,63 @@ public sealed class TransferSession : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Pareia este dispositivo com o par usando o código do receptor (cada lado prova que o conhece, sem
+    /// enviá-lo) e as identidades permanentes. Ao concluir, o chamador deve passar a confiar no par.
+    /// </summary>
+    /// <param name="receiverCode">O código deste computador (receptor) ou o digitado (remetente).</param>
+    public async Task<PairedPeer> PairAsync(
+        DeviceIdentity identity,
+        string deviceName,
+        string receiverCode,
+        CancellationToken cancellationToken = default)
+    {
+        if (_authentication is not null)
+            throw new InvalidOperationException("Pairing runs on a session without authentication.");
+
+        var pairingKey = ReceiverCode.DerivePairingKey(receiverCode);
+        var (cipher, ownEphemeralKey, peerEphemeralKey) = await AgreeKeyAsync(cancellationToken).ConfigureAwait(false);
+
+        var name = Encoding.UTF8.GetBytes(SanitizeDeviceName(deviceName));
+        var ownTranscript = SessionAuthentication.Transcript(ownEphemeralKey, peerEphemeralKey.Span);
+        var payload = WriteFields(
+            identity.PublicKey,
+            name,
+            identity.Sign(ownTranscript),
+            PairingProof(pairingKey, ownTranscript, identity.PublicKey, name));
+        await SendTypedAsync(TypePairing, cipher.Encrypt(payload), cancellationToken).ConfigureAwait(false);
+
+        var reply = cipher.Decrypt((await ReadExpectedAsync(TypePairing, cancellationToken).ConfigureAwait(false)).Span);
+        var fields = ReadFields(reply, 4);
+        var (peerIdentityKey, peerName, peerSignature, peerProof) = (fields[0], fields[1], fields[2], fields[3]);
+
+        var peerTranscript = SessionAuthentication.Transcript(peerEphemeralKey.Span, ownEphemeralKey);
+        if (!CryptographicOperations.FixedTimeEquals(PairingProof(pairingKey, peerTranscript, peerIdentityKey, peerName), peerProof))
+            throw new PeerNotTrustedException("The pairing code does not match.");
+        if (!DeviceIdentity.Verify(peerIdentityKey, peerTranscript, peerSignature))
+            throw new PeerNotTrustedException("The other device failed to prove its identity.");
+
+        // Os dois só confiam depois de saber que o outro também aceitou.
+        await SendTypedAsync(TypeDone, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
+        await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
+
+        PeerIdentityKey = peerIdentityKey;
+        var peer = new PairedPeer(peerIdentityKey, SanitizeDeviceName(Encoding.UTF8.GetString(peerName)));
+        _logger.LogInformation("Paired with device {DeviceId} ({Name})", peer.DeviceId, peer.Name);
+        return peer;
+    }
+
     private async Task<ChunkCipher> EstablishKeyAsync(CancellationToken cancellationToken)
+    {
+        var (cipher, ownEphemeralKey, peerEphemeralKey) = await AgreeKeyAsync(cancellationToken).ConfigureAwait(false);
+        if (_authentication is not null)
+            await AuthenticatePeerAsync(_authentication, ownEphemeralKey, peerEphemeralKey, cipher, cancellationToken).ConfigureAwait(false);
+
+        return cipher;
+    }
+
+    private async Task<(ChunkCipher Cipher, byte[] OwnEphemeralKey, ReadOnlyMemory<byte> PeerEphemeralKey)> AgreeKeyAsync(
+        CancellationToken cancellationToken)
     {
         using var agreement = new KeyAgreement();
         await SendTypedAsync(TypePublicKey, agreement.PublicKey, cancellationToken).ConfigureAwait(false);
@@ -313,11 +375,7 @@ public sealed class TransferSession : IAsyncDisposable
         _logger.LogInformation("Key agreement completed (ECDH P-256); security code {Sas}", sas);
         SasReady?.Invoke(sas);
 
-        var cipher = new ChunkCipher(key);
-        if (_authentication is not null)
-            await AuthenticatePeerAsync(_authentication, agreement.PublicKey, otherKey, cipher, cancellationToken).ConfigureAwait(false);
-
-        return cipher;
+        return (new ChunkCipher(key), agreement.PublicKey, otherKey);
     }
 
     private async Task AuthenticatePeerAsync(
@@ -327,22 +385,13 @@ public sealed class TransferSession : IAsyncDisposable
         ChunkCipher cipher,
         CancellationToken cancellationToken)
     {
-        // Payload: [tamanho da chave (2 bytes)][chave pública da identidade][assinatura].
         var identityKey = authentication.Identity.PublicKey;
         var signature = authentication.Identity.Sign(SessionAuthentication.Transcript(ownEphemeralKey, peerEphemeralKey.Span));
-        var payload = new byte[2 + identityKey.Length + signature.Length];
-        BinaryPrimitives.WriteUInt16LittleEndian(payload, (ushort)identityKey.Length);
-        identityKey.CopyTo(payload.AsSpan(2));
-        signature.CopyTo(payload.AsSpan(2 + identityKey.Length));
-        await SendTypedAsync(TypeIdentity, cipher.Encrypt(payload), cancellationToken).ConfigureAwait(false);
+        await SendTypedAsync(TypeIdentity, cipher.Encrypt(WriteFields(identityKey, signature)), cancellationToken).ConfigureAwait(false);
 
         var reply = cipher.Decrypt((await ReadExpectedAsync(TypeIdentity, cancellationToken).ConfigureAwait(false)).Span);
-        var keyLength = reply.Length >= 2 ? BinaryPrimitives.ReadUInt16LittleEndian(reply) : int.MaxValue;
-        if (2 + keyLength >= reply.Length)
-            throw new InvalidDataException("Invalid identity message.");
-
-        var peerIdentityKey = reply.AsSpan(2, keyLength).ToArray();
-        var peerSignature = reply.AsSpan(2 + keyLength);
+        var fields = ReadFields(reply, 2);
+        var (peerIdentityKey, peerSignature) = (fields[0], fields[1]);
         if (!DeviceIdentity.Verify(peerIdentityKey, SessionAuthentication.Transcript(peerEphemeralKey.Span, ownEphemeralKey), peerSignature))
             throw new PeerNotTrustedException("The other device failed to prove its identity.");
 
@@ -436,6 +485,58 @@ public sealed class TransferSession : IAsyncDisposable
             throw new InvalidDataException($"Unexpected message type 0x{type:X2} (expected 0x{expectedTypes[0]:X2}).");
 
         return (type, message[1..]);
+    }
+
+    /// <summary>Prova de que quem enviou conhece o código: HMAC sobre a sessão, a identidade e o nome.</summary>
+    private static byte[] PairingProof(byte[] pairingKey, byte[] transcript, ReadOnlySpan<byte> identityKey, ReadOnlySpan<byte> name)
+    {
+        using var hmac = IncrementalHash.CreateHMAC(HashAlgorithmName.SHA256, pairingKey);
+        hmac.AppendData(transcript);
+        hmac.AppendData(WriteFields(identityKey.ToArray(), name.ToArray()));
+        return hmac.GetHashAndReset();
+    }
+
+    private static string SanitizeDeviceName(string name)
+    {
+        var clean = new string(name.Where(c => !char.IsControl(c)).ToArray()).Trim();
+        if (clean.Length > MaxDeviceNameLength)
+            clean = clean[..MaxDeviceNameLength].TrimEnd();
+        return clean.Length > 0 ? clean : "Unknown device";
+    }
+
+    /// <summary>Campos com prefixo de tamanho (2 bytes cada).</summary>
+    private static byte[] WriteFields(params byte[][] fields)
+    {
+        var buffer = new byte[fields.Sum(f => 2 + f.Length)];
+        var offset = 0;
+        foreach (var field in fields)
+        {
+            BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(offset), checked((ushort)field.Length));
+            field.CopyTo(buffer.AsSpan(offset + 2));
+            offset += 2 + field.Length;
+        }
+
+        return buffer;
+    }
+
+    private static byte[][] ReadFields(byte[] payload, int count)
+    {
+        var fields = new byte[count][];
+        var offset = 0;
+        for (var i = 0; i < count; i++)
+        {
+            if (payload.Length - offset < 2)
+                throw new InvalidDataException("Truncated message.");
+            var length = BinaryPrimitives.ReadUInt16LittleEndian(payload.AsSpan(offset));
+            if (payload.Length - offset - 2 < length)
+                throw new InvalidDataException("Truncated message.");
+            fields[i] = payload.AsSpan(offset + 2, length).ToArray();
+            offset += 2 + length;
+        }
+
+        if (offset != payload.Length)
+            throw new InvalidDataException("Unexpected data at the end of the message.");
+        return fields;
     }
 
     private static byte[] WriteInt64(long value)
