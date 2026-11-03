@@ -8,12 +8,13 @@ public sealed class SettingsStore
     private readonly string _connectionString;
 
     public SettingsStore()
+        : this(DefaultPath)
     {
-        var directory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZipStream");
-        Directory.CreateDirectory(directory);
+    }
 
-        var dbPath = Path.Combine(directory, "settings.db");
+    public SettingsStore(string dbPath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(dbPath))!);
         _connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
 
         using var connection = new SqliteConnection(_connectionString);
@@ -22,6 +23,9 @@ public sealed class SettingsStore
         command.CommandText = "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);";
         command.ExecuteNonQuery();
     }
+
+    public static string DefaultPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZipStream", "settings.db");
 
     public string? Get(string key)
     {
