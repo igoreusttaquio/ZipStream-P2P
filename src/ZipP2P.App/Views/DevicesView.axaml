@@ -141,17 +141,17 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Adicionar dispositivo: o código do outro computador -->
+                    <!-- Adicionar dispositivo: digita o código do outro computador e pareia -->
                     <StackPanel Spacing="6">
                         <TextBlock Classes="label" Text="{Binding [Devices.Add], Source={x:Static loc:Localizer.Instance}}" />
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0" Text="{Binding PairCode}" PlaceholderText="XXX-XXX-XXXX-XXXX"
                                      FontFamily="Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace" VerticalContentAlignment="Center"
                                      AutomationProperties.Name="{Binding [Devices.Add], Source={x:Static loc:Localizer.Instance}}" />
-                            <Button Grid.Column="1" Classes="primary" Command="{Binding PairCommand}"
+                            <Button Grid.Column="1" Classes="primary" Command="{Binding PairCommand}" VerticalAlignment="Center"
                                     AutomationProperties.Name="{Binding [Devices.Pair], Source={x:Static loc:Localizer.Instance}}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <icons:MaterialIcon Kind="LinkVariant" Width="16" Height="16" VerticalAlignment="Center" />
+                                    <icons:MaterialIcon Kind="Plus" Width="16" Height="16" VerticalAlignment="Center" />
                                     <TextBlock Text="{Binding [Devices.Pair], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>

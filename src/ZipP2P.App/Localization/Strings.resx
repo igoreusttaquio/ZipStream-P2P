@@ -409,7 +409,7 @@
     <value>THIS COMPUTER'S CODE</value>
   </data>
   <data name="Devices.CodeHint" xml:space="preserve">
-    <value>Anyone who enters this code in “Add device” can send files here. If it leaks, generate a new one (paired devices keep working).</value>
+    <value>On the other computer, enter this code in Devices → Add device. Anyone with the code can send files here; if it leaks, generate a new one (paired devices keep working).</value>
   </data>
   <data name="Devices.Regenerate" xml:space="preserve">
     <value>New code</value>
@@ -445,13 +445,13 @@
     <value>Refresh</value>
   </data>
   <data name="Devices.Add" xml:space="preserve">
-    <value>ADD DEVICE</value>
+    <value>OTHER COMPUTER'S CODE</value>
   </data>
   <data name="Devices.AddHint" xml:space="preserve">
     <value>Enter the code shown in the other computer's Devices tab (with receive mode on). Both devices will trust each other.</value>
   </data>
   <data name="Devices.Pair" xml:space="preserve">
-    <value>Pair</value>
+    <value>Add device</value>
   </data>
   <data name="Devices.Pairing" xml:space="preserve">
     <value>Pairing…</value>

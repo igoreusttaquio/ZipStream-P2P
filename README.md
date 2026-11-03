@@ -41,7 +41,7 @@ Aplicativo desktop multiplataforma (Windows, Linux, macOS) para **compactar e tr
 Para um computador que fica ligado (ex.: o do escritório) receber arquivos dos seus outros computadores:
 
 1. **No computador que recebe:** aba **Dispositivos** → ligue **Modo de recebimento** (fica "Online — aguardando envios"). Marque **Iniciar com o sistema** para ele já abrir na bandeja ao ligar o computador.
-2. **No computador que envia (uma vez só):** aba **Dispositivos** → **Adicionar dispositivo** → digite o **código deste computador** que aparece no outro → **Parear**. Os dois passam a confiar um no outro.
+2. **No computador que envia (uma vez só):** aba **Dispositivos** → em **Código do outro computador**, digite o código que aparece no que recebe → **Adicionar dispositivo**. Os dois passam a confiar um no outro.
 3. **Daí em diante:** aba **Enviar** → escolha o arquivo → em **Enviar para um dispositivo pareado**, escolha o computador → **Enviar**. Ele recebe sozinho e extrai em **Salvar em**.
 
 - O código do computador é fixo; se vazar, **Gerar novo** invalida o antigo (os dispositivos já pareados continuam). Para tirar um dispositivo, **Remover** na lista.

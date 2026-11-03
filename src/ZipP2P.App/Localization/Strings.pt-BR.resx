@@ -409,7 +409,7 @@
     <value>CÓDIGO DESTE COMPUTADOR</value>
   </data>
   <data name="Devices.CodeHint" xml:space="preserve">
-    <value>Quem digitar este código em “Adicionar dispositivo” passa a poder enviar para cá. Se ele vazar, gere um novo (os pareados continuam).</value>
+    <value>No outro computador, digite este código em Dispositivos → Adicionar dispositivo. Quem tiver o código pode enviar para cá; se ele vazar, gere um novo (os já pareados continuam).</value>
   </data>
   <data name="Devices.Regenerate" xml:space="preserve">
     <value>Gerar novo</value>
@@ -445,13 +445,13 @@
     <value>Atualizar</value>
   </data>
   <data name="Devices.Add" xml:space="preserve">
-    <value>ADICIONAR DISPOSITIVO</value>
+    <value>CÓDIGO DO OUTRO COMPUTADOR</value>
   </data>
   <data name="Devices.AddHint" xml:space="preserve">
     <value>Digite o código que aparece na aba Dispositivos do outro computador (com o modo de recebimento ligado). Os dois passam a confiar um no outro.</value>
   </data>
   <data name="Devices.Pair" xml:space="preserve">
-    <value>Parear</value>
+    <value>Adicionar dispositivo</value>
   </data>
   <data name="Devices.Pairing" xml:space="preserve">
     <value>Pareando…</value>

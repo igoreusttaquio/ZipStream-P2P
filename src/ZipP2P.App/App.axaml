@@ -87,7 +87,7 @@
             <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="MinWidth" Value="120" />
+            <Setter Property="MinWidth" Value="100" />
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource AccentFillHoverBrush}" />
@@ -134,11 +134,9 @@
         </Style>
         <!-- Botão de ação principal das abas: mesmo tamanho em todas -->
         <Style Selector="Button.large">
-            <Setter Property="MinWidth" Value="240" />
+            <Setter Property="MinWidth" Value="170" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="Padding" Value="22,11" />
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="18,9" />
         </Style>
         <Style Selector="Button.link">
             <Setter Property="Background" Value="Transparent" />
@@ -178,21 +176,20 @@
             <Setter Property="Foreground" Value="{DynamicResource AccentFillBrush}" />
             <Setter Property="Background" Value="{DynamicResource SubtleBackgroundBrush}" />
         </Style>
-        <!-- Card principal de cada aba: borda pontilhada (mesmo visual da área de soltar arquivos) -->
-        <Style Selector="ContentControl.dashed">
-            <Setter Property="Padding" Value="18" />
+        <!-- Card principal de cada aba (formulário / área de soltar arquivos): mesmo visual do Border.card. -->
+        <Style Selector="ContentControl.panel">
+            <Setter Property="Padding" Value="20" />
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Grid>
-                        <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
-                                   StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="16" RadiusY="16"
-                                   Fill="{DynamicResource CardBackgroundBrush}" />
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderColorBrush}" BorderThickness="1"
+                            CornerRadius="16" BoxShadow="0 4 18 0 #120B1533">
                         <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           Padding="{TemplateBinding Padding}"
                                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" />
-                    </Grid>
+                    </Border>
                 </ControlTemplate>
             </Setter>
         </Style>
@@ -218,13 +215,13 @@
             <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="TextElement.LetterSpacing" Value="0" />
         </Style>
-        <!-- Abas principais em "pílulas": a selecionada ganha fundo azul suave em vez do traço do Fluent. -->
+        <!-- Abas principais: a selecionada ganha fundo azul suave (mesmo raio dos botões) em vez do traço do Fluent. -->
         <Style Selector="TabControl.main > TabItem">
             <Setter Property="FontSize" Value="15" />
-            <Setter Property="Padding" Value="16,6" />
-            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="MinHeight" Value="38" />
             <Setter Property="Margin" Value="0,0,6,0" />
-            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
         </Style>
         <Style Selector="TabControl.main > TabItem /template/ Border#PART_SelectedPipe">

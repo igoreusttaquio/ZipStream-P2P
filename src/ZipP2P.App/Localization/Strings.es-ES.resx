@@ -409,7 +409,7 @@
     <value>CÓDIGO DE ESTE EQUIPO</value>
   </data>
   <data name="Devices.CodeHint" xml:space="preserve">
-    <value>Quien escriba este código en “Agregar dispositivo” podrá enviar archivos aquí. Si se filtra, genere uno nuevo (los emparejados siguen funcionando).</value>
+    <value>En el otro equipo, escriba este código en Dispositivos → Agregar dispositivo. Quien tenga el código puede enviar archivos aquí; si se filtra, genere uno nuevo (los ya emparejados siguen funcionando).</value>
   </data>
   <data name="Devices.Regenerate" xml:space="preserve">
     <value>Nuevo código</value>
@@ -445,13 +445,13 @@
     <value>Actualizar</value>
   </data>
   <data name="Devices.Add" xml:space="preserve">
-    <value>AGREGAR DISPOSITIVO</value>
+    <value>CÓDIGO DEL OTRO EQUIPO</value>
   </data>
   <data name="Devices.AddHint" xml:space="preserve">
     <value>Escriba el código que aparece en la pestaña Dispositivos del otro equipo (con el modo de recepción activado). Ambos confiarán el uno en el otro.</value>
   </data>
   <data name="Devices.Pair" xml:space="preserve">
-    <value>Emparejar</value>
+    <value>Agregar dispositivo</value>
   </data>
   <data name="Devices.Pairing" xml:space="preserve">
     <value>Emparejando…</value>

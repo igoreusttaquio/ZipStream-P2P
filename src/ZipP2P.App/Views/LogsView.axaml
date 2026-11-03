@@ -66,8 +66,7 @@
         </Grid>
 
         <!-- Entradas -->
-        <Border Grid.Row="2" CornerRadius="8" BorderThickness="1"
-                BorderBrush="{DynamicResource BorderColorBrush}" Background="{DynamicResource CardBackgroundBrush}">
+        <Border Grid.Row="2" Classes="card" Padding="6" ClipToBounds="True">
             <Grid>
                 <TextBlock Text="{Binding [Logs.Empty], Source={x:Static loc:Localizer.Instance}}"
                            HorizontalAlignment="Center" VerticalAlignment="Center"

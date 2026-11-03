@@ -14,7 +14,7 @@
         <StackPanel Spacing="16" Margin="0,4,4,4">
             <TextBlock Classes="hint" Text="{Binding [Tools.Hint], Source={x:Static loc:Localizer.Instance}}" />
 
-            <ContentControl Classes="dashed" IsEnabled="{Binding !IsBusy}">
+            <ContentControl Classes="panel" IsEnabled="{Binding !IsBusy}">
                 <StackPanel Spacing="16">
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
                         <StackPanel Grid.Column="0" Spacing="6">

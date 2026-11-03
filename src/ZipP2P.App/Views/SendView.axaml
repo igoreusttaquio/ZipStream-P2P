@@ -17,7 +17,7 @@
             <TextBlock Classes="hint" Text="{Binding [Send.Intro], Source={x:Static loc:Localizer.Instance}}" />
 
             <!-- 1. Escolher o que enviar -->
-            <ContentControl Classes="dashed" MinHeight="190" IsVisible="{Binding ShowPicker}"
+            <ContentControl Classes="panel" MinHeight="190" IsVisible="{Binding ShowPicker}"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <StackPanel Spacing="12">
                     <icons:MaterialIcon Kind="CloudUpload" Width="48" Height="48" HorizontalAlignment="Center"
