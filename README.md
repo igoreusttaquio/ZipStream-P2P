@@ -47,6 +47,8 @@ Para um computador que fica ligado (ex.: o do escritório) receber arquivos dos 
 - O código do computador é fixo; se vazar, **Gerar novo** invalida o antigo (os dispositivos já pareados continuam). Para tirar um dispositivo, **Remover** na lista.
 - Só dispositivos da lista de confiáveis conseguem enviar; os outros são recusados antes de qualquer byte ser gravado.
 - O ícone da bandeja tem **Modo de recebimento** para ligar/desligar sem abrir a janela.
+- **Notificações do sistema** quando chega um arquivo, quando um dispositivo pareia ou quando um recebimento falha (desligáveis na aba Dispositivos). Windows: notificação nativa (balão da área de notificação, que no Windows 10/11 vira notificação do sistema); Linux: `notify-send`; macOS: `osascript`.
+- **Enviar com ZipStream** (menu de contexto): com dispositivos pareados, a janela compacta pergunta o destino — **Gerar código e enviar** ou um dispositivo pareado. A janela pode ser movida (inclusive para outro monitor).
 
 <p align="center"><img src="docs/img/receive-dark.png" alt="Aba Receber: código de envio e pasta de destino" width="60%" /></p>
 
@@ -134,6 +136,8 @@ Linha de comando:
 | `--close-for-update` | Fecha de verdade a instância aberta, sem ir para a bandeja (usado pelo instalador); se não houver nenhuma, não abre o app |
 
 As configurações ficam em SQLite (`%LOCALAPPDATA%/ZipStream/settings.db`) e são editadas em ⚙️ **Configurações**: URL do servidor, porta do servidor local, menu de contexto, atualizações. A pasta de destino é lembrada pela aba Receber. O mesmo banco guarda a identidade do dispositivo (no Windows, a chave privada fica cifrada com DPAPI), o código do receptor e os dispositivos confiáveis.
+
+**Perfil separado:** a variável de ambiente `ZIPSTREAM_DATA_DIR` aponta o app para outra pasta de dados (configurações e transferências), com a própria instância — útil para simular um segundo computador na mesma máquina sem mexer no perfil real (ex.: `ZIPSTREAM_DATA_DIR=C:\temp\pc2`).
 
 **Iniciar com o sistema** (aba Dispositivos): chave `Run` do usuário no Windows, `~/.config/autostart/zipstream.desktop` no Linux e `~/Library/LaunchAgents/com.zipstream.app.plist` no macOS — nada exige administrador.
 
@@ -227,6 +231,7 @@ Se o `dotnet test` abortar com "You must install or update .NET" (ASP.NET Core m
 - [x] Modo de recebimento: pareamento por código fixo, envio sem código, iniciar com o sistema
 - [x] Atualização pelo app (releases do GitHub) e "close for update" no instalador
 - [x] Nova identidade visual (logo, paleta clara/escura)
+- [x] Notificações nativas do modo de recebimento
 - [ ] Instalador Windows assinado
 - [x] Deploy do servidor em produção (Docker + HTTPS via Caddy)
 - [x] Empacotamento do app (instalador Windows e .deb)
