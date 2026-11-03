@@ -47,6 +47,9 @@ public partial class MainViewModel : ViewModelBase
 
         EmbeddedSignalingServer.Instance.StateChanged += () => Dispatcher.UIThread.Post(RefreshServerStatus);
         RefreshServerStatus();
+
+        // Em segundo plano; se houver versão nova, aparece um aviso no cabeçalho.
+        _ = Settings.CheckForUpdatesOnStartupAsync();
     }
 
     /// <summary>Abre a aba Receber com o código preenchido (linha de comando <c>--receive</c>).</summary>

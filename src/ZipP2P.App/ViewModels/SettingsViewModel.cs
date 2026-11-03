@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using ZipP2P.App.Localization;
 using ZipP2P.App.Logging;
 using ZipP2P.App.ShellIntegration;
+using ZipP2P.App.Updates;
 
 namespace ZipP2P.App.ViewModels;
 
@@ -47,10 +48,14 @@ public partial class SettingsViewModel : ViewModelBase
 
     partial void OnCloseToTrayChanged(bool value) => _settings.CloseToTray = value;
 
-    public SettingsViewModel(AppSettings settings, Action back)
+    public SettingsViewModel(AppSettings settings, Action back, UpdateChecker? updates = null, Action? exitForUpdate = null)
     {
         _settings = settings;
         _back = back;
+        _updates = updates ?? UpdateChecker.ForCurrentApp();
+        _exitForUpdate = exitForUpdate ?? (() => (Avalonia.Application.Current as App)?.Exit());
+        AutoCheckUpdates = settings.AutoCheckUpdates;
+        UpdateStatus = _updates.IsDevelopmentBuild ? Localizer.Instance["Update.DevBuild"] : string.Empty;
         ServerUrl = settings.SignalingUrl;
         Port = settings.Port;
         var ice = IceServerConfig.FromUrls(settings.IceServers);
@@ -62,7 +67,11 @@ public partial class SettingsViewModel : ViewModelBase
         if (IsServerRunning)
             ServerStatus = BuildStatus();
 
-        Localizer.Instance.PropertyChanged += (_, _) => RefreshShell();
+        Localizer.Instance.PropertyChanged += (_, _) =>
+        {
+            RefreshShell();
+            OnPropertyChanged(nameof(CurrentVersion));
+        };
         RefreshShell();
     }
 
@@ -171,6 +180,120 @@ public partial class SettingsViewModel : ViewModelBase
             OperatingSystem.IsWindows() ? "Settings.ShellNoteWindows"
             : OperatingSystem.IsMacOS() ? "Settings.ShellNoteMac"
             : "Settings.ShellNoteLinux"];
+    }
+
+    // ---- Atualizações ----
+
+    private static readonly TimeSpan AutoCheckInterval = TimeSpan.FromDays(1);
+
+    private readonly UpdateChecker _updates;
+    private readonly Action _exitForUpdate;
+
+    public string CurrentVersion => string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Update.CurrentVersion"], _updates.CurrentVersion);
+
+    public bool CanCheckForUpdates => !_updates.IsDevelopmentBuild;
+
+    /// <summary>Procurar versões novas ao abrir o app (salvo na hora).</summary>
+    [ObservableProperty]
+    public partial bool AutoCheckUpdates { get; set; }
+
+    partial void OnAutoCheckUpdatesChanged(bool value) => _settings.AutoCheckUpdates = value;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdate), nameof(CanInstallUpdate))]
+    public partial AvailableUpdate? AvailableUpdate { get; set; }
+
+    public bool HasUpdate => AvailableUpdate is not null;
+
+    /// <summary>Só no Windows o app baixa e roda o instalador; nos outros sistemas abre a página da release.</summary>
+    public bool CanInstallUpdate => AvailableUpdate?.Installer is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsIdleForUpdates))]
+    public partial bool IsWorkingOnUpdate { get; set; }
+
+    public bool IsIdleForUpdates => !IsWorkingOnUpdate;
+
+    [ObservableProperty]
+    public partial string UpdateStatus { get; set; }
+
+    /// <summary>Ao abrir o app: verifica em segundo plano se a opção estiver ligada e a última verificação tiver mais de um dia.</summary>
+    public Task CheckForUpdatesOnStartupAsync()
+    {
+        var last = _settings.LastUpdateCheck;
+        if (!AutoCheckUpdates || (last is { } at && DateTimeOffset.Now - at < AutoCheckInterval))
+            return Task.CompletedTask;
+
+        return CheckAsync(reportErrors: false);
+    }
+
+    [RelayCommand]
+    private Task CheckForUpdatesAsync() => CheckAsync(reportErrors: true);
+
+    private async Task CheckAsync(bool reportErrors)
+    {
+        if (_updates.IsDevelopmentBuild || IsWorkingOnUpdate)
+            return;
+
+        IsWorkingOnUpdate = true;
+        UpdateStatus = Localizer.Instance["Update.Checking"];
+        try
+        {
+            AvailableUpdate = await _updates.CheckAsync();
+            _settings.LastUpdateCheck = DateTimeOffset.Now;
+            UpdateStatus = AvailableUpdate is { } update
+                ? string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Update.Available"], update.Version.ToString(3))
+                : Localizer.Instance["Update.UpToDate"];
+            Logger.LogInformation(
+                "Update check: {Result}", AvailableUpdate is { } found ? $"version {found.Tag} available" : "up to date");
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            Logger.LogWarning("Update check failed: {Message}", ex.Message);
+            UpdateStatus = reportErrors
+                ? string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Update.Failed"], ex.Message)
+                : string.Empty;
+        }
+        finally
+        {
+            IsWorkingOnUpdate = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task InstallUpdateAsync()
+    {
+        if (AvailableUpdate?.Installer is not { } installer || IsWorkingOnUpdate)
+            return;
+
+        IsWorkingOnUpdate = true;
+        try
+        {
+            var progress = new Progress<double>(p => UpdateStatus = string.Format(
+                CultureInfo.CurrentCulture, Localizer.Instance["Update.Downloading"], p));
+            var directory = Path.Combine(Path.GetTempPath(), "ZipStream-Update");
+            var path = await _updates.DownloadAsync(installer, directory, progress);
+
+            Logger.LogInformation("Starting installer {Installer}; closing for update", path);
+            UpdateInstaller.RunInstaller(path);
+            _exitForUpdate();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Update download/installation failed");
+            UpdateStatus = string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Update.Failed"], ex.Message);
+        }
+        finally
+        {
+            IsWorkingOnUpdate = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenReleasePage()
+    {
+        if (AvailableUpdate is { } update)
+            UpdateInstaller.OpenInBrowser(update.ReleasePage);
     }
 
     private string BuildStatus()

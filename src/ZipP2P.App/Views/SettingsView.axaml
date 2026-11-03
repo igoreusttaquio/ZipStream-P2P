@@ -115,6 +115,38 @@
                                FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" Opacity="0.8" />
                 </StackPanel>
 
+                <!-- Atualizações (releases do GitHub) -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding [Update.Title], Source={x:Static loc:Localizer.Instance}}"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBlock Text="{Binding CurrentVersion}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button AutomationProperties.Name="{Binding [Update.Check], Source={x:Static loc:Localizer.Instance}}"
+                                Command="{Binding CheckForUpdatesCommand}" IsVisible="{Binding CanCheckForUpdates}"
+                                IsEnabled="{Binding IsIdleForUpdates}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="Refresh" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Update.Check], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{Binding [Update.Install], Source={x:Static loc:Localizer.Instance}}"
+                                Classes="primary" Command="{Binding InstallUpdateCommand}" IsVisible="{Binding CanInstallUpdate}"
+                                IsEnabled="{Binding IsIdleForUpdates}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:MaterialIcon Kind="Download" Width="16" Height="16" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding [Update.Install], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{Binding [Update.OpenPage], Source={x:Static loc:Localizer.Instance}}"
+                                Classes="link" Command="{Binding OpenReleasePageCommand}" IsVisible="{Binding HasUpdate}"
+                                VerticalAlignment="Center"
+                                Content="{Binding [Update.OpenPage], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding UpdateStatus}" TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}" />
+                    <CheckBox IsChecked="{Binding AutoCheckUpdates}" IsVisible="{Binding CanCheckForUpdates}"
+                              Content="{Binding [Update.AutoCheck], Source={x:Static loc:Localizer.Instance}}" />
+                </StackPanel>
+
             </StackPanel>
         </ScrollViewer>
 

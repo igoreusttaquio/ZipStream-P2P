@@ -10,6 +10,8 @@
     <!-- Nome nas propriedades do executável e no Gerenciador de Tarefas (também exigido para assinar o código). -->
     <Product>ZipStream</Product>
     <AssemblyTitle>ZipStream</AssemblyTitle>
+    <!-- Builds locais: o workflow de release passa -p:Version=x.y.z. Versão de desenvolvimento não procura atualizações. -->
+    <Version>0.0.0-dev</Version>
   </PropertyGroup>
 
   <ItemGroup>

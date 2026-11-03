@@ -348,6 +348,45 @@
   <data name="Settings.CloseToTrayHint" xml:space="preserve">
     <value>Transfers keep running and “Send with ZipStream” opens instantly. Use Exit in the tray icon menu to quit.</value>
   </data>
+  <data name="Update.Title" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Update.CurrentVersion" xml:space="preserve">
+    <value>Installed version: {0}</value>
+  </data>
+  <data name="Update.Check" xml:space="preserve">
+    <value>Check now</value>
+  </data>
+  <data name="Update.AutoCheck" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+  <data name="Update.Checking" xml:space="preserve">
+    <value>Checking…</value>
+  </data>
+  <data name="Update.UpToDate" xml:space="preserve">
+    <value>You are using the latest version.</value>
+  </data>
+  <data name="Update.Available" xml:space="preserve">
+    <value>New version available: {0}</value>
+  </data>
+  <data name="Update.Install" xml:space="preserve">
+    <value>Download and install</value>
+  </data>
+  <data name="Update.OpenPage" xml:space="preserve">
+    <value>See what's new and downloads</value>
+  </data>
+  <data name="Update.Downloading" xml:space="preserve">
+    <value>Downloading… {0:P0}</value>
+  </data>
+  <data name="Update.Failed" xml:space="preserve">
+    <value>Could not update: {0}</value>
+  </data>
+  <data name="Update.DevBuild" xml:space="preserve">
+    <value>Development build: update checks are disabled.</value>
+  </data>
+  <data name="Update.Badge" xml:space="preserve">
+    <value>Update available</value>
+  </data>
   <data name="Settings.IceTitle" xml:space="preserve">
     <value>STUN/TURN server (relay)</value>
   </data>

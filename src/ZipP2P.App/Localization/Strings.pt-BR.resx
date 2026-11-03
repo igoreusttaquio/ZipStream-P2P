@@ -348,6 +348,45 @@
   <data name="Settings.CloseToTrayHint" xml:space="preserve">
     <value>As transferências continuam e o “Enviar com ZipStream” abre na hora. Para encerrar, use Sair no menu do ícone da bandeja.</value>
   </data>
+  <data name="Update.Title" xml:space="preserve">
+    <value>Atualizações</value>
+  </data>
+  <data name="Update.CurrentVersion" xml:space="preserve">
+    <value>Versão instalada: {0}</value>
+  </data>
+  <data name="Update.Check" xml:space="preserve">
+    <value>Verificar agora</value>
+  </data>
+  <data name="Update.AutoCheck" xml:space="preserve">
+    <value>Procurar atualizações automaticamente</value>
+  </data>
+  <data name="Update.Checking" xml:space="preserve">
+    <value>Verificando…</value>
+  </data>
+  <data name="Update.UpToDate" xml:space="preserve">
+    <value>Você já está usando a versão mais recente.</value>
+  </data>
+  <data name="Update.Available" xml:space="preserve">
+    <value>Nova versão disponível: {0}</value>
+  </data>
+  <data name="Update.Install" xml:space="preserve">
+    <value>Baixar e instalar</value>
+  </data>
+  <data name="Update.OpenPage" xml:space="preserve">
+    <value>Ver novidades e downloads</value>
+  </data>
+  <data name="Update.Downloading" xml:space="preserve">
+    <value>Baixando… {0:P0}</value>
+  </data>
+  <data name="Update.Failed" xml:space="preserve">
+    <value>Não foi possível atualizar: {0}</value>
+  </data>
+  <data name="Update.DevBuild" xml:space="preserve">
+    <value>Versão de desenvolvimento: a busca por atualizações está desativada.</value>
+  </data>
+  <data name="Update.Badge" xml:space="preserve">
+    <value>Atualização disponível</value>
+  </data>
   <data name="Settings.IceTitle" xml:space="preserve">
     <value>Servidor STUN/TURN (relay)</value>
   </data>

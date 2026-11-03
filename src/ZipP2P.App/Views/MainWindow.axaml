@@ -40,6 +40,17 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Button Classes="link" Command="{Binding GoSettingsCommand}" IsVisible="{Binding Settings.HasUpdate}"
+                        AutomationProperties.Name="{Binding [Update.Badge], Source={x:Static loc:Localizer.Instance}}"
+                        VerticalAlignment="Center" Padding="0">
+                    <Border CornerRadius="10" Padding="8,4" Background="#1A22C55E">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:MaterialIcon Kind="Download" Width="14" Height="14" Foreground="#22C55E" />
+                            <TextBlock Text="{Binding [Update.Badge], Source={x:Static loc:Localizer.Instance}}"
+                                       FontSize="11" Foreground="#22C55E" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Button>
                 <Border IsVisible="{Binding IsServerRunning}" CornerRadius="10" Padding="8,4" Background="#143B82F6"
                         ToolTip.Tip="{Binding ServerStatus}" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="6">

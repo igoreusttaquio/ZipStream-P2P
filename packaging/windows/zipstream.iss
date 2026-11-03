@@ -78,6 +78,8 @@ Root: HKCU; Subkey: "Software\Classes\Directory\shell\{#VerbName}\command"; Valu
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Atualização iniciada pelo próprio app (UpdateInstaller: /SILENT /relaunch=1): abre o app de novo no fim.
+Filename: "{app}\{#AppExe}"; Flags: nowait; Check: ShouldRelaunch
 
 [Code]
 const
@@ -104,6 +106,11 @@ begin
     Sleep(250);
     Waited := Waited + 250;
   end;
+end;
+
+function ShouldRelaunch(): Boolean;
+begin
+  Result := ExpandConstant('{param:relaunch|0}') = '1';
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace ZipP2P.App;
@@ -13,6 +14,8 @@ public sealed class AppSettings
     private const string PortKey = "Port";
     private const string DownloadDirectoryKey = "DownloadDirectory";
     private const string CloseToTrayKey = "CloseToTray";
+    private const string AutoCheckUpdatesKey = "AutoCheckUpdates";
+    private const string LastUpdateCheckKey = "LastUpdateCheck";
 
     private readonly SettingsStore _store;
 
@@ -45,6 +48,19 @@ public sealed class AppSettings
     {
         get => _store.Get(CloseToTrayKey) != "false";
         set => _store.Set(CloseToTrayKey, value ? "true" : "false");
+    }
+
+    /// <summary>Procurar versões novas ao abrir o app, no máximo uma vez por dia (padrão: sim).</summary>
+    public bool AutoCheckUpdates
+    {
+        get => _store.Get(AutoCheckUpdatesKey) != "false";
+        set => _store.Set(AutoCheckUpdatesKey, value ? "true" : "false");
+    }
+
+    public DateTimeOffset? LastUpdateCheck
+    {
+        get => DateTimeOffset.TryParse(_store.Get(LastUpdateCheckKey), CultureInfo.InvariantCulture, DateTimeStyles.None, out var at) ? at : null;
+        set => _store.Set(LastUpdateCheckKey, value?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty);
     }
 
     public static string DefaultDownloadDirectory =>
