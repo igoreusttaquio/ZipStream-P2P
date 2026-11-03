@@ -79,6 +79,7 @@ public partial class SendViewModel : OperationViewModel
     [NotifyPropertyChangedFor(nameof(ShowPicker))]
     [NotifyPropertyChangedFor(nameof(SelectedName))]
     [NotifyPropertyChangedFor(nameof(SelectedIsFolder))]
+    [NotifyPropertyChangedFor(nameof(ShowDestinationChoice))]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     [NotifyCanExecuteChangedFor(nameof(SendToDeviceCommand))]
     public partial string SelectedPath { get; set; } = string.Empty;
@@ -120,6 +121,7 @@ public partial class SendViewModel : OperationViewModel
     protected override void OnStateUpdated(OperationState value)
     {
         OnPropertyChanged(nameof(ShowPicker));
+        OnPropertyChanged(nameof(ShowDestinationChoice));
         SendCommand.NotifyCanExecuteChanged();
         SendToDeviceCommand.NotifyCanExecuteChanged();
         if (value != OperationState.Running)
@@ -140,13 +142,21 @@ public partial class SendViewModel : OperationViewModel
         SelectedPath = Path.GetFullPath(path);
     }
 
-    /// <summary>Usado pelo menu de contexto do sistema: seleciona e já começa a enviar.</summary>
+    /// <summary>
+    /// Usado pelo menu de contexto do sistema: seleciona e já começa a enviar com código. Com
+    /// dispositivos pareados, espera a escolha (dispositivo ou código) na janela compacta.
+    /// </summary>
     public async Task SendFromShellAsync(string path)
     {
         SetPath(path);
-        if (SendCommand.CanExecute(null))
+        if (!HasDevices && SendCommand.CanExecute(null))
             await SendAsync();
     }
+
+    /// <summary>Janela compacta: ainda não começou e há dispositivos pareados para escolher.</summary>
+    public bool ShowDestinationChoice => IsIdle && HasSelection && HasDevices;
+
+    partial void OnHasDevicesChanged(bool value) => OnPropertyChanged(nameof(ShowDestinationChoice));
 
     [RelayCommand]
     private async Task PickFileAsync()

@@ -6,8 +6,9 @@ using ZipP2P.App.ViewModels;
 namespace ZipP2P.App.Views;
 
 /// <summary>
-/// Janela compacta aberta pelo "Enviar com ZipStream": mostra o código (já copiado) e o progresso,
-/// sem abrir a janela principal. Fechar durante o envio apenas minimiza.
+/// Janela compacta aberta pelo "Enviar com ZipStream": com dispositivos pareados, deixa escolher o
+/// destino (dispositivo ou código); sem eles, já mostra o código (copiado). Depois, o progresso, sem
+/// abrir a janela principal. Fechar durante o envio apenas minimiza.
 /// </summary>
 public partial class QuickSendWindow : Window
 {
@@ -15,13 +16,18 @@ public partial class QuickSendWindow : Window
     {
         InitializeComponent();
 
-        // A altura muda com o conteúdo (SizeToContent): mantém a janela ancorada no canto.
+        // A altura muda com o conteúdo (SizeToContent): mantém a janela ancorada no canto, mas só até
+        // o usuário movê-la. Antes, qualquer mudança de tamanho (inclusive a de escala ao arrastar para
+        // um monitor com outro DPI) a trazia de volta para o canto do monitor principal.
         SizeChanged += (_, _) =>
         {
-            if (WindowState == WindowState.Normal)
+            if (_anchor.IsAnchored && WindowState == WindowState.Normal)
                 PlaceNearTray();
         };
+        PositionChanged += (_, e) => _anchor.Moved(e.Point);
     }
+
+    private readonly CornerAnchor _anchor = new();
 
     /// <summary>Quantas estão abertas (empilha as janelas no canto da tela).</summary>
     private static int _openCount;
@@ -72,9 +78,11 @@ public partial class QuickSendWindow : Window
         var height = (int)(size.Height * scale);
         var margin = (int)(16 * scale);
         var offset = _stackIndex * (int)(28 * scale);
-        Position = new PixelPoint(
+        var position = new PixelPoint(
             area.Right - width - margin - offset,
             Math.Max(area.Y, area.Bottom - height - margin - offset));
+        _anchor.Placed(position);
+        Position = position;
     }
 
     private void OnOpenMainClick(object? sender, RoutedEventArgs e) => (Application.Current as App)?.ShowMainWindow();

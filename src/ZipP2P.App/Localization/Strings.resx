@@ -513,6 +513,9 @@
   <data name="Error.DeviceRemoved" xml:space="preserve">
     <value>The target device was removed from the trusted list. Discard this transfer or pair again.</value>
   </data>
+  <data name="QuickSend.Or" xml:space="preserve">
+    <value>or</value>
+  </data>
   <data name="Tray.ReceiveMode" xml:space="preserve">
     <value>Receive mode</value>
   </data>

@@ -52,7 +52,9 @@ public partial class App : Application
             _mainViewModel = new MainViewModel();
             _mainWindow = new MainWindow { DataContext = _mainViewModel };
             _mainWindow.Closing += OnMainWindowClosing;
-            desktop.MainWindow = _mainWindow;
+            // Não vira desktop.MainWindow aqui: o Avalonia mostraria a janela ao iniciar, inclusive no
+            // "Enviar com ZipStream" (só a janela compacta) e no --background (só a bandeja).
+            // ShowMainWindow a atribui quando ela deve aparecer.
 
             CreateTrayIcon();
 
@@ -75,6 +77,8 @@ public partial class App : Application
         if (_mainWindow is null)
             return;
 
+        if (_desktop is not null)
+            _desktop.MainWindow ??= _mainWindow;
         _mainWindow.Show();
         if (_mainWindow.WindowState == WindowState.Minimized)
             _mainWindow.WindowState = WindowState.Normal;

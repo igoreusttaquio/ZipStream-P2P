@@ -513,6 +513,9 @@
   <data name="Error.DeviceRemoved" xml:space="preserve">
     <value>O dispositivo de destino foi removido da lista de confiáveis. Descarte este envio ou pareie de novo.</value>
   </data>
+  <data name="QuickSend.Or" xml:space="preserve">
+    <value>ou</value>
+  </data>
   <data name="Tray.ReceiveMode" xml:space="preserve">
     <value>Modo de recebimento</value>
   </data>
