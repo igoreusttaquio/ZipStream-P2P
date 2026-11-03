@@ -1,4 +1,5 @@
 using ZipP2P.Core.Compression;
+using ZipP2P.Core.Security;
 using ZipP2P.P2P.Transfer;
 
 namespace ZipP2P.P2P.Tests;
@@ -126,6 +127,34 @@ public sealed class TransferRunnerTests : IDisposable
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending.WaitAsync(TimeSpan.FromSeconds(30)));
         await Assert.ThrowsAsync<TransferAbortedException>(() => receiving.WaitAsync(TimeSpan.FromSeconds(30)));
+    }
+
+    [Fact]
+    public async Task UnpairedSender_IsRefused_WithoutRetrying()
+    {
+        var source = Path.Combine(_dir, "b.bin");
+        File.WriteAllBytes(source, new byte[64 * 1024]);
+        var senderStore = new TransferStore(Path.Combine(_dir, "sender"));
+        var outgoing = await PrepareAsync(senderStore, source, "R");
+        using var stranger = DeviceIdentity.Create();
+        using var receiverIdentity = DeviceIdentity.Create();
+
+        var factory = new MemoryPeerLinkFactory();
+        var receiver = new TransferRunner(
+            factory, new TransferStore(Path.Combine(_dir, "receiver")), backoff: _ => TimeSpan.FromMilliseconds(50),
+            authentication: new SessionAuthentication(receiverIdentity, _ => false));
+        var sender = new TransferRunner(
+            factory, senderStore, backoff: _ => TimeSpan.FromMilliseconds(50),
+            authentication: new SessionAuthentication(stranger, _ => true));
+
+        var receiving = receiver.ReceiveAsync("R", _dir, null, CancellationToken.None);
+        var sending = sender.SendAsync(outgoing, null, CancellationToken.None);
+
+        await Assert.ThrowsAsync<PeerNotTrustedException>(() => receiving.WaitAsync(TimeSpan.FromSeconds(30)));
+        var ex = await Assert.ThrowsAsync<TransferAbortedException>(() => sending.WaitAsync(TimeSpan.FromSeconds(30)));
+        Assert.Contains("did not accept", ex.Reason);
+        Assert.Equal(1, factory.Pairs);
+        Assert.Single(senderStore.ListOutgoing());
     }
 
     private static async Task<OutgoingTransfer> PrepareAsync(TransferStore store, string source, string room)

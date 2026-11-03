@@ -17,6 +17,8 @@ namespace ZipP2P.P2P.Transfer;
 /// Protocolo (cada mensagem = 1 byte de tipo + payload):
 /// <list type="number">
 /// <item>Ambos enviam <c>PublicKey</c> (ECDH) e derivam a chave AES-GCM + código SAS.</item>
+/// <item>Só entre dispositivos pareados (<see cref="SessionAuthentication"/>): ambos enviam <c>Identity</c>
+/// (cifrado): a chave pública da identidade e a assinatura das chaves efêmeras.</item>
 /// <item>Remetente envia <c>Header</c> (cifrado): id, nome, tamanho e tipo do pacote. Se o pacote ainda
 /// está sendo compactado, o tamanho vai como -1 (com uma estimativa) e o final chega em <c>End</c>.</item>
 /// <item>Destinatário responde <c>ResumeOffset</c>: quantos bytes desse pacote já possui.</item>
@@ -46,18 +48,29 @@ public sealed class TransferSession : IAsyncDisposable
     private const byte TypeDone = 0x06;
     private const byte TypeAbort = 0x07;
     private const byte TypeEnd = 0x08;
+    private const byte TypeIdentity = 0x09;
 
     private readonly ITransport _transport;
     private readonly ILogger _logger;
     private readonly TimeSpan _idleTimeout;
+    private readonly SessionAuthentication? _authentication;
     private readonly Channel<ReadOnlyMemory<byte>> _incoming = Channel.CreateUnbounded<ReadOnlyMemory<byte>>(
         new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
 
-    public TransferSession(ITransport transport, ILogger? logger = null, TimeSpan? idleTimeout = null)
+    /// <param name="authentication">
+    /// Se informado, o par precisa provar uma identidade confiável (receive mode); senão a sessão é
+    /// anônima e a verificação fica com o código SAS.
+    /// </param>
+    public TransferSession(
+        ITransport transport,
+        ILogger? logger = null,
+        TimeSpan? idleTimeout = null,
+        SessionAuthentication? authentication = null)
     {
         _transport = transport;
         _logger = logger ?? NullLogger.Instance;
         _idleTimeout = idleTimeout ?? TimeSpan.FromSeconds(30);
+        _authentication = authentication;
         _transport.MessageReceived += m => _incoming.Writer.TryWrite(m);
         _transport.Disconnected += () =>
             _incoming.Writer.TryComplete(new ConnectionLostException("The peer connection was closed."));
@@ -67,6 +80,9 @@ public sealed class TransferSession : IAsyncDisposable
 
     /// <summary>Disparado quando o código de verificação (SAS) é derivado — exibir para o usuário conferir.</summary>
     public event Action<string>? SasReady;
+
+    /// <summary>Chave pública da identidade do par, depois de autenticado (só com <see cref="SessionAuthentication"/>).</summary>
+    public byte[]? PeerIdentityKey { get; private set; }
 
     /// <summary>Envia o pacote já comprimido em <paramref name="packagePath"/>, retomando do offset informado pelo destinatário.</summary>
     public Task SendAsync(
@@ -297,7 +313,48 @@ public sealed class TransferSession : IAsyncDisposable
         _logger.LogInformation("Key agreement completed (ECDH P-256); security code {Sas}", sas);
         SasReady?.Invoke(sas);
 
-        return new ChunkCipher(key);
+        var cipher = new ChunkCipher(key);
+        if (_authentication is not null)
+            await AuthenticatePeerAsync(_authentication, agreement.PublicKey, otherKey, cipher, cancellationToken).ConfigureAwait(false);
+
+        return cipher;
+    }
+
+    private async Task AuthenticatePeerAsync(
+        SessionAuthentication authentication,
+        byte[] ownEphemeralKey,
+        ReadOnlyMemory<byte> peerEphemeralKey,
+        ChunkCipher cipher,
+        CancellationToken cancellationToken)
+    {
+        // Payload: [tamanho da chave (2 bytes)][chave pública da identidade][assinatura].
+        var identityKey = authentication.Identity.PublicKey;
+        var signature = authentication.Identity.Sign(SessionAuthentication.Transcript(ownEphemeralKey, peerEphemeralKey.Span));
+        var payload = new byte[2 + identityKey.Length + signature.Length];
+        BinaryPrimitives.WriteUInt16LittleEndian(payload, (ushort)identityKey.Length);
+        identityKey.CopyTo(payload.AsSpan(2));
+        signature.CopyTo(payload.AsSpan(2 + identityKey.Length));
+        await SendTypedAsync(TypeIdentity, cipher.Encrypt(payload), cancellationToken).ConfigureAwait(false);
+
+        var reply = cipher.Decrypt((await ReadExpectedAsync(TypeIdentity, cancellationToken).ConfigureAwait(false)).Span);
+        var keyLength = reply.Length >= 2 ? BinaryPrimitives.ReadUInt16LittleEndian(reply) : int.MaxValue;
+        if (2 + keyLength >= reply.Length)
+            throw new InvalidDataException("Invalid identity message.");
+
+        var peerIdentityKey = reply.AsSpan(2, keyLength).ToArray();
+        var peerSignature = reply.AsSpan(2 + keyLength);
+        if (!DeviceIdentity.Verify(peerIdentityKey, SessionAuthentication.Transcript(peerEphemeralKey.Span, ownEphemeralKey), peerSignature))
+            throw new PeerNotTrustedException("The other device failed to prove its identity.");
+
+        var peerId = DeviceIdentity.ComputeDeviceId(peerIdentityKey);
+        if (!authentication.IsTrusted(peerIdentityKey))
+        {
+            _logger.LogWarning("Rejected device {DeviceId}: not paired", peerId);
+            throw new PeerNotTrustedException("The other device is not paired with this one.");
+        }
+
+        PeerIdentityKey = peerIdentityKey;
+        _logger.LogInformation("Peer authenticated as paired device {DeviceId}", peerId);
     }
 
     private async Task<long> WaitForAckAsync(CancellationToken cancellationToken)

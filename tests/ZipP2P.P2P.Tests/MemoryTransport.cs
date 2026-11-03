@@ -136,7 +136,8 @@ public sealed class MemoryPeerLinkFactory : IPeerLinkFactory
             if (waiting is not null)
             {
                 var (offerer, answerer) = MemoryTransport.CreatePair();
-                OnPair?.Invoke(Pairs++, offerer, answerer);
+                var index = Pairs++;
+                OnPair?.Invoke(index, offerer, answerer);
                 waiting.SetResult(asOfferer ? answerer : offerer);
                 if (asOfferer)
                     _waitingAnswerer = null;

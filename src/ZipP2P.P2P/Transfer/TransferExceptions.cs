@@ -9,6 +9,15 @@ public sealed class ConnectionLostException : Exception
     }
 }
 
+/// <summary>O par não provou a identidade ou não é um dispositivo pareado. Não adianta tentar de novo.</summary>
+public sealed class PeerNotTrustedException : Exception
+{
+    public PeerNotTrustedException(string message)
+        : base(message)
+    {
+    }
+}
+
 /// <summary>O par encerrou a transferência intencionalmente (cancelamento ou erro do lado dele).</summary>
 public sealed class TransferAbortedException : Exception
 {

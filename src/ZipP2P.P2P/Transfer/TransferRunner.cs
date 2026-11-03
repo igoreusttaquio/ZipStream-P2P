@@ -32,19 +32,23 @@ public sealed class TransferRunner
     private readonly ILogger _logger;
     private readonly TimeSpan? _idleTimeout;
     private readonly Func<int, TimeSpan> _backoff;
+    private readonly SessionAuthentication? _authentication;
 
+    /// <param name="authentication">Exige um par pareado em cada conexão (receive mode). Ver <see cref="TransferSession"/>.</param>
     public TransferRunner(
         IPeerLinkFactory factory,
         TransferStore store,
         ILogger? logger = null,
         TimeSpan? idleTimeout = null,
-        Func<int, TimeSpan>? backoff = null)
+        Func<int, TimeSpan>? backoff = null,
+        SessionAuthentication? authentication = null)
     {
         _factory = factory;
         _store = store;
         _logger = logger ?? NullLogger.Instance;
         _idleTimeout = idleTimeout;
         _backoff = backoff ?? (attempt => TimeSpan.FromSeconds(Math.Min(Math.Pow(2, attempt), MaxBackoff.TotalSeconds)));
+        _authentication = authentication;
     }
 
     public event Action<TransferStatus>? StatusChanged;
@@ -203,7 +207,7 @@ public sealed class TransferRunner
             string? lostReason = null;
             await using (link.ConfigureAwait(false))
             {
-                var session = new TransferSession(link.Transport, _logger, _idleTimeout);
+                var session = new TransferSession(link.Transport, _logger, _idleTimeout, _authentication);
                 session.SasReady += sas => SasReady?.Invoke(sas);
                 StatusChanged?.Invoke(new TransferStatus(TransferStage.Transferring, attempt));
 
@@ -226,6 +230,12 @@ public sealed class TransferRunner
                 catch (TransferAbortedException ex)
                 {
                     _logger.LogWarning("The other device ended the transfer: {Reason}", ex.Reason);
+                    throw;
+                }
+                catch (PeerNotTrustedException ex)
+                {
+                    _logger.LogWarning("Connection refused: {Message}", ex.Message);
+                    await session.AbortAsync("The other device did not accept this one. Pair the devices again.").ConfigureAwait(false);
                     throw;
                 }
                 catch (Exception ex)
