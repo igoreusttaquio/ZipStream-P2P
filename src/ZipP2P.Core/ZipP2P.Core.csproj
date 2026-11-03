@@ -10,4 +10,8 @@
     <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ZipP2P.Contracts\ZipP2P.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

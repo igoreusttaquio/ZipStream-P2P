@@ -17,6 +17,7 @@ public static class ReceiverCode
 
     private static readonly int[] GroupSizes = [3, 3, 4, 4];
     private static readonly byte[] PairingInfo = Encoding.UTF8.GetBytes("ZipStream-Pairing-v1");
+    private static readonly byte[] LookupInfo = Encoding.UTF8.GetBytes("ZipStream-Lookup-v1");
 
     /// <summary>Gera um código novo, já formatado.</summary>
     public static string Generate()
@@ -55,6 +56,19 @@ public static class ReceiverCode
 
         return HKDF.DeriveKey(
             HashAlgorithmName.SHA256, Encoding.UTF8.GetBytes(normalized), 32, salt: null, info: PairingInfo);
+    }
+
+    /// <summary>
+    /// Endereço do receptor no servidor de sinalização para pareamento: derivado do código, mas sem
+    /// revelá-lo (o servidor só vê este valor; a chave de pareamento usa outra derivação).
+    /// </summary>
+    public static string LookupId(string code)
+    {
+        if (!TryNormalize(code, out var normalized))
+            throw new ArgumentException("Invalid receiver code.", nameof(code));
+
+        return Convert.ToHexStringLower(HKDF.DeriveKey(
+            HashAlgorithmName.SHA256, Encoding.UTF8.GetBytes(normalized), 32, salt: null, info: LookupInfo));
     }
 
     /// <summary>Agrupa um código normalizado para exibição: <c>XXX-XXX-XXXX-XXXX</c>.</summary>

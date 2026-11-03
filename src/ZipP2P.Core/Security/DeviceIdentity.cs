@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using ZipP2P.Contracts;
 
 namespace ZipP2P.Core.Security;
 
@@ -66,8 +67,10 @@ public sealed class DeviceIdentity : IDisposable
     }
 
     /// <summary>Id do dispositivo dono da <paramref name="publicKey"/> (SHA-256 em hexadecimal).</summary>
-    public static string ComputeDeviceId(ReadOnlySpan<byte> publicKey)
-        => Convert.ToHexStringLower(SHA256.HashData(publicKey));
+    public static string ComputeDeviceId(ReadOnlySpan<byte> publicKey) => Presence.ComputeDeviceId(publicKey);
+
+    /// <summary>Assina o desafio do servidor de sinalização para registrar a presença deste dispositivo.</summary>
+    public byte[] SignPresenceChallenge(ReadOnlySpan<byte> challenge) => Sign(Presence.ChallengePayload(challenge));
 
     public void Dispose() => _key.Dispose();
 }

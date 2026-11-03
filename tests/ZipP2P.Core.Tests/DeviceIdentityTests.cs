@@ -88,6 +88,33 @@ public class DeviceIdentityTests
         Assert.Throws<ArgumentException>(() => ReceiverCode.DerivePairingKey("ABC"));
     }
 
+    [Fact]
+    public void ReceiverCode_LookupIdIsStableAndUnrelatedToThePairingKey()
+    {
+        var lookup = ReceiverCode.LookupId("K7P-2QX-9MRT-H4WZ");
+
+        Assert.Matches("^[0-9a-f]{64}$", lookup);
+        Assert.Equal(lookup, ReceiverCode.LookupId("k7p2qx9mrth4wz"));
+        Assert.NotEqual(lookup, ReceiverCode.LookupId("K7P-2QX-9MRT-H4WY"));
+        Assert.NotEqual(lookup, Convert.ToHexStringLower(ReceiverCode.DerivePairingKey("K7P-2QX-9MRT-H4WZ")));
+    }
+
+    [Fact]
+    public void PresenceChallenge_IsVerifiedByTheServerContract()
+    {
+        using var identity = DeviceIdentity.Create();
+        using var other = DeviceIdentity.Create();
+        var challenge = RandomNumberGenerator.GetBytes(32);
+
+        var signature = identity.SignPresenceChallenge(challenge);
+
+        Assert.True(ZipP2P.Contracts.Presence.VerifyChallenge(identity.PublicKey, challenge, signature));
+        Assert.False(ZipP2P.Contracts.Presence.VerifyChallenge(other.PublicKey, challenge, signature));
+        Assert.False(ZipP2P.Contracts.Presence.VerifyChallenge(identity.PublicKey, RandomNumberGenerator.GetBytes(32), signature));
+        // A assinatura de presença não serve como assinatura de sessão (e vice-versa): rótulos diferentes.
+        Assert.False(ZipP2P.Contracts.Presence.VerifyChallenge(identity.PublicKey, challenge, identity.Sign(challenge)));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
