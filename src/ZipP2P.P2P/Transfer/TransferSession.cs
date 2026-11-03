@@ -25,7 +25,8 @@ namespace ZipP2P.P2P.Transfer;
 /// <item>Destinatário responde <c>ResumeOffset</c>: quantos bytes desse pacote já possui.</item>
 /// <item>Remetente envia <c>Chunk</c>s (cifrados) a partir do offset, com no máximo
 /// <see cref="WindowSize"/> bytes sem confirmação, e <c>End</c> com o tamanho se ele era desconhecido.</item>
-/// <item>Destinatário confirma com <c>Ack</c> (bytes gravados em disco) e, ao final, <c>Done</c>.</item>
+/// <item>Destinatário confirma com <c>Ack</c> (bytes gravados em disco) e, ao final, <c>Done</c>; o remetente
+/// responde <c>Done</c> e fecha primeiro (o destinatário espera, para não perder confirmações em trânsito).</item>
 /// </list>
 /// Qualquer lado pode enviar <c>Abort</c> com o motivo antes de encerrar.
 /// No pareamento (<see cref="PairAsync"/>), depois do <c>PublicKey</c> ambos enviam <c>Pairing</c> (cifrado:
@@ -42,6 +43,8 @@ public sealed class TransferSession : IAsyncDisposable
     public const long WindowSize = 8 * 1024 * 1024;
 
     private const long AckInterval = 1024 * 1024;
+
+    private static readonly TimeSpan FinishTimeout = TimeSpan.FromSeconds(5);
 
     private const byte TypePublicKey = 0x01;
     private const byte TypeHeader = 0x02;
@@ -185,6 +188,9 @@ public sealed class TransferSession : IAsyncDisposable
             }
 
             await ReadExpectedAsync(TypeDone, cancellationToken).ConfigureAwait(false);
+
+            // Libera o destinatário, que espera este aviso (ou o fechamento) antes de fechar a conexão.
+            await SendTypedAsync(TypeDone, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
         }
         catch (ConnectionLostException) when (acked >= size)
         {
@@ -283,6 +289,7 @@ public sealed class TransferSession : IAsyncDisposable
         }
 
         await SendTypedAsync(TypeDone, ReadOnlyMemory<byte>.Empty, cancellationToken).ConfigureAwait(false);
+        await WaitForSenderToFinishAsync(cancellationToken).ConfigureAwait(false);
         _logger.LogInformation(
             "Receive completed: {Bytes} bytes in {Seconds:F1}s", size - offset, stopwatch.Elapsed.TotalSeconds);
 
@@ -413,6 +420,35 @@ public sealed class TransferSession : IAsyncDisposable
 
         PeerIdentityKey = peerIdentityKey;
         _logger.LogInformation("Peer authenticated as paired device {DeviceId}", peerId);
+    }
+
+    /// <summary>
+    /// Depois do Done, espera o remetente responder Done ou fechar a conexão (até <see cref="FinishTimeout"/>).
+    /// Se este lado fechasse primeiro, as últimas confirmações ainda em trânsito se perdiam e o remetente,
+    /// sem saber que a transferência terminou, ficava tentando reconectar. Versões antigas não respondem,
+    /// mas fecham a conexão ao terminar.
+    /// </summary>
+    private async Task WaitForSenderToFinishAsync(CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(FinishTimeout);
+        try
+        {
+            while (true)
+            {
+                var message = await _incoming.Reader.ReadAsync(timeout.Token).ConfigureAwait(false);
+                if (message.Length > 0 && message.Span[0] == TypeDone)
+                    return;
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogDebug("The sender did not acknowledge the end of the transfer; closing anyway");
+        }
+        catch (Exception ex) when (ex is ChannelClosedException or ConnectionLostException)
+        {
+            // O remetente fechou a conexão: terminou.
+        }
     }
 
     private async Task<long> WaitForAckAsync(CancellationToken cancellationToken)

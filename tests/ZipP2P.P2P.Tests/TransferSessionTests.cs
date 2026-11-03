@@ -94,6 +94,29 @@ public sealed class TransferSessionTests : IDisposable
         await Assert.ThrowsAsync<ConnectionLostException>(() => received.WaitAsync(TimeSpan.FromSeconds(10)));
     }
 
+    [Fact]
+    public async Task ReceiverClosingRightAfterDone_DoesNotLoseTheLastConfirmations()
+    {
+        // Como o TransferRunner: cada lado fecha a conexão assim que termina. O remetente recebe com
+        // atraso; se o destinatário fechasse logo após o Done, as últimas confirmações se perdiam e o
+        // remetente achava que a conexão caiu no meio (e ficava tentando reconectar).
+        var package = CreateRandomFile("package.zpp2", 3 * 1024 * 1024 + 100);
+        var header = new TransferHeader(Guid.NewGuid(), "file.bin", new FileInfo(package).Length, 0);
+        var (a, b) = MemoryTransport.CreatePair();
+        a.ReceiveDelay = TimeSpan.FromMilliseconds(20);
+
+        var receiving = Task.Run(async () =>
+        {
+            await new TransferSession(b).ReceiveAsync(_ => Path.Combine(_dir, "recv.part"));
+            b.Close();
+        });
+        await new TransferSession(a).SendAsync(package, header).WaitAsync(TimeSpan.FromSeconds(30));
+        a.Close();
+        await receiving.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(Hash(package), Hash(Path.Combine(_dir, "recv.part")));
+    }
+
     private string CreateRandomFile(string name, int size)
     {
         var path = Path.Combine(_dir, name);
