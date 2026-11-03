@@ -55,7 +55,7 @@
             <!-- Resultado -->
             <Border Classes="card" IsVisible="{Binding HasResult}">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                    <icons:MaterialIcon Grid.Column="0" Kind="CheckCircle" Width="30" Height="30" Foreground="#22C55E" VerticalAlignment="Center" />
+                    <icons:MaterialIcon Grid.Column="0" Kind="CheckCircle" Width="30" Height="30" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center" />
                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                         <TextBlock Classes="label" Text="{Binding [Receive.SavedAt], Source={x:Static loc:Localizer.Instance}}" />
                         <SelectableTextBlock Text="{Binding ResultPath}" TextWrapping="Wrap" />

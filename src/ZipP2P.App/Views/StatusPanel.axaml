@@ -22,7 +22,7 @@
                          Minimum="0" Maximum="100" Height="6" IsVisible="{Binding IsBusy}" />
 
             <!-- SAS: os dois lados devem ver o mesmo código -->
-            <Border IsVisible="{Binding IsSasVisible}" CornerRadius="8" Padding="12,8" Background="#143B82F6">
+            <Border Classes="notice" IsVisible="{Binding IsSasVisible}">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                     <icons:MaterialIcon Grid.Column="0" Kind="ShieldCheck" Width="20" Height="20"
                                         Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
@@ -38,7 +38,7 @@
             </Border>
 
             <!-- Erro: mensagem amigável + detalhe técnico + atalho para o log -->
-            <Border IsVisible="{Binding HasError}" CornerRadius="8" Padding="12,10" Background="#14EF4444">
+            <Border Classes="notice danger" IsVisible="{Binding HasError}">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                     <SelectableTextBlock Grid.Column="0" Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
                     <Button AutomationProperties.Name="{Binding [Action.ViewLogs], Source={x:Static loc:Localizer.Instance}}" Grid.Column="1" Command="{Binding ViewLogsCommand}" VerticalAlignment="Top">

@@ -9,26 +9,64 @@
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <!-- Paleta derivada da logo (Assets/zipstream.svg): azul #1D4ED8 e azul claro #93C5FD.
+         AccentBrush = texto/ícones em destaque; AccentFillBrush = fundo de botões principais (texto branco). -->
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F8FAFC" />
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F3F6FD" />
                     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
-                    <SolidColorBrush x:Key="BorderColorBrush" Color="#E2E8F0" />
-                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A" />
-                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#64748B" />
-                    <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+                    <SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#E8EEFB" />
+                    <SolidColorBrush x:Key="BorderColorBrush" Color="#D9E2F3" />
+                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0B1533" />
+                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#5B6A8A" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="AccentFillBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="AccentFillHoverBrush" Color="#1E40AF" />
+                    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E3EBFF" />
+                    <SolidColorBrush x:Key="SuccessBrush" Color="#15803D" />
+                    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#DCFCE7" />
+                    <SolidColorBrush x:Key="DangerBrush" Color="#B91C1C" />
+                    <SolidColorBrush x:Key="DangerSoftBrush" Color="#FEE2E2" />
+                    <SolidColorBrush x:Key="WarningBrush" Color="#B45309" />
+                    <Color x:Key="SystemAccentColor">#1D4ED8</Color>
+                    <Color x:Key="SystemAccentColorDark1">#1E40AF</Color>
+                    <Color x:Key="SystemAccentColorDark2">#1E3A8A</Color>
+                    <Color x:Key="SystemAccentColorDark3">#172554</Color>
+                    <Color x:Key="SystemAccentColorLight1">#2563EB</Color>
+                    <Color x:Key="SystemAccentColorLight2">#3B82F6</Color>
+                    <Color x:Key="SystemAccentColorLight3">#60A5FA</Color>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1E1E24" />
-                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#2A2B36" />
-                    <SolidColorBrush x:Key="BorderColorBrush" Color="#3F4050" />
-                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F1F5F9" />
-                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#94A3B8" />
-                    <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0A1022" />
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#121A31" />
+                    <SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#18223D" />
+                    <SolidColorBrush x:Key="BorderColorBrush" Color="#243154" />
+                    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#E8EEFC" />
+                    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#8E9DC1" />
+                    <SolidColorBrush x:Key="AccentBrush" Color="#93C5FD" />
+                    <SolidColorBrush x:Key="AccentFillBrush" Color="#2563EB" />
+                    <SolidColorBrush x:Key="AccentFillHoverBrush" Color="#1D4ED8" />
+                    <SolidColorBrush x:Key="AccentSoftBrush" Color="#1B2B55" />
+                    <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80" />
+                    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#12301F" />
+                    <SolidColorBrush x:Key="DangerBrush" Color="#F87171" />
+                    <SolidColorBrush x:Key="DangerSoftBrush" Color="#3A1620" />
+                    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24" />
+                    <Color x:Key="SystemAccentColor">#3B82F6</Color>
+                    <Color x:Key="SystemAccentColorDark1">#2563EB</Color>
+                    <Color x:Key="SystemAccentColorDark2">#1D4ED8</Color>
+                    <Color x:Key="SystemAccentColorDark3">#1E40AF</Color>
+                    <Color x:Key="SystemAccentColorLight1">#60A5FA</Color>
+                    <Color x:Key="SystemAccentColorLight2">#93C5FD</Color>
+                    <Color x:Key="SystemAccentColorLight3">#BFDBFE</Color>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Cantos arredondados nos controles do Fluent (botões, campos, listas, menus). -->
+            <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
+            <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
         </ResourceDictionary>
     </Application.Resources>
 
@@ -37,18 +75,62 @@
         <materialIcons:MaterialIconStyles />
         <Style Selector="Button">
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="Background" Value="{DynamicResource SubtleBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
             <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="MinWidth" Value="120" />
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#1D4ED8" />
+            <Setter Property="Background" Value="{DynamicResource AccentFillHoverBrush}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentFillHoverBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <!-- Botões só com ícone (cabeçalho): quadrados e discretos até o mouse passar. -->
+        <Style Selector="Button.icon">
+            <Setter Property="Padding" Value="9" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        </Style>
+        <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <!-- Etiqueta arredondada (ex.: "Servidor local ativo", "Atualização disponível"). -->
+        <Style Selector="Border.pill">
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="Border.pill.success">
+            <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource SuccessBrush}" />
+        </Style>
+        <!-- Avisos dentro das telas (código SAS, erros). -->
+        <Style Selector="Border.notice">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+        <Style Selector="Border.notice.danger">
+            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+        </Style>
         <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Opacity" Value="0.4" />
         </Style>
         <!-- Botão de ação principal das abas: mesmo tamanho em todas -->
         <Style Selector="Button.large">
@@ -64,12 +146,33 @@
             <Setter Property="Padding" Value="6,4" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderColorBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="18" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="BoxShadow" Value="0 4 18 0 #120B1533" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColorBrush}" />
+            <Setter Property="MinHeight" Value="38" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColorBrush}" />
+            <Setter Property="MinHeight" Value="38" />
+        </Style>
+        <Style Selector="ProgressBar">
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="MinHeight" Value="8" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentFillBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SubtleBackgroundBrush}" />
         </Style>
         <!-- Card principal de cada aba: borda pontilhada (mesmo visual da área de soltar arquivos) -->
         <Style Selector="ContentControl.dashed">
@@ -78,7 +181,7 @@
                 <ControlTemplate>
                     <Grid>
                         <Rectangle Stroke="{DynamicResource BorderColorBrush}" StrokeThickness="1.5"
-                                   StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="12" RadiusY="12"
+                                   StrokeDashArray="2,5" StrokeLineCap="Round" RadiusX="16" RadiusY="16"
                                    Fill="{DynamicResource CardBackgroundBrush}" />
                         <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -111,10 +214,29 @@
             <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="TextElement.LetterSpacing" Value="0" />
         </Style>
+        <!-- Abas principais em "pílulas": a selecionada ganha fundo azul suave em vez do traço do Fluent. -->
         <Style Selector="TabControl.main > TabItem">
             <Setter Property="FontSize" Value="15" />
-            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Padding" Value="16,6" />
             <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="CornerRadius" Value="999" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        </Style>
+        <Style Selector="TabControl.main > TabItem /template/ Border#PART_SelectedPipe">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="TabControl.main > TabItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource SubtleBackgroundBrush}" />
+        </Style>
+        <Style Selector="TabControl.main > TabItem:selected /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        </Style>
+        <Style Selector="TabControl.main > TabItem:selected">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="TabControl.main > TabItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, TabControl.main > TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
     </Application.Styles>
 </Application>

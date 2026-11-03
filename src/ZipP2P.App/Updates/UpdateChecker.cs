@@ -49,7 +49,10 @@ public sealed class UpdateChecker
     /// <summary>Versões de desenvolvimento (ex.: <c>0.0.0-dev</c>) não oferecem atualização.</summary>
     public bool IsDevelopmentBuild => !TryParseVersion(_currentVersion, out var version) || version == new Version(0, 0, 0);
 
-    public string CurrentVersion => TryParseVersion(_currentVersion, out var version) ? version.ToString(3) : _currentVersion;
+    /// <summary>Versão para exibir, sem os metadados de build (ex.: <c>1.2.0</c> ou <c>0.0.0-dev</c>).</summary>
+    public string CurrentVersion => TryParseVersion(_currentVersion, out var version)
+        ? version.ToString(3)
+        : _currentVersion.Split('+')[0];
 
     /// <summary>Retorna a versão publicada se for mais nova que esta; senão, null.</summary>
     public async Task<AvailableUpdate?> CheckAsync(CancellationToken cancellationToken = default)

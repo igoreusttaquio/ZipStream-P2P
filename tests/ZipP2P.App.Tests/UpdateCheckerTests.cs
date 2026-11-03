@@ -55,6 +55,7 @@ public sealed class UpdateCheckerTests : IDisposable
         var checker = new UpdateChecker(new HttpClient(handler), "0.0.0-dev", "win-x64");
 
         Assert.True(checker.IsDevelopmentBuild);
+        Assert.Equal("0.0.0-dev", new UpdateChecker(new HttpClient(handler), "0.0.0-dev+b9418e4", "win-x64").CurrentVersion);
         Assert.Null(await checker.CheckAsync());
     }
 

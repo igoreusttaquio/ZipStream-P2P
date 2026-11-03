@@ -43,20 +43,20 @@
                 <Button Classes="link" Command="{Binding GoSettingsCommand}" IsVisible="{Binding Settings.HasUpdate}"
                         AutomationProperties.Name="{Binding [Update.Badge], Source={x:Static loc:Localizer.Instance}}"
                         VerticalAlignment="Center" Padding="0">
-                    <Border CornerRadius="10" Padding="8,4" Background="#1A22C55E">
+                    <Border Classes="pill success">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <icons:MaterialIcon Kind="Download" Width="14" Height="14" Foreground="#22C55E" />
+                            <icons:MaterialIcon Kind="Download" Width="14" Height="14" />
                             <TextBlock Text="{Binding [Update.Badge], Source={x:Static loc:Localizer.Instance}}"
-                                       FontSize="11" Foreground="#22C55E" VerticalAlignment="Center" />
+                                       FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </Button>
-                <Border IsVisible="{Binding IsServerRunning}" CornerRadius="10" Padding="8,4" Background="#143B82F6"
+                <Border Classes="pill" IsVisible="{Binding IsServerRunning}"
                         ToolTip.Tip="{Binding ServerStatus}" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:MaterialIcon Kind="Lan" Width="14" Height="14" Foreground="{DynamicResource AccentBrush}" />
+                        <icons:MaterialIcon Kind="Lan" Width="14" Height="14" />
                         <TextBlock Text="{Binding [Settings.ServerRunning], Source={x:Static loc:Localizer.Instance}}"
-                                   FontSize="11" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                                   FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
                 <icons:MaterialIcon Kind="Language" Width="18" Height="18" VerticalAlignment="Center"
@@ -66,17 +66,17 @@
                     <ComboBoxItem Content="Português (Brasil)" />
                     <ComboBoxItem Content="Español" />
                 </ComboBox>
-                <Button AutomationProperties.Name="{Binding [Settings.Theme], Source={x:Static loc:Localizer.Instance}}" ToolTip.Tip="{Binding [Settings.Theme], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleThemeCommand}" Padding="8" VerticalAlignment="Center">
+                <Button AutomationProperties.Name="{Binding [Settings.Theme], Source={x:Static loc:Localizer.Instance}}" ToolTip.Tip="{Binding [Settings.Theme], Source={x:Static loc:Localizer.Instance}}" Command="{Binding ToggleThemeCommand}" Classes="icon" VerticalAlignment="Center">
                     <Grid Width="20" Height="20">
                         <icons:MaterialIcon Kind="WhiteBalanceSunny" Width="20" Height="20" IsVisible="{Binding IsDarkMode}" />
                         <icons:MaterialIcon Kind="WeatherNight" Width="20" Height="20" IsVisible="{Binding IsLightMode}" />
                     </Grid>
                 </Button>
-                <Button AutomationProperties.Name="{Binding [Logs.Title], Source={x:Static loc:Localizer.Instance}}" Command="{Binding GoLogsCommand}" Padding="8" VerticalAlignment="Center"
+                <Button AutomationProperties.Name="{Binding [Logs.Title], Source={x:Static loc:Localizer.Instance}}" Command="{Binding GoLogsCommand}" Classes="icon" VerticalAlignment="Center"
                         ToolTip.Tip="{Binding [Logs.Title], Source={x:Static loc:Localizer.Instance}}">
                     <icons:MaterialIcon Kind="TextBoxSearchOutline" Width="20" Height="20" />
                 </Button>
-                <Button AutomationProperties.Name="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}" ToolTip.Tip="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}" Command="{Binding GoSettingsCommand}" Padding="8" VerticalAlignment="Center">
+                <Button AutomationProperties.Name="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}" ToolTip.Tip="{Binding [Settings.Title], Source={x:Static loc:Localizer.Instance}}" Command="{Binding GoSettingsCommand}" Classes="icon" VerticalAlignment="Center">
                     <icons:MaterialIcon Kind="Cog" Width="20" Height="20" />
                 </Button>
             </StackPanel>
