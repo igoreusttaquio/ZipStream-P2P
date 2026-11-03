@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -6,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using ZipP2P.App.Devices;
 using ZipP2P.App.Localization;
 using ZipP2P.App.Logging;
 using ZipP2P.App.ViewModels;
@@ -53,6 +55,11 @@ public partial class App : Application
             desktop.MainWindow = _mainWindow;
 
             CreateTrayIcon();
+
+            // Receive mode ligado da última vez: volta a atender convites (também ao iniciar com o sistema).
+            if (new AppSettings(new SettingsStore()).ReceiveModeEnabled)
+                DeviceServices.ReceiveMode.Start();
+
             _singleInstance.Listen(
                 command => Dispatcher.UIThread.Post(() => Handle(command)),
                 ex => Logger.LogDebug(ex, "Single-instance channel error"));
@@ -78,6 +85,7 @@ public partial class App : Application
     {
         _exiting = true;
         Logger.LogInformation("Exiting");
+        _ = DeviceServices.ReceiveMode.StopAsync();
         _singleInstance.Dispose();
         _trayIcon?.Dispose();
         _desktop?.Shutdown();
@@ -93,6 +101,10 @@ public partial class App : Application
             Exit();
             return;
         }
+
+        // Iniciado com o sistema: fica só na bandeja (o receive mode, se ligado, já está atendendo).
+        if (command.Background)
+            return;
 
         if (command.SendPath is { } path)
         {
@@ -130,10 +142,37 @@ public partial class App : Application
         var exit = new NativeMenuItem();
         exit.Click += (_, _) => Exit();
 
+        // Liga/desliga o receive mode sem abrir a janela.
+        var receiveMode = new NativeMenuItem { ToggleType = MenuItemToggleType.CheckBox };
+        receiveMode.Click += (_, _) =>
+        {
+            var enable = !DeviceServices.ReceiveMode.IsRunning;
+            new AppSettings(new SettingsStore()).ReceiveModeEnabled = enable;
+            if (enable)
+                DeviceServices.ReceiveMode.Start();
+            else
+                _ = DeviceServices.ReceiveMode.StopAsync();
+        };
+        DeviceServices.ReceiveMode.StateChanged += () =>
+            Dispatcher.UIThread.Post(() => receiveMode.IsChecked = DeviceServices.ReceiveMode.IsRunning);
+        receiveMode.IsChecked = DeviceServices.ReceiveMode.IsRunning;
+
+        // Recebido em segundo plano: aparece no tooltip do ícone.
+        DeviceServices.ReceiveMode.Activity += e =>
+        {
+            if (e.Kind == ReceiveModeEventKind.Received)
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_trayIcon is not null)
+                        _trayIcon.ToolTipText = string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Tray.Received"], e.Name);
+                });
+        };
+
         void Localize()
         {
             open.Header = Localizer.Instance["Tray.Open"];
             exit.Header = Localizer.Instance["Tray.Exit"];
+            receiveMode.Header = Localizer.Instance["Tray.ReceiveMode"];
         }
 
         Localize();
@@ -143,7 +182,7 @@ public partial class App : Application
         {
             Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://ZipP2P.App/Assets/zipstream.ico"))),
             ToolTipText = "ZipStream",
-            Menu = new NativeMenu { Items = { open, new NativeMenuItemSeparator(), exit } },
+            Menu = new NativeMenu { Items = { open, receiveMode, new NativeMenuItemSeparator(), exit } },
             IsVisible = true,
         };
         _trayIcon.Clicked += (_, _) => ShowMainWindow();

@@ -143,7 +143,8 @@ public sealed class TransferRunner
                                 header.Size,
                                 destinationDir,
                                 roomCode,
-                                DateTimeOffset.Now);
+                                DateTimeOffset.Now,
+                                session.PeerIdentityKey is { } peerKey ? DeviceIdentity.ComputeDeviceId(peerKey) : null);
                             _store.Save(current);
                         }
                         else

@@ -16,6 +16,7 @@ public sealed class AppSettings
     private const string CloseToTrayKey = "CloseToTray";
     private const string AutoCheckUpdatesKey = "AutoCheckUpdates";
     private const string LastUpdateCheckKey = "LastUpdateCheck";
+    private const string ReceiveModeEnabledKey = "ReceiveModeEnabled";
 
     private readonly SettingsStore _store;
 
@@ -48,6 +49,13 @@ public sealed class AppSettings
     {
         get => _store.Get(CloseToTrayKey) != "false";
         set => _store.Set(CloseToTrayKey, value ? "true" : "false");
+    }
+
+    /// <summary>Receive mode ligado: volta a ligar sozinho quando o app abre (padrão: não).</summary>
+    public bool ReceiveModeEnabled
+    {
+        get => _store.Get(ReceiveModeEnabledKey) == "true";
+        set => _store.Set(ReceiveModeEnabledKey, value ? "true" : "false");
     }
 
     /// <summary>Procurar versões novas ao abrir o app, no máximo uma vez por dia (padrão: sim).</summary>

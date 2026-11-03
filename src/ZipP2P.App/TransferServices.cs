@@ -45,16 +45,28 @@ public static class TransferServices
     /// <summary>Pacote do envio <paramref name="id"/> ainda em compressão neste processo, se houver.</summary>
     public static PackageSource? FindPreparing(Guid id) => Preparing.TryGetValue(id, out var package) ? package : null;
 
-    public static TransferRunner CreateRunner() => new(CreateFactory(), Store, AppLog.Instance.CreateLogger("Transfer"));
+    /// <param name="authentication">Exige um dispositivo pareado do outro lado (envio/recebimento sem código).</param>
+    public static TransferRunner CreateRunner(SessionAuthentication? authentication = null)
+        => new(CreateFactory(), Store, AppLog.Instance.CreateLogger("Transfer"), authentication: authentication);
 
     /// <summary>Falha cedo (antes de comprimir) se o servidor de sinalização não responder.</summary>
     public static Task CheckServerAsync(CancellationToken cancellationToken) => CreateFactory().CheckServerAsync(cancellationToken);
 
-    private static SignalingPeerLinkFactory CreateFactory()
+    public static SignalingPeerLinkFactory CreateFactory()
     {
         var settings = new AppSettings(new SettingsStore());
         return new SignalingPeerLinkFactory(settings.SignalingUrl, settings.IceServers, AppLog.Instance.Factory);
     }
+
+    /// <summary>Conexão de presença com o servidor configurado (convites do receive mode).</summary>
+    public static PresenceClient CreatePresence()
+        => new(new AppSettings(new SettingsStore()).SignalingUrl, AppLog.Instance.CreateLogger("Presence"));
+
+    /// <summary>
+    /// Sala de um convite: só os dois dispositivos a conhecem (o servidor a entrega apenas ao convidado),
+    /// então pode ser longa e aleatória; não precisa ser digitada.
+    /// </summary>
+    public static string GenerateInviteRoom() => "D" + Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(12));
 
     /// <summary>Código de 6 caracteres sem ambiguidades (sem 0/O, 1/I).</summary>
     public static string GenerateRoomCode()

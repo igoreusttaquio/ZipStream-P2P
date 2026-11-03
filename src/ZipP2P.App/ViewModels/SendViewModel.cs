@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using ZipP2P.App.Devices;
 using ZipP2P.App.Localization;
 using ZipP2P.Core.Compression;
 using ZipP2P.P2P.Transfer;
@@ -24,12 +25,54 @@ public partial class SendViewModel : OperationViewModel
     public SendViewModel()
     {
         RefreshPending();
+        LoadDevices();
         Localizer.Instance.PropertyChanged += (_, _) =>
         {
             if (!IsBusy)
                 RefreshPending();
         };
+        DeviceServices.TrustedChanged += () => Dispatcher.UIThread.Post(LoadDevices);
     }
+
+    // ---- Enviar para dispositivo pareado (sem código) ----
+
+    /// <summary>Abre a aba Dispositivos (definido pela Home).</summary>
+    public Action? ShowDevices { get; set; }
+
+    public ObservableCollection<TrustedDevice> Devices { get; } = new();
+
+    [ObservableProperty]
+    public partial bool HasDevices { get; set; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendToDeviceCommand))]
+    public partial TrustedDevice? SelectedDevice { get; set; }
+
+    /// <summary>Dispositivo de destino do envio atual (no lugar do código).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTargetDevice))]
+    public partial string TargetDeviceName { get; set; } = string.Empty;
+
+    public bool HasTargetDevice => !string.IsNullOrEmpty(TargetDeviceName);
+
+    private void LoadDevices()
+    {
+        var selectedId = SelectedDevice?.DeviceId;
+        Devices.Clear();
+        foreach (var device in DeviceServices.Trusted.List())
+            Devices.Add(device);
+        HasDevices = Devices.Count > 0;
+        SelectedDevice = Devices.FirstOrDefault(d => d.DeviceId == selectedId) ?? Devices.FirstOrDefault();
+    }
+
+    private bool CanSendToDevice() => CanSend() && SelectedDevice is not null;
+
+    [RelayCommand(CanExecute = nameof(CanSendToDevice))]
+    private Task SendToDeviceAsync()
+        => StartSendAsync(SelectedPath, TransferServices.GenerateInviteRoom(), SelectedDevice);
+
+    [RelayCommand]
+    private void OpenDevices() => ShowDevices?.Invoke();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
@@ -37,6 +80,7 @@ public partial class SendViewModel : OperationViewModel
     [NotifyPropertyChangedFor(nameof(SelectedName))]
     [NotifyPropertyChangedFor(nameof(SelectedIsFolder))]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SendToDeviceCommand))]
     public partial string SelectedPath { get; set; } = string.Empty;
 
     public bool HasSelection => !string.IsNullOrEmpty(SelectedPath);
@@ -77,6 +121,7 @@ public partial class SendViewModel : OperationViewModel
     {
         OnPropertyChanged(nameof(ShowPicker));
         SendCommand.NotifyCanExecuteChanged();
+        SendToDeviceCommand.NotifyCanExecuteChanged();
         if (value != OperationState.Running)
             RefreshPending();
     }
@@ -91,6 +136,7 @@ public partial class SendViewModel : OperationViewModel
 
         State = OperationState.Idle;
         RoomCode = string.Empty;
+        TargetDeviceName = string.Empty;
         SelectedPath = Path.GetFullPath(path);
     }
 
@@ -142,6 +188,7 @@ public partial class SendViewModel : OperationViewModel
 
         SelectedPath = string.Empty;
         RoomCode = string.Empty;
+        TargetDeviceName = string.Empty;
         State = OperationState.Idle;
     }
 
@@ -152,11 +199,14 @@ public partial class SendViewModel : OperationViewModel
 
     /// <summary>
     /// Entra na sala logo e compacta ao mesmo tempo: o envio começa assim que o outro computador
-    /// conecta e acompanha a compressão, em vez de esperar ela terminar.
+    /// conecta e acompanha a compressão, em vez de esperar ela terminar. Com <paramref name="target"/>,
+    /// convida o dispositivo pareado (em vez de mostrar um código) e a sessão é autenticada.
     /// </summary>
-    private async Task StartSendAsync(string source, string roomCode)
+    private async Task StartSendAsync(string source, string roomCode, TrustedDevice? target = null)
     {
-        RoomCode = roomCode;
+        // O código só aparece no envio por código; para um dispositivo, aparece o nome dele.
+        RoomCode = target is null ? roomCode : string.Empty;
+        TargetDeviceName = target?.Name ?? string.Empty;
         var version = ++_sendVersion;
 
         await RunAsync(async ct =>
@@ -164,11 +214,16 @@ public partial class SendViewModel : OperationViewModel
             SetStatus("Status.Connecting");
             await TransferServices.CheckServerAsync(ct).ConfigureAwait(true);
 
-            Logger.LogInformation("Preparing {Source} for sending (code {Room})", source, RoomCode);
+            // Convida antes de compactar: se o dispositivo estiver offline, falha na hora.
+            if (target is not null)
+                await DeviceServices.Connector.InviteAsync(target, roomCode, ct).ConfigureAwait(true);
+
+            Logger.LogInformation("Preparing {Source} for sending ({Target})", source, target?.Name ?? "code " + roomCode);
             SetStatus("Status.Preparing");
 
             var transfer = new OutgoingTransfer(
-                Guid.NewGuid(), source, SelectedName, TransferPackage.GetContentType(source), -1, RoomCode, DateTimeOffset.Now);
+                Guid.NewGuid(), source, SelectedName, TransferPackage.GetContentType(source), -1, roomCode, DateTimeOffset.Now,
+                target?.DeviceId);
             TransferServices.Store.Save(transfer);
             var package = TransferServices.StartPackage(
                 transfer,
@@ -218,11 +273,21 @@ public partial class SendViewModel : OperationViewModel
         SelectedPath = pending.SourcePath;
         ++_sendVersion;
 
+        // Envio para um dispositivo pareado: ele precisa ser convidado de novo para a sala.
+        TrustedDevice? target = null;
+        if (pending.TargetDeviceId is { } targetId && (target = DeviceServices.Trusted.Find(targetId)) is null)
+        {
+            SetStatus("Status.Failed");
+            ErrorMessage = L("Error.DeviceRemoved");
+            State = OperationState.Failed;
+            return;
+        }
+
         // Ainda compactando neste processo (só a conexão caiu): retoma acompanhando a compressão.
         if (TransferServices.FindPreparing(pending.Id) is { } preparing)
         {
-            RoomCode = pending.RoomCode;
-            await RunAsync(ct => TransferAsync(pending, preparing, ct));
+            ShowTarget(pending.RoomCode, target);
+            await RunAsync(ct => InviteAndTransferAsync(pending, preparing, target, ct));
             return;
         }
 
@@ -232,13 +297,30 @@ public partial class SendViewModel : OperationViewModel
             // O app fechou no meio da compressão: o pacote parcial não serve. Compacta de novo, com o mesmo código.
             Logger.LogInformation("The package of {Id} was not fully prepared; preparing it again", transfer.Id);
             TransferServices.Store.Delete(transfer);
-            await StartSendAsync(transfer.SourcePath, transfer.RoomCode);
+            await StartSendAsync(transfer.SourcePath, transfer.RoomCode, target);
             return;
         }
 
-        RoomCode = transfer.RoomCode;
+        ShowTarget(transfer.RoomCode, target);
         var package = PackageSource.FromFile(TransferServices.Store.PackagePath(transfer.Id));
-        await RunAsync(ct => TransferAsync(transfer, package, ct));
+        await RunAsync(ct => InviteAndTransferAsync(transfer, package, target, ct));
+    }
+
+    private void ShowTarget(string roomCode, TrustedDevice? target)
+    {
+        RoomCode = target is null ? roomCode : string.Empty;
+        TargetDeviceName = target?.Name ?? string.Empty;
+    }
+
+    private async Task InviteAndTransferAsync(OutgoingTransfer transfer, PackageSource package, TrustedDevice? target, CancellationToken ct)
+    {
+        if (target is not null)
+        {
+            SetStatus("Status.Connecting");
+            await DeviceServices.Connector.InviteAsync(target, transfer.RoomCode, ct).ConfigureAwait(true);
+        }
+
+        await TransferAsync(transfer, package, ct).ConfigureAwait(true);
     }
 
     private void Discard(PendingTransferItem item)
@@ -259,8 +341,12 @@ public partial class SendViewModel : OperationViewModel
         // Cancelar o envio cancela também a compressão; se só a conexão cair, ela continua e o envio fica retomável.
         await using var cancelCompression = ct.Register(package.Cancel);
 
-        var runner = TransferServices.CreateRunner();
-        runner.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
+        // Para um dispositivo pareado, a sessão só aceita aquele dispositivo (e dispensa a conferência do SAS).
+        var target = transfer.TargetDeviceId is { } targetId ? DeviceServices.Trusted.Find(targetId) : null;
+        using var identity = target is null ? null : DeviceServices.Profile.LoadIdentity();
+        var runner = TransferServices.CreateRunner(target is null ? null : DeviceTrust.OnlyDevice(identity!, target));
+        if (target is null)
+            runner.SasReady += sas => Dispatcher.UIThread.Post(() => SasCode = sas);
         runner.StatusChanged += status => Dispatcher.UIThread.Post(() => ApplyTransferStatus(status, "Status.Sending"));
         var progress = new Progress<TransferProgress>(p =>
         {
@@ -275,11 +361,13 @@ public partial class SendViewModel : OperationViewModel
         Pending.Clear();
         foreach (var t in TransferServices.Store.ListOutgoing().OrderByDescending(t => t.CreatedAt))
         {
+            // Envio para dispositivo: mostra o nome dele no lugar do código.
+            var target = t.TargetDeviceId is { } id ? DeviceServices.Trusted.Find(id)?.Name ?? "?" : t.RoomCode;
             var detail = string.Format(
                 CultureInfo.CurrentCulture,
                 L("Pending.SendDetail"),
                 FormatBytes(t.PackageSize),
-                t.RoomCode,
+                target,
                 t.CreatedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture));
             Pending.Add(new PendingTransferItem(
                 t, t.FileName, detail, t.ContentType == Zpp2Format.ContentTypeDirectory, ResumeAsync, Discard));

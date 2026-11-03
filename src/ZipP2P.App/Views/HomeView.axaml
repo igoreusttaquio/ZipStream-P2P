@@ -11,7 +11,7 @@
              x:DataType="vm:HomeViewModel"
              DragDrop.AllowDrop="True">
 
-    <!-- Abas: Enviar / Receber / Ferramentas. Arrastar um item para a janela seleciona-o para envio. -->
+    <!-- Abas: Enviar / Receber / Dispositivos / Ferramentas. Arrastar um item para a janela seleciona-o para envio. -->
     <TabControl Classes="main" SelectedIndex="{Binding SelectedTab}" Padding="0,12,0,0">
         <TabItem>
             <TabItem.Header>
@@ -30,6 +30,15 @@
                 </StackPanel>
             </TabItem.Header>
             <views:ReceiveView DataContext="{Binding Receive}" />
+        </TabItem>
+        <TabItem>
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:MaterialIcon Kind="Devices" Width="18" Height="18" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding [Devices.Title], Source={x:Static loc:Localizer.Instance}}" VerticalAlignment="Center" />
+                </StackPanel>
+            </TabItem.Header>
+            <views:DevicesView DataContext="{Binding Devices}" />
         </TabItem>
         <TabItem>
             <TabItem.Header>

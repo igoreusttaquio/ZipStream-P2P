@@ -6,6 +6,7 @@ namespace ZipP2P.P2P.Transfer;
 /// Envio pendente: o pacote comprimido fica em cache até o destinatário confirmar o recebimento.
 /// <see cref="PackageSize"/> é -1 enquanto o pacote ainda está sendo compactado.
 /// </summary>
+/// <param name="TargetDeviceId">Dispositivo pareado de destino (receive mode); null no envio por código.</param>
 public sealed record OutgoingTransfer(
     Guid Id,
     string SourcePath,
@@ -13,12 +14,17 @@ public sealed record OutgoingTransfer(
     byte ContentType,
     long PackageSize,
     string RoomCode,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? TargetDeviceId = null);
 
 /// <summary>
 /// Recebimento pendente: o pacote parcial fica em disco para ser retomado.
 /// <see cref="Size"/> é -1 enquanto o remetente ainda não anunciou o tamanho final.
 /// </summary>
+/// <param name="SourceDeviceId">
+/// Dispositivo pareado que enviou (receive mode); null no recebimento por código. Esses só são
+/// retomados quando o remetente envia de novo.
+/// </param>
 public sealed record IncomingTransfer(
     Guid Id,
     string FileName,
@@ -26,7 +32,8 @@ public sealed record IncomingTransfer(
     long Size,
     string DestinationDir,
     string RoomCode,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? SourceDeviceId = null);
 
 /// <summary>
 /// Persiste o estado das transferências em andamento (JSON + dados) para que possam ser

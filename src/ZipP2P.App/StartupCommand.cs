@@ -10,7 +10,8 @@ namespace ZipP2P.App;
 /// Fecha a instância aberta de verdade (sem ir para a bandeja), para o instalador substituir os arquivos.
 /// Se não houver instância aberta, não abre o app.
 /// </param>
-public sealed record StartupCommand(string? SendPath, string? ReceiveCode, bool CloseForUpdate = false)
+/// <param name="Background">Abre só na bandeja, sem a janela (<c>--background</c>, usado ao iniciar com o sistema).</param>
+public sealed record StartupCommand(string? SendPath, string? ReceiveCode, bool CloseForUpdate = false, bool Background = false)
 {
     public const string CloseForUpdateArgument = "--close-for-update";
 
@@ -31,6 +32,8 @@ public sealed record StartupCommand(string? SendPath, string? ReceiveCode, bool 
             {
                 case CloseForUpdateArgument:
                     return CloseForUpdateCommand;
+                case ShellIntegration.Autostart.BackgroundArgument:
+                    return new StartupCommand(null, null, Background: true);
                 case "--send" when i + 1 < args.Count:
                     return new StartupCommand(args[i + 1], null);
                 case "--receive" when i + 1 < args.Count:

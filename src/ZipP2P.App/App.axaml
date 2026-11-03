@@ -168,6 +168,10 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderColorBrush}" />
             <Setter Property="MinHeight" Value="38" />
         </Style>
+        <!-- O raio dos controles (10) deixaria a caixa do checkbox redonda. -->
+        <Style Selector="CheckBox">
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
         <Style Selector="ProgressBar">
             <Setter Property="CornerRadius" Value="999" />
             <Setter Property="MinHeight" Value="8" />

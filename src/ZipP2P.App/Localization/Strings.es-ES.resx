@@ -387,6 +387,138 @@
   <data name="Update.Badge" xml:space="preserve">
     <value>Actualización disponible</value>
   </data>
+  <data name="Devices.Title" xml:space="preserve">
+    <value>Dispositivos</value>
+  </data>
+  <data name="Devices.Intro" xml:space="preserve">
+    <value>Deje este equipo recibiendo archivos de sus dispositivos emparejados, sin escribir un código en cada envío.</value>
+  </data>
+  <data name="Devices.ReceiveMode" xml:space="preserve">
+    <value>Modo de recepción</value>
+  </data>
+  <data name="Devices.StatusOff" xml:space="preserve">
+    <value>Desactivado. Actívelo para recibir archivos de los dispositivos emparejados automáticamente.</value>
+  </data>
+  <data name="Devices.StatusConnecting" xml:space="preserve">
+    <value>Conectando al servidor…</value>
+  </data>
+  <data name="Devices.StatusOnline" xml:space="preserve">
+    <value>En línea — esperando envíos</value>
+  </data>
+  <data name="Devices.Code" xml:space="preserve">
+    <value>CÓDIGO DE ESTE EQUIPO</value>
+  </data>
+  <data name="Devices.CodeHint" xml:space="preserve">
+    <value>Quien escriba este código en “Agregar dispositivo” podrá enviar archivos aquí. Si se filtra, genere uno nuevo (los emparejados siguen funcionando).</value>
+  </data>
+  <data name="Devices.Regenerate" xml:space="preserve">
+    <value>Nuevo código</value>
+  </data>
+  <data name="Devices.Name" xml:space="preserve">
+    <value>NOMBRE DE ESTE EQUIPO</value>
+  </data>
+  <data name="Devices.ChangeFolder" xml:space="preserve">
+    <value>Cambiar carpeta</value>
+  </data>
+  <data name="Devices.StartWithSystem" xml:space="preserve">
+    <value>Iniciar con el sistema (queda en la bandeja)</value>
+  </data>
+  <data name="Devices.Trusted" xml:space="preserve">
+    <value>Dispositivos de confianza</value>
+  </data>
+  <data name="Devices.TrustedEmpty" xml:space="preserve">
+    <value>Aún no hay dispositivos emparejados.</value>
+  </data>
+  <data name="Devices.PairedOn" xml:space="preserve">
+    <value>Emparejado el {0}</value>
+  </data>
+  <data name="Devices.Online" xml:space="preserve">
+    <value>En línea</value>
+  </data>
+  <data name="Devices.Offline" xml:space="preserve">
+    <value>Sin conexión</value>
+  </data>
+  <data name="Devices.Remove" xml:space="preserve">
+    <value>Quitar</value>
+  </data>
+  <data name="Devices.Refresh" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="Devices.Add" xml:space="preserve">
+    <value>AGREGAR DISPOSITIVO</value>
+  </data>
+  <data name="Devices.AddHint" xml:space="preserve">
+    <value>Escriba el código que aparece en la pestaña Dispositivos del otro equipo (con el modo de recepción activado). Ambos confiarán el uno en el otro.</value>
+  </data>
+  <data name="Devices.Pair" xml:space="preserve">
+    <value>Emparejar</value>
+  </data>
+  <data name="Devices.Pairing" xml:space="preserve">
+    <value>Emparejando…</value>
+  </data>
+  <data name="Devices.PairedWith" xml:space="preserve">
+    <value>Emparejado con {0}.</value>
+  </data>
+  <data name="Devices.PairOffline" xml:space="preserve">
+    <value>Ningún equipo en línea tiene este código. Revise el código y que el modo de recepción esté activado allí.</value>
+  </data>
+  <data name="Devices.PairWrongCode" xml:space="preserve">
+    <value>El código no coincide.</value>
+  </data>
+  <data name="Devices.InvalidCode" xml:space="preserve">
+    <value>Código inválido: el formato es XXX-XXX-XXXX-XXXX.</value>
+  </data>
+  <data name="Devices.OwnCode" xml:space="preserve">
+    <value>Ese es el código de este equipo; escriba el del otro.</value>
+  </data>
+  <data name="Devices.Activity" xml:space="preserve">
+    <value>Actividad reciente</value>
+  </data>
+  <data name="Devices.EventPaired" xml:space="preserve">
+    <value>{0} se emparejó con este equipo</value>
+  </data>
+  <data name="Devices.EventReceiving" xml:space="preserve">
+    <value>Recibiendo de {0}…</value>
+  </data>
+  <data name="Devices.EventReceived" xml:space="preserve">
+    <value>{0} recibido de {1}</value>
+  </data>
+  <data name="Devices.EventFailed" xml:space="preserve">
+    <value>Falló: {0}</value>
+  </data>
+  <data name="Devices.UnknownDevice" xml:space="preserve">
+    <value>dispositivo emparejado</value>
+  </data>
+  <data name="Send.ToDevice" xml:space="preserve">
+    <value>ENVIAR A UN DISPOSITIVO EMPAREJADO</value>
+  </data>
+  <data name="Send.ToDeviceStart" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Send.NoDevices" xml:space="preserve">
+    <value>Empareje sus equipos para enviar sin código.</value>
+  </data>
+  <data name="Send.OpenDevices" xml:space="preserve">
+    <value>Ir a Dispositivos</value>
+  </data>
+  <data name="Send.SendingTo" xml:space="preserve">
+    <value>ENVIANDO A</value>
+  </data>
+  <data name="Error.DeviceOffline" xml:space="preserve">
+    <value>El dispositivo no está en línea con el modo de recepción activado.</value>
+  </data>
+  <data name="Error.NotTrusted" xml:space="preserve">
+    <value>El otro dispositivo no reconoció a este. Empareje ambos de nuevo.</value>
+  </data>
+  <data name="Error.DeviceRemoved" xml:space="preserve">
+    <value>El dispositivo de destino se quitó de la lista de confianza. Descarte este envío o empareje de nuevo.</value>
+  </data>
+  <data name="Tray.ReceiveMode" xml:space="preserve">
+    <value>Modo de recepción</value>
+  </data>
+  <data name="Tray.Received" xml:space="preserve">
+    <value>ZipStream — recibido: {0}</value>
+  </data>
   <data name="Settings.IceTitle" xml:space="preserve">
     <value>Servidor STUN/TURN (relay)</value>
   </data>

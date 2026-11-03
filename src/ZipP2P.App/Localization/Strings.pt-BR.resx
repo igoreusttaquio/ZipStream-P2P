@@ -387,6 +387,138 @@
   <data name="Update.Badge" xml:space="preserve">
     <value>Atualização disponível</value>
   </data>
+  <data name="Devices.Title" xml:space="preserve">
+    <value>Dispositivos</value>
+  </data>
+  <data name="Devices.Intro" xml:space="preserve">
+    <value>Deixe este computador recebendo arquivos dos seus dispositivos pareados, sem digitar código a cada envio.</value>
+  </data>
+  <data name="Devices.ReceiveMode" xml:space="preserve">
+    <value>Modo de recebimento</value>
+  </data>
+  <data name="Devices.StatusOff" xml:space="preserve">
+    <value>Desligado. Ligue para receber arquivos dos dispositivos pareados automaticamente.</value>
+  </data>
+  <data name="Devices.StatusConnecting" xml:space="preserve">
+    <value>Conectando ao servidor…</value>
+  </data>
+  <data name="Devices.StatusOnline" xml:space="preserve">
+    <value>Online — aguardando envios</value>
+  </data>
+  <data name="Devices.Code" xml:space="preserve">
+    <value>CÓDIGO DESTE COMPUTADOR</value>
+  </data>
+  <data name="Devices.CodeHint" xml:space="preserve">
+    <value>Quem digitar este código em “Adicionar dispositivo” passa a poder enviar para cá. Se ele vazar, gere um novo (os pareados continuam).</value>
+  </data>
+  <data name="Devices.Regenerate" xml:space="preserve">
+    <value>Gerar novo</value>
+  </data>
+  <data name="Devices.Name" xml:space="preserve">
+    <value>NOME DESTE COMPUTADOR</value>
+  </data>
+  <data name="Devices.ChangeFolder" xml:space="preserve">
+    <value>Alterar pasta</value>
+  </data>
+  <data name="Devices.StartWithSystem" xml:space="preserve">
+    <value>Iniciar com o sistema (fica na bandeja)</value>
+  </data>
+  <data name="Devices.Trusted" xml:space="preserve">
+    <value>Dispositivos confiáveis</value>
+  </data>
+  <data name="Devices.TrustedEmpty" xml:space="preserve">
+    <value>Nenhum dispositivo pareado ainda.</value>
+  </data>
+  <data name="Devices.PairedOn" xml:space="preserve">
+    <value>Pareado em {0}</value>
+  </data>
+  <data name="Devices.Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Devices.Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="Devices.Remove" xml:space="preserve">
+    <value>Remover</value>
+  </data>
+  <data name="Devices.Refresh" xml:space="preserve">
+    <value>Atualizar</value>
+  </data>
+  <data name="Devices.Add" xml:space="preserve">
+    <value>ADICIONAR DISPOSITIVO</value>
+  </data>
+  <data name="Devices.AddHint" xml:space="preserve">
+    <value>Digite o código que aparece na aba Dispositivos do outro computador (com o modo de recebimento ligado). Os dois passam a confiar um no outro.</value>
+  </data>
+  <data name="Devices.Pair" xml:space="preserve">
+    <value>Parear</value>
+  </data>
+  <data name="Devices.Pairing" xml:space="preserve">
+    <value>Pareando…</value>
+  </data>
+  <data name="Devices.PairedWith" xml:space="preserve">
+    <value>Pareado com {0}.</value>
+  </data>
+  <data name="Devices.PairOffline" xml:space="preserve">
+    <value>Nenhum computador online com esse código. Confira o código e se o modo de recebimento está ligado lá.</value>
+  </data>
+  <data name="Devices.PairWrongCode" xml:space="preserve">
+    <value>O código não confere.</value>
+  </data>
+  <data name="Devices.InvalidCode" xml:space="preserve">
+    <value>Código inválido: ele tem o formato XXX-XXX-XXXX-XXXX.</value>
+  </data>
+  <data name="Devices.OwnCode" xml:space="preserve">
+    <value>Esse é o código deste computador; digite o do outro.</value>
+  </data>
+  <data name="Devices.Activity" xml:space="preserve">
+    <value>Atividade recente</value>
+  </data>
+  <data name="Devices.EventPaired" xml:space="preserve">
+    <value>{0} pareou com este computador</value>
+  </data>
+  <data name="Devices.EventReceiving" xml:space="preserve">
+    <value>Recebendo de {0}…</value>
+  </data>
+  <data name="Devices.EventReceived" xml:space="preserve">
+    <value>{0} recebido de {1}</value>
+  </data>
+  <data name="Devices.EventFailed" xml:space="preserve">
+    <value>Falhou: {0}</value>
+  </data>
+  <data name="Devices.UnknownDevice" xml:space="preserve">
+    <value>dispositivo pareado</value>
+  </data>
+  <data name="Send.ToDevice" xml:space="preserve">
+    <value>ENVIAR PARA UM DISPOSITIVO PAREADO</value>
+  </data>
+  <data name="Send.ToDeviceStart" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Send.NoDevices" xml:space="preserve">
+    <value>Pareie seus computadores para enviar sem código.</value>
+  </data>
+  <data name="Send.OpenDevices" xml:space="preserve">
+    <value>Ir para Dispositivos</value>
+  </data>
+  <data name="Send.SendingTo" xml:space="preserve">
+    <value>ENVIANDO PARA</value>
+  </data>
+  <data name="Error.DeviceOffline" xml:space="preserve">
+    <value>O dispositivo não está online com o modo de recebimento ligado.</value>
+  </data>
+  <data name="Error.NotTrusted" xml:space="preserve">
+    <value>O outro dispositivo não reconheceu este. Pareie os dois de novo.</value>
+  </data>
+  <data name="Error.DeviceRemoved" xml:space="preserve">
+    <value>O dispositivo de destino foi removido da lista de confiáveis. Descarte este envio ou pareie de novo.</value>
+  </data>
+  <data name="Tray.ReceiveMode" xml:space="preserve">
+    <value>Modo de recebimento</value>
+  </data>
+  <data name="Tray.Received" xml:space="preserve">
+    <value>ZipStream — recebido: {0}</value>
+  </data>
   <data name="Settings.IceTitle" xml:space="preserve">
     <value>Servidor STUN/TURN (relay)</value>
   </data>

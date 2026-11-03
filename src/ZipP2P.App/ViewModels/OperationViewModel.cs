@@ -236,6 +236,8 @@ public abstract partial class OperationViewModel : ViewModelBase
     {
         var hint = ex switch
         {
+            DeviceOfflineException => L("Error.DeviceOffline"),
+            PeerNotTrustedException => L("Error.NotTrusted"),
             SignalingException => L("Error.Signaling"),
             ConnectionLostException => L("Error.ConnectionLost"),
             TransferAbortedException => L("Error.Aborted"),

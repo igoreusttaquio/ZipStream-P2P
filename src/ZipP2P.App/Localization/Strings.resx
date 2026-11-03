@@ -387,6 +387,138 @@
   <data name="Update.Badge" xml:space="preserve">
     <value>Update available</value>
   </data>
+  <data name="Devices.Title" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="Devices.Intro" xml:space="preserve">
+    <value>Keep this computer receiving files from your paired devices, without typing a code for every transfer.</value>
+  </data>
+  <data name="Devices.ReceiveMode" xml:space="preserve">
+    <value>Receive mode</value>
+  </data>
+  <data name="Devices.StatusOff" xml:space="preserve">
+    <value>Off. Turn it on to receive files from paired devices automatically.</value>
+  </data>
+  <data name="Devices.StatusConnecting" xml:space="preserve">
+    <value>Connecting to the server…</value>
+  </data>
+  <data name="Devices.StatusOnline" xml:space="preserve">
+    <value>Online — waiting for transfers</value>
+  </data>
+  <data name="Devices.Code" xml:space="preserve">
+    <value>THIS COMPUTER'S CODE</value>
+  </data>
+  <data name="Devices.CodeHint" xml:space="preserve">
+    <value>Anyone who enters this code in “Add device” can send files here. If it leaks, generate a new one (paired devices keep working).</value>
+  </data>
+  <data name="Devices.Regenerate" xml:space="preserve">
+    <value>New code</value>
+  </data>
+  <data name="Devices.Name" xml:space="preserve">
+    <value>THIS COMPUTER'S NAME</value>
+  </data>
+  <data name="Devices.ChangeFolder" xml:space="preserve">
+    <value>Change folder</value>
+  </data>
+  <data name="Devices.StartWithSystem" xml:space="preserve">
+    <value>Start with the system (stays in the tray)</value>
+  </data>
+  <data name="Devices.Trusted" xml:space="preserve">
+    <value>Trusted devices</value>
+  </data>
+  <data name="Devices.TrustedEmpty" xml:space="preserve">
+    <value>No paired devices yet.</value>
+  </data>
+  <data name="Devices.PairedOn" xml:space="preserve">
+    <value>Paired on {0}</value>
+  </data>
+  <data name="Devices.Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Devices.Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="Devices.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Devices.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Devices.Add" xml:space="preserve">
+    <value>ADD DEVICE</value>
+  </data>
+  <data name="Devices.AddHint" xml:space="preserve">
+    <value>Enter the code shown in the other computer's Devices tab (with receive mode on). Both devices will trust each other.</value>
+  </data>
+  <data name="Devices.Pair" xml:space="preserve">
+    <value>Pair</value>
+  </data>
+  <data name="Devices.Pairing" xml:space="preserve">
+    <value>Pairing…</value>
+  </data>
+  <data name="Devices.PairedWith" xml:space="preserve">
+    <value>Paired with {0}.</value>
+  </data>
+  <data name="Devices.PairOffline" xml:space="preserve">
+    <value>No computer is online with this code. Check the code and that receive mode is on there.</value>
+  </data>
+  <data name="Devices.PairWrongCode" xml:space="preserve">
+    <value>The code does not match.</value>
+  </data>
+  <data name="Devices.InvalidCode" xml:space="preserve">
+    <value>Invalid code: the format is XXX-XXX-XXXX-XXXX.</value>
+  </data>
+  <data name="Devices.OwnCode" xml:space="preserve">
+    <value>That is this computer's own code; enter the other one's.</value>
+  </data>
+  <data name="Devices.Activity" xml:space="preserve">
+    <value>Recent activity</value>
+  </data>
+  <data name="Devices.EventPaired" xml:space="preserve">
+    <value>{0} paired with this computer</value>
+  </data>
+  <data name="Devices.EventReceiving" xml:space="preserve">
+    <value>Receiving from {0}…</value>
+  </data>
+  <data name="Devices.EventReceived" xml:space="preserve">
+    <value>{0} received from {1}</value>
+  </data>
+  <data name="Devices.EventFailed" xml:space="preserve">
+    <value>Failed: {0}</value>
+  </data>
+  <data name="Devices.UnknownDevice" xml:space="preserve">
+    <value>paired device</value>
+  </data>
+  <data name="Send.ToDevice" xml:space="preserve">
+    <value>SEND TO A PAIRED DEVICE</value>
+  </data>
+  <data name="Send.ToDeviceStart" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Send.NoDevices" xml:space="preserve">
+    <value>Pair your computers to send without a code.</value>
+  </data>
+  <data name="Send.OpenDevices" xml:space="preserve">
+    <value>Go to Devices</value>
+  </data>
+  <data name="Send.SendingTo" xml:space="preserve">
+    <value>SENDING TO</value>
+  </data>
+  <data name="Error.DeviceOffline" xml:space="preserve">
+    <value>The device is not online with receive mode on.</value>
+  </data>
+  <data name="Error.NotTrusted" xml:space="preserve">
+    <value>The other device did not recognize this one. Pair them again.</value>
+  </data>
+  <data name="Error.DeviceRemoved" xml:space="preserve">
+    <value>The target device was removed from the trusted list. Discard this transfer or pair again.</value>
+  </data>
+  <data name="Tray.ReceiveMode" xml:space="preserve">
+    <value>Receive mode</value>
+  </data>
+  <data name="Tray.Received" xml:space="preserve">
+    <value>ZipStream — received: {0}</value>
+  </data>
   <data name="Settings.IceTitle" xml:space="preserve">
     <value>STUN/TURN server (relay)</value>
   </data>

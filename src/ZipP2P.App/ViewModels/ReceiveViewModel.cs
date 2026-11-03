@@ -189,7 +189,8 @@ public partial class ReceiveViewModel : OperationViewModel
     {
         Pending.Clear();
         var store = TransferServices.Store;
-        foreach (var t in store.ListIncoming().OrderByDescending(t => t.CreatedAt))
+        // Os do receive mode (de um dispositivo pareado) não são retomados por código: voltam quando o remetente enviar de novo.
+        foreach (var t in store.ListIncoming().Where(t => t.SourceDeviceId is null).OrderByDescending(t => t.CreatedAt))
         {
             var percent = t.Size > 0 ? store.BytesReceived(t) * 100 / t.Size : 0;
             var detail = string.Format(
