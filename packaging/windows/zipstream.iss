@@ -35,7 +35,8 @@ UninstallDisplayName={#AppName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-; Fecha o app aberto (ele fica na bandeja) antes de substituir os arquivos.
+; Plano B para fechar o app: o principal é CloseRunningApp ([Code]), porque o app fica na bandeja
+; e o pedido de fechar janela do Windows só o esconde.
 CloseApplications=yes
 
 [Languages]
@@ -79,6 +80,44 @@ Root: HKCU; Subkey: "Software\Classes\Directory\shell\{#VerbName}\command"; Valu
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+const
+  // Mesmo nome de Program.AppMutexName: existe enquanto o app está aberto.
+  AppMutex = 'ZipStreamAppMutex';
+
+// Pede ao app aberto que saia de verdade (--close-for-update) e espera até 15 s pelo fim dele.
+// Versões antigas não criam o mutex; para elas fica o CloseApplications.
+procedure CloseRunningApp();
+var
+  Exe: String;
+  ResultCode, Waited: Integer;
+begin
+  if not CheckForMutexes(AppMutex) then
+    Exit;
+
+  Exe := ExpandConstant('{app}\{#AppExe}');
+  if FileExists(Exe) then
+    Exec(Exe, '--close-for-update', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
+  Waited := 0;
+  while CheckForMutexes(AppMutex) and (Waited < 15000) do
+  begin
+    Sleep(250);
+    Waited := Waited + 250;
+  end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  CloseRunningApp();
+  Result := '';
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  CloseRunningApp();
+  Result := True;
+end;
+
 // Remove o menu de contexto também quando ele foi ativado depois, pelas Configurações do app.
 // As configurações e transferências em %LOCALAPPDATA%\ZipStream são mantidas.
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);

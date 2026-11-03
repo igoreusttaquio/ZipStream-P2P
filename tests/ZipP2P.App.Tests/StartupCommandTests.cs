@@ -23,6 +23,18 @@ public sealed class StartupCommandTests
     }
 
     [Theory]
+    [InlineData("--close-for-update")]
+    [InlineData("--CLOSE-FOR-UPDATE")]
+    public void CloseForUpdate_IsRecognized(string arg)
+    {
+        var command = StartupCommand.Parse(new[] { arg });
+
+        Assert.True(command.CloseForUpdate);
+        Assert.Null(command.SendPath);
+        Assert.Null(command.ReceiveCode);
+    }
+
+    [Theory]
     [InlineData]
     [InlineData("--send")]
     [InlineData("--unknown", "x")]

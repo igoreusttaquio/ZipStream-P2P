@@ -2,12 +2,21 @@ namespace ZipP2P.App;
 
 /// <summary>
 /// Ação pedida na linha de comando:
-/// <c>--send &lt;caminho&gt;</c> (usado pelo menu de contexto do sistema), <c>--receive &lt;código&gt;</c>
-/// ou apenas um caminho (ex.: arquivo arrastado sobre o executável / "Abrir com").
+/// <c>--send &lt;caminho&gt;</c> (usado pelo menu de contexto do sistema), <c>--receive &lt;código&gt;</c>,
+/// <c>--close-for-update</c> (usado pelo instalador) ou apenas um caminho (ex.: arquivo arrastado sobre
+/// o executável / "Abrir com").
 /// </summary>
-public sealed record StartupCommand(string? SendPath, string? ReceiveCode)
+/// <param name="CloseForUpdate">
+/// Fecha a instância aberta de verdade (sem ir para a bandeja), para o instalador substituir os arquivos.
+/// Se não houver instância aberta, não abre o app.
+/// </param>
+public sealed record StartupCommand(string? SendPath, string? ReceiveCode, bool CloseForUpdate = false)
 {
+    public const string CloseForUpdateArgument = "--close-for-update";
+
     public static StartupCommand None { get; } = new(null, null);
+
+    public static StartupCommand CloseForUpdateCommand { get; } = new(null, null, CloseForUpdate: true);
 
     /// <summary>Resolve caminhos relativos (a outra instância tem outro diretório de trabalho).</summary>
     public StartupCommand WithAbsolutePaths()
@@ -20,6 +29,8 @@ public sealed record StartupCommand(string? SendPath, string? ReceiveCode)
             var arg = args[i];
             switch (arg.ToLowerInvariant())
             {
+                case CloseForUpdateArgument:
+                    return CloseForUpdateCommand;
                 case "--send" when i + 1 < args.Count:
                     return new StartupCommand(args[i + 1], null);
                 case "--receive" when i + 1 < args.Count:

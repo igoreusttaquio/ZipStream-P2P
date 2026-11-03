@@ -37,6 +37,19 @@ public sealed class SingleInstanceTests
     }
 
     [Fact]
+    public async Task CloseForUpdate_ReachesTheRunningInstance()
+    {
+        var name = "ZipStreamTest-" + Guid.NewGuid().ToString("N");
+        var received = new TaskCompletionSource<StartupCommand>();
+        using var first = new SingleInstance(name);
+        first.Listen(command => received.TrySetResult(command));
+
+        Assert.True(await new SingleInstance(name).TrySendAsync(StartupCommand.CloseForUpdateCommand, TimeSpan.FromSeconds(5)));
+
+        Assert.True((await received.Task.WaitAsync(TimeSpan.FromSeconds(10))).CloseForUpdate);
+    }
+
+    [Fact]
     public void RelativeSendPath_IsResolvedBeforeForwarding()
     {
         var command = new StartupCommand("relatorio.pdf", null).WithAbsolutePaths();

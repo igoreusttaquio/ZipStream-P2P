@@ -85,6 +85,15 @@ public partial class App : Application
 
     private void Handle(StartupCommand command)
     {
+        if (command.CloseForUpdate)
+        {
+            // Pedido do instalador: sai de verdade. Transferências em andamento ficam pendentes e
+            // podem ser retomadas quando o app abrir de novo.
+            Logger.LogInformation("Closing for update");
+            Exit();
+            return;
+        }
+
         if (command.SendPath is { } path)
         {
             Logger.LogInformation("Quick send requested for {Path}", path);
