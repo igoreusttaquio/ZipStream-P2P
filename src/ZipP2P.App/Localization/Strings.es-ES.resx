@@ -513,6 +513,24 @@
   <data name="Error.DeviceRemoved" xml:space="preserve">
     <value>El dispositivo de destino se quitó de la lista de confianza. Descarte este envío o empareje de nuevo.</value>
   </data>
+  <data name="Devices.Notifications" xml:space="preserve">
+    <value>Mostrar notificaciones del sistema al recibir</value>
+  </data>
+  <data name="Notify.ReceivedTitle" xml:space="preserve">
+    <value>Archivo recibido</value>
+  </data>
+  <data name="Notify.ReceivedBody" xml:space="preserve">
+    <value>{0}, de {1}. Guardado en {2}</value>
+  </data>
+  <data name="Notify.PairedTitle" xml:space="preserve">
+    <value>Nuevo dispositivo emparejado</value>
+  </data>
+  <data name="Notify.PairedBody" xml:space="preserve">
+    <value>{0} ahora puede enviar archivos a este equipo.</value>
+  </data>
+  <data name="Notify.FailedTitle" xml:space="preserve">
+    <value>Error al recibir</value>
+  </data>
   <data name="QuickSend.Or" xml:space="preserve">
     <value>o</value>
   </data>

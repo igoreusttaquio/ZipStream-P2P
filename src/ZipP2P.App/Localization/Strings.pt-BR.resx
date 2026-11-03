@@ -513,6 +513,24 @@
   <data name="Error.DeviceRemoved" xml:space="preserve">
     <value>O dispositivo de destino foi removido da lista de confiáveis. Descarte este envio ou pareie de novo.</value>
   </data>
+  <data name="Devices.Notifications" xml:space="preserve">
+    <value>Mostrar notificações do sistema ao receber</value>
+  </data>
+  <data name="Notify.ReceivedTitle" xml:space="preserve">
+    <value>Arquivo recebido</value>
+  </data>
+  <data name="Notify.ReceivedBody" xml:space="preserve">
+    <value>{0}, de {1}. Salvo em {2}</value>
+  </data>
+  <data name="Notify.PairedTitle" xml:space="preserve">
+    <value>Novo dispositivo pareado</value>
+  </data>
+  <data name="Notify.PairedBody" xml:space="preserve">
+    <value>{0} agora pode enviar arquivos para este computador.</value>
+  </data>
+  <data name="Notify.FailedTitle" xml:space="preserve">
+    <value>Falha no recebimento</value>
+  </data>
   <data name="QuickSend.Or" xml:space="preserve">
     <value>ou</value>
   </data>

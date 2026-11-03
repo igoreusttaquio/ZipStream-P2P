@@ -513,6 +513,24 @@
   <data name="Error.DeviceRemoved" xml:space="preserve">
     <value>The target device was removed from the trusted list. Discard this transfer or pair again.</value>
   </data>
+  <data name="Devices.Notifications" xml:space="preserve">
+    <value>Show system notifications when receiving</value>
+  </data>
+  <data name="Notify.ReceivedTitle" xml:space="preserve">
+    <value>File received</value>
+  </data>
+  <data name="Notify.ReceivedBody" xml:space="preserve">
+    <value>{0}, from {1}. Saved to {2}</value>
+  </data>
+  <data name="Notify.PairedTitle" xml:space="preserve">
+    <value>New device paired</value>
+  </data>
+  <data name="Notify.PairedBody" xml:space="preserve">
+    <value>{0} can now send files to this computer.</value>
+  </data>
+  <data name="Notify.FailedTitle" xml:space="preserve">
+    <value>Receiving failed</value>
+  </data>
   <data name="QuickSend.Or" xml:space="preserve">
     <value>or</value>
   </data>

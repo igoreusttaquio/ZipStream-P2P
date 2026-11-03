@@ -86,8 +86,12 @@
                         </StackPanel>
                     </Grid>
 
-                    <CheckBox IsChecked="{Binding StartWithSystem}"
-                              Content="{Binding [Devices.StartWithSystem], Source={x:Static loc:Localizer.Instance}}" />
+                    <StackPanel Spacing="2">
+                        <CheckBox IsChecked="{Binding StartWithSystem}"
+                                  Content="{Binding [Devices.StartWithSystem], Source={x:Static loc:Localizer.Instance}}" />
+                        <CheckBox IsChecked="{Binding NotificationsEnabled}"
+                                  Content="{Binding [Devices.Notifications], Source={x:Static loc:Localizer.Instance}}" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

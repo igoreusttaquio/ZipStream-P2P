@@ -63,6 +63,7 @@ public partial class DevicesViewModel : ViewModelBase
         DownloadDirectory = _settings.DownloadDirectory;
         ReceiveModeEnabled = _receiveMode.IsRunning;
         StartWithSystem = _autostart.IsEnabled;
+        NotificationsEnabled = _settings.NotificationsEnabled;
         _loading = false;
 
         _receiveMode.StateChanged += () => Dispatcher.UIThread.Post(RefreshReceiveState);
@@ -105,6 +106,16 @@ public partial class DevicesViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool StartWithSystem { get; set; }
+
+    /// <summary>Notificações do sistema ao receber/parear (salvo na hora).</summary>
+    [ObservableProperty]
+    public partial bool NotificationsEnabled { get; set; }
+
+    partial void OnNotificationsEnabledChanged(bool value)
+    {
+        if (!_loading)
+            _settings.NotificationsEnabled = value;
+    }
 
     /// <summary>Progresso do recebimento automático em andamento (0 = nenhum).</summary>
     [ObservableProperty]

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ZipP2P.App.Devices;
 using ZipP2P.App.Localization;
 using ZipP2P.App.Logging;
+using ZipP2P.App.ShellIntegration;
 using ZipP2P.App.ViewModels;
 using ZipP2P.App.Views;
 
@@ -161,16 +162,16 @@ public partial class App : Application
             Dispatcher.UIThread.Post(() => receiveMode.IsChecked = DeviceServices.ReceiveMode.IsRunning);
         receiveMode.IsChecked = DeviceServices.ReceiveMode.IsRunning;
 
-        // Recebido em segundo plano: aparece no tooltip do ícone.
-        DeviceServices.ReceiveMode.Activity += e =>
+        // Modo de recebimento em segundo plano: notificação do sistema e o último recebido no tooltip do ícone.
+        // Na thread da interface: no Windows a notificação usa uma janela que precisa de uma thread que dure.
+        DeviceServices.ReceiveMode.Activity += e => Dispatcher.UIThread.Post(() =>
         {
-            if (e.Kind == ReceiveModeEventKind.Received)
-                Dispatcher.UIThread.Post(() =>
-                {
-                    if (_trayIcon is not null)
-                        _trayIcon.ToolTipText = string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Tray.Received"], e.Name);
-                });
-        };
+            if (e.Kind == ReceiveModeEventKind.Received && _trayIcon is not null)
+                _trayIcon.ToolTipText = string.Format(CultureInfo.CurrentCulture, Localizer.Instance["Tray.Received"], e.Name);
+
+            if (ReceiveModeNotification.For(e) is { } notification && new AppSettings(new SettingsStore()).NotificationsEnabled)
+                DesktopNotifier.ForCurrentOs.Show(notification.Title, notification.Message);
+        });
 
         void Localize()
         {

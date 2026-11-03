@@ -12,7 +12,7 @@ public static class TransferServices
     /// <summary>Pacotes ainda sendo compactados: um envio interrompido pode ser retomado enquanto a compressão continua.</summary>
     private static readonly ConcurrentDictionary<Guid, PackageSource> Preparing = new();
 
-    public static TransferStore Store { get; } = new(TransferStore.DefaultRoot);
+    public static TransferStore Store { get; } = new(Path.Combine(AppPaths.DataDirectory, "transfers"));
 
     /// <summary>
     /// Começa a compactar o envio em segundo plano. Ao terminar, grava o tamanho no <see cref="Store"/>

@@ -33,8 +33,9 @@ sealed class Program
         if (command.CloseForUpdate)
             return;
 
+        // Um perfil personalizado (ZIPSTREAM_DATA_DIR) não é a instalação: não segura o mutex do instalador.
         if (OperatingSystem.IsWindows())
-            _appMutex = new Mutex(initiallyOwned: false, AppMutexName);
+            _appMutex = new Mutex(initiallyOwned: false, AppMutexName + AppPaths.InstanceSuffix);
 
         App.StartupCommand = command;
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args, ShutdownMode.OnExplicitShutdown);
@@ -51,7 +52,7 @@ sealed class Program
             return;
 
         var deadline = DateTime.UtcNow.AddSeconds(15);
-        while (DateTime.UtcNow < deadline && Mutex.TryOpenExisting(AppMutexName, out var other))
+        while (DateTime.UtcNow < deadline && Mutex.TryOpenExisting(AppMutexName + AppPaths.InstanceSuffix, out var other))
         {
             other.Dispose();
             Thread.Sleep(200);

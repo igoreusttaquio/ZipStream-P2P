@@ -24,8 +24,7 @@ public sealed class SettingsStore
         command.ExecuteNonQuery();
     }
 
-    public static string DefaultPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZipStream", "settings.db");
+    public static string DefaultPath => Path.Combine(AppPaths.DataDirectory, "settings.db");
 
     public string? Get(string key)
     {

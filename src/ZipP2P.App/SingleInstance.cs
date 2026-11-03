@@ -20,7 +20,7 @@ public sealed class SingleInstance : IDisposable
     }
 
     public static string DefaultPipeName =>
-        "ZipStream-" + new string(Environment.UserName.Where(char.IsLetterOrDigit).ToArray());
+        "ZipStream-" + new string(Environment.UserName.Where(char.IsLetterOrDigit).ToArray()) + AppPaths.InstanceSuffix;
 
     /// <summary>Tenta entregar o comando a uma instância já aberta. Retorna false se não houver nenhuma.</summary>
     public async Task<bool> TrySendAsync(StartupCommand command, TimeSpan? timeout = null)

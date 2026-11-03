@@ -17,6 +17,7 @@ public sealed class AppSettings
     private const string AutoCheckUpdatesKey = "AutoCheckUpdates";
     private const string LastUpdateCheckKey = "LastUpdateCheck";
     private const string ReceiveModeEnabledKey = "ReceiveModeEnabled";
+    private const string NotificationsEnabledKey = "NotificationsEnabled";
 
     private readonly SettingsStore _store;
 
@@ -56,6 +57,13 @@ public sealed class AppSettings
     {
         get => _store.Get(ReceiveModeEnabledKey) == "true";
         set => _store.Set(ReceiveModeEnabledKey, value ? "true" : "false");
+    }
+
+    /// <summary>Notificações do sistema para o modo de recebimento (recebido, pareado, falha). Padrão: sim.</summary>
+    public bool NotificationsEnabled
+    {
+        get => _store.Get(NotificationsEnabledKey) != "false";
+        set => _store.Set(NotificationsEnabledKey, value ? "true" : "false");
     }
 
     /// <summary>Procurar versões novas ao abrir o app, no máximo uma vez por dia (padrão: sim).</summary>
