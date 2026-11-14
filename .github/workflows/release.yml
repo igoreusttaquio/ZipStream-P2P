@@ -43,6 +43,22 @@ jobs:
       - name: Publish
         run: dotnet publish src/ZipP2P.App/ZipP2P.App.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:Version=${{ env.VERSION }} -o publish/${{ matrix.rid }}
 
+      # O datachannel.dll (WebRTC) depende do runtime do Visual C++, que não vem com o Windows:
+      # numa máquina recém-instalada o envio falhava com DllNotFoundException. O instalador é por
+      # usuário (sem administrador), então as DLLs vão junto do app (implantação local, permitida
+      # pela Microsoft) — vale também para o .zip portátil.
+      - name: Bundle Visual C++ runtime (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath
+          $crt = Get-ChildItem "$vs\VC\Redist\MSVC\*\x64\Microsoft.VC14*.CRT" -Directory | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $crt) { throw "Visual C++ redistributable folder not found under $vs" }
+          Write-Host "Using $($crt.FullName)"
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            Copy-Item (Join-Path $crt.FullName $dll) "publish/${{ matrix.rid }}/" -ErrorAction Stop
+          }
+
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
